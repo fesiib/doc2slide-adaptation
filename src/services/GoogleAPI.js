@@ -1,7 +1,5 @@
 import {gapi} from 'gapi-script';
 
-import {parseSlideFiles} from './DriveAPI';
-
 const CLIENT_ID = process.env.REACT_APP_clientId;
 const API_KEY = process.env.REACT_APP_apiKey;
 
@@ -13,7 +11,7 @@ const DISCOVERY_DOCS = [
 
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
-const SCOPES = "https://www.googleapis.com/auth/presentations.readonly https://www.googleapis.com/auth/drive.metadata.readonly";
+const SCOPES = "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file";
 
 /**
  * Append a pre element to the body containing the given message
@@ -21,7 +19,7 @@ const SCOPES = "https://www.googleapis.com/auth/presentations.readonly https://w
  *
  * @param {string} message Text to be placed in pre element.
  */
- export function appendPre(message) {
+export function appendPre(message) {
     let pre = document.getElementById('content');
     let textContent = document.createTextNode(message + '\n');
     pre.appendChild(textContent);
@@ -30,15 +28,15 @@ const SCOPES = "https://www.googleapis.com/auth/presentations.readonly https://w
 /**
  *  On load, called to load the auth2 library and API client library.
  */
-export function handleClientLoad() {
-    gapi.load('client:auth2', initClient);
+export function handleClientLoad(callbackStatusChange) {
+    gapi.load('client:auth2', () => initClient(callbackStatusChange));
 }
 
 /**
  *  Initializes the API client library and sets up sign-in state
  *  listeners.
  */
-function initClient() {
+function initClient(callbackStatusChange) {
     gapi.client.init({
         apiKey: API_KEY,
         clientId: CLIENT_ID,
@@ -47,6 +45,7 @@ function initClient() {
     }).then(function () {
         // Listen for sign-in state changes.
         gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+        gapi.auth2.getAuthInstance().isSignedIn.listen(callbackStatusChange);
 
         // Handle the initial sign-in state.
         updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
@@ -68,7 +67,6 @@ function updateSigninStatus(isSignedIn) {
     if (isSignedIn) {
         authorizeButton.style.display = 'none';
         signoutButton.style.display = 'block';
-        parseSlideFiles();
     } else {
         authorizeButton.style.display = 'block';
         signoutButton.style.display = 'none';

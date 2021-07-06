@@ -13,7 +13,7 @@ import reportWebVitals from './reportWebVitals';
 
 //import {db, storage, auth, analytics, firebaseApp, firebase} from './services/firebase';
 
-export const {store, persistor} = configureStore();
+const {store, persistor} = configureStore();
 
 ReactDOM.render(
   <Provider store={store}>
