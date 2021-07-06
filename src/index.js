@@ -8,11 +8,12 @@ import configureStore from './config/store';
 import Routes from './Routes';
 
 import './index.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import reportWebVitals from './reportWebVitals';
 
 //import {db, storage, auth, analytics, firebaseApp, firebase} from './services/firebase';
 
-const {store, persistor} = configureStore();
+export const {store, persistor} = configureStore();
 
 ReactDOM.render(
   <Provider store={store}>

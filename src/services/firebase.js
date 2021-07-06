@@ -26,6 +26,7 @@ const storage = firebaseApp.storage();
 
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider()
+
 export const signInWithGoogle = () => {
   auth.signInWithPopup(googleProvider).then((res) => {
     // user object
@@ -34,6 +35,7 @@ export const signInWithGoogle = () => {
     console.log(error.message)
   })
 }
+
 export const logOut = () => {
   auth.signOut().then(()=> {
     console.log('logged out')
