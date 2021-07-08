@@ -3,7 +3,9 @@ import { v4 as random} from 'uuid';
 import { createPresentation } from './DriveAPI';
 
 import {appendPre} from './GoogleAPI';
-import { REQ_FIELDS } from './SlidesAPIRqFields';
+import { objRecTraverse, REQ_FIELDS } from './SlidesAPIRqFields';
+
+const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
 /**
  * Prints the number of slides and elements in a sample presentation:
@@ -90,7 +92,7 @@ function isEmpty(obj) {
                     additional.text.push(textElement.textRun.content);
                 }
                 else if (textElement.hasOwnProperty('autoText')
-                    && textElement.textRun.hasOwnProperty('content')
+                    && textElement.autoText.hasOwnProperty('content')
                 ) {
                     additional.text.push(textElement.autoText.content);
                 }
@@ -264,6 +266,232 @@ function extractPage(pages, dict) {
     return template;
 }
 
+function assignElementProperties(pageObjectId, size, transform) {
+    let ret = {
+        pageObjectId,
+    }
+    if (size !== undefined) {
+        if (!size.width.hasOwnProperty('magnitude')) {
+            size.width.magnitude = 1;
+            size.width.unit = 'EMU';
+        }
+        if (!size.height.hasOwnProperty('magnitude')) {
+            size.height.magnitude = 1;
+            size.height.unit = 'EMU';
+        }
+        ret['size'] = size;
+    }
+    if (transform !== undefined) {
+        ret['transform'] = transform;
+    }
+    return ret;
+}
+
+function getPageElementRequests(pageId, pageElement, suffix) {
+    let objectId = random();
+    let requests = [];
+    let request = {
+        objectId,
+        elementProperties: {},
+    };
+    switch (pageElement.additional.originalType) {
+        // case 'elementGroup':
+        //     if (Array.isArray(pageElement.elementGroup.children)) {
+        //         let num_pageElement = 0;
+        //         let childrenObjectIds = [];
+        //         for (let obj of pageElement.elementGroup.children) {
+        //             let result = getPageElementRequests(pageId, obj, suffix + (num_pageElement.toString()));
+        //             requests = requests.concat(result.requests);
+        //             let hasRequest = false;
+        //             for (let r of requests) {
+        //                 if (r.objectId === result.objectId) {
+        //                     hasRequest = true;
+        //                     break;
+        //                 }
+        //             }
+        //             if (hasRequest) {
+        //                 childrenObjectIds.push(result.objectId);
+        //                 num_pageElement++;
+        //             }
+        //         }
+        //         if (childrenObjectIds.length > 0) {
+        //             requests.push({
+        //                 groupObjects: {
+        //                     groupObjectId: objectId,
+        //                     childrenObjectIds,
+        //                 }
+        //             });
+        //         }
+        //     }
+        //     break;
+        case 'shape':
+            request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
+            
+            if (pageElement.shape.hasOwnProperty('shapeType')) {
+                request['shapeType'] = pageElement.shapeType;
+            }
+            if (request.shapeType === undefined) {
+                request['shapeType'] = 'RECTANGLE';
+            }
+            requests.push({
+                createShape: request
+            });
+
+            if (pageElement.additional.text.length > 0) {
+                /// TEXT FORMAT: TEXT_BOX_{NUMBER}
+                let text = "TEXT_BOX_" + suffix;
+                
+                requests.push({
+                    insertText: {
+                        objectId,
+                        text: text,
+                    }
+                });
+
+                if (pageElement.shape.hasOwnProperty('text')
+                    && Array.isArray(pageElement.shape.text.textElements)
+                ) {
+                    for (let textElement of pageElement.shape.text.textElements) {
+                        if (textElement.hasOwnProperty('paragraphMarker')
+                            && textElement.paragraphMarker.hasOwnProperty('style')
+                        ) {
+                            let fields = objRecTraverse(textElement.paragraphMarker.style, '');
+                            if (fields.length > 0) {
+                                requests.push({
+                                    updateParagraphStyle: {
+                                        objectId,
+                                        style: textElement.paragraphMarker.style,
+                                        textRange: {
+                                            type: 'ALL',
+                                        },
+                                        fields: fields.join(" "),
+                                    }
+                                });
+                            }
+                            break;
+                        }
+                    }
+                    for (let textElement of pageElement.shape.text.textElements) {
+                        if (textElement.hasOwnProperty('textRun')    
+                            && textElement.textRun.hasOwnProperty('style')
+                        ) {
+                            let fields = objRecTraverse(textElement.textRun.style)
+                            if (fields.length > 0) {
+                                requests.push({
+                                    updateTextStyle: {
+                                        objectId,
+                                        style: textElement.textRun.style,
+                                        textRange: {
+                                            type: 'ALL',
+                                        },
+                                        fields: fields.join(" "),
+                                    }
+                                });
+                            }
+                            break;
+                        }
+                    }
+                    for (let textElement of pageElement.shape.text.textElements) {
+                        if (textElement.hasOwnProperty('autoText')    
+                            && textElement.autoText.hasOwnProperty('style')
+                        ) {
+                            let fields = objRecTraverse(textElement.autoText.style);
+                            if (fields.length > 0) {
+                                requests.push({
+                                    updateTextStyle: {
+                                        objectId,
+                                        style: textElement.autoText.style,
+                                        textRange: {
+                                            type: 'ALL',
+                                        },
+                                        fields: fields.join(" "),
+                                    }
+                                });
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if (pageElement.shape.hasOwnProperty('shapeProperties')) {
+                let fields = objRecTraverse(pageElement.shape.shapeProperties);
+                if (fields.length > 0) {
+                    requests.push({
+                        updateShapeProperties: {
+                            objectId,
+                            shapeProperties: pageElement.shape.shapeProperties,
+                            fields: fields.join(" "),
+                        }
+                    });
+                }
+            }
+            break;
+        case 'image':
+        case 'video':
+        case 'sheetsChart':
+            request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
+            // if (pageElement.additional.contentUrl.length > 0) {
+            //     request['url'] = pageElement.additional.contentUrl[0];
+            // }
+            // else {
+            //     request['url'] = PLACEHOLDER_IMAGE_URL;
+            // }
+            request['url'] = PLACEHOLDER_IMAGE_URL;
+            requests.push({
+                createImage: request
+            });
+            if (pageElement.image.hasOwnProperty('imageProperties')) {
+                let fields = objRecTraverse(pageElement.image.imageProperties, '');
+                if (fields.length > 0) {
+                    requests.push({
+                        updateImageProperties: {
+                            objectId,
+                            imageProperties: pageElement.image.imageProperties,
+                            fields: fields.join(" "),
+                        }
+                    });
+                }
+            }
+            break;
+        case 'line':
+            if (pageElement.line.hasOwnProperty('lineProperties'))
+            {
+                if (pageElement.line.lineProperties['hasLink'] === 1
+                || pageElement.line.lineProperties['hasConnection'] === 1) {
+                    break;
+                }
+            }
+            
+            request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
+            
+            if (pageElement.line.hasOwnProperty('lineCategory')) {
+                request['category'] = pageElement.line.lineCategory;
+            }
+            requests.push({
+                createLine: request
+            });
+            if (pageElement.line.hasOwnProperty('lineProperties')) {
+                let fields = objRecTraverse(pageElement.line.lineProperties, '');
+                if (fields.length > 0) {
+                    requests.push({
+                        updateLineProperties: {
+                            objectId,
+                            lineProperties: pageElement.line.lineProperties,
+                            fields: fields.join(" "),
+                        }
+                    });
+                }
+            }
+            break;
+        default:
+            console.log('no such type:', pageElement);
+    }
+    return {
+        requests,
+        objectId
+    };
+}
+
 function initializePage(pageId, source, dict, index) {
     let pages = [];
     if (source === undefined) {
@@ -278,7 +506,7 @@ function initializePage(pageId, source, dict, index) {
     if (Array.isArray(source.layouts) 
         && pages[0].hasOwnProperty('slideProperties') 
         && pages[0]['slideProperties'].hasOwnProperty('layoutObjectId')
-        && dict.hasOwnProperty(source.layouts, pages[0].slideProperties.layoutObjectId)
+        && dict.hasOwnProperty(pages[0].slideProperties.layoutObjectId)
     ) {
         let layout = dict[pages[0].slideProperties.layoutObjectId];
         if (layout != null) {
@@ -288,12 +516,12 @@ function initializePage(pageId, source, dict, index) {
     if (Array.isArray(source.masters) 
         && pages[0].hasOwnProperty('slideProperties') 
         && pages[0]['slideProperties'].hasOwnProperty('masterObjectId')
-        && dict.hasOwnProperty(source.layouts, pages[0].slideProperties.masterObjectId)
+        && dict.hasOwnProperty(pages[0].slideProperties.masterObjectId)
     ) {
         if (pages.length > 1) {
             if (pages[1].hasOwnProperty('layoutProperties') 
                 && pages[1]['layoutProperties'].hasOwnProperty('masterObjectId')
-                && dict.hasOwnProperty(source.layouts, pages[1].layoutProperties.masterObjectId)
+                && dict.hasOwnProperty(pages[1].layoutProperties.masterObjectId)
             ) {
                 if (pages[0].slideProperties.masterObjectId !== pages[1].layoutProperties.masterObjectId) {
                     let masterLayout = dict[pages[1].layoutProperties.masterObjectId];
@@ -311,9 +539,50 @@ function initializePage(pageId, source, dict, index) {
     
 
 
-    let pageTemplate = extractPage(pages.reverse(), source);
+    let pageTemplate = extractPage(pages.reverse(), dict);
     
+    console.log(pages.reverse(), pageTemplate);
+
     let requests = [];
+
+
+    // if (pageTemplate.hasOwnProperty('pageProperties')) {
+    //     // let fields = objRecTraverse(pageTemplate.pageProperties, '');
+    //     // console.log(fields);
+    //     // if (fields.length > 0) {
+    //     //     requests.push({
+    //     //         updatePageProperties: {
+    //     //             objectId,
+    //     //             pageProperties: pageTemplate.pageProperties,
+    //     //             fields: fields.join(" "),
+    //     //         }
+    //     //     });
+    //     // }
+    //     requests.push({
+    //         updatePageProperties: {
+    //             objectId: pageId,
+    //             pageProperties: pageTemplate.pageProperties,
+    //             fields: '*',
+    //         }
+    //     });
+        
+    // }
+
+    if (Array.isArray(pageTemplate.pageElements)) {
+        let num_pageElement = 0;
+        for (let pageElement of pageTemplate.pageElements) {
+            if (pageElement.hasOwnProperty('additional')
+                && pageElement.additional.hasOwnProperty('originalType')
+            ) { 
+                let result = getPageElementRequests(pageId, pageElement, num_pageElement.toString());
+                requests = requests.concat(result.requests);
+            }
+            else {
+                console.log('no additional', pageElement);
+            }
+            num_pageElement++;
+        }
+    }
     
     return requests;
 }
@@ -327,10 +596,7 @@ function initializePage(pageId, source, dict, index) {
 
 export async function extract(forId) {
     const initializeSlide = (pageId, source, dict, index) => {
-        let requests = [];
-        
-        requests.concat(initializePage(pageId, source, dict, index));
-        
+        let requests = initializePage(pageId, source, dict, index);
         return requests;
     }
 
@@ -351,6 +617,7 @@ export async function extract(forId) {
             });
             requests = requests.concat(initializeSlide(pageId, source, dict, index));
         }
+        console.log(requests);
         gapi.client.slides.presentations.batchUpdate({
             presentationId: id,
             requests: requests,

@@ -275,14 +275,26 @@ export const REQ_FIELDS = [
     ".pageProperties.colorScheme.colors.0.color.blue"
   ];
 
-function objRecTraverse(obj, prefix = '') {
+const CUSTOM_FIELDS = [
+    'hasLink',
+    'hasConnection',
+    'additional',
+]
+
+export function objRecTraverse(obj, prefix = '') {
     if (typeof obj !== 'object' || obj === null) {
         return [];
     }
     let fields = [];
     for (let field in obj) {
-        fields.push(prefix + '.' + field);
-        fields = fields.concat(objRecTraverse(obj[field], prefix + '.' + field));
+        if (CUSTOM_FIELDS.hasOwnProperty(field)) {
+            continue;
+        }
+        let field_txt = prefix + '.' + field;
+        if (prefix === '') {
+            field_txt = field;
+        }
+        fields = fields.concat(objRecTraverse(obj[field], field_txt));
     }
     return fields;
 }
