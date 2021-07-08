@@ -540,8 +540,6 @@ function initializePage(pageId, source, dict, index) {
 
 
     let pageTemplate = extractPage(pages.reverse(), dict);
-    
-    console.log(pages.reverse(), pageTemplate);
 
     let requests = [];
 
