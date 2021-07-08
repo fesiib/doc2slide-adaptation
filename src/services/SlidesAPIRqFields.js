@@ -476,6 +476,7 @@ export function parse() {
                 dashStyle: 'DASH_STYLE_UNSPECIFIED',
                 startArrow: 'ARROW_STYLE_UNSPECIFIED',
                 endArrow: 'ARROW_STYLE_UNSPECIFIED ',
+                hasLink: false,
                 hasConnection: false,
             },
             lineType: 'TYPE_UNSPECIFIED',

@@ -55,18 +55,110 @@ function isEmpty(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
+/**
+ * TODO: Calculate Additional Information
+ * @param {Object} page 
+ * @returns 
+ */
+
+ function calculateAdditional(pageElement, src) {
+    // additional: {
+    //     isReplacable: true, // not line;
+    //     //union start
+    //     originalType: '', // elementGroup, shape, image, video, line, table, sheetsChart, wordArt
+    //     amountText: 0,
+    //     mainColors: {
+    //         colors: [opaqueColorTemplate],
+    //     },
+    //     //union end
+    // }
+    let additional = {
+        isReplacable: true,
+        originalType: '',
+        text: [],
+        contentUrl: [],
+    }
+    if (src.hasOwnProperty('shape')) {
+        additional.isReplacable = true;
+        additional.originalType = 'shape';
+        if (src.shape.hasOwnProperty('text') && Array.isArray(src.shape.text.textElements)) {
+            additional.text = [];
+            for (let textElement of src.shape.text.textElements) {
+                if (textElement.hasOwnProperty('textRun')
+                    && textElement.textRun.hasOwnProperty('content')
+                ) {
+                    additional.text.push(textElement.textRun.content);
+                }
+                else if (textElement.hasOwnProperty('autoText')
+                    && textElement.textRun.hasOwnProperty('content')
+                ) {
+                    additional.text.push(textElement.autoText.content);
+                }
+            }
+        }
+        
+    }
+    else if (src.hasOwnProperty('image')) {
+        additional.isReplacable = true;
+        additional.originalType = 'image';
+        additional.contentUrl = [src.image.contentUrl];
+    }
+    else if (src.hasOwnProperty('elementGroup')) {
+        additional.isReplacable = true;
+        additional.originalType = 'elementGroup';
+        if (Array.isArray(pageElement.elementGroup.children)) {
+            additional.text = [];
+            additional.contentUrl = [];
+            for (let ch of pageElement.elementGroup.children) {
+                additional.text = additional.text.concat(ch.additional.text);
+                additional.contentUrl = additional.text.concat(ch.additional.contentUrl);
+            }
+        }
+    }
+    else if (src.hasOwnProperty('video')) {
+        additional.isReplacable = true;
+        additional.originalType = 'video';
+    }
+    else if (src.hasOwnProperty('line')) {
+        additional.isReplacable = false;
+        additional.originalType = 'line';
+    }
+    else if (src.hasOwnProperty('table')) {
+        additional.isReplacable = false;
+        additional.originalType = 'table';
+    }
+    else if (src.hasOwnProperty('wordArt')) {
+        additional.isReplacable = false;
+        additional.originalType = 'wordArt';
+        additional.text = [src.wordArt.renderedText];
+    }
+    else if (src.hasOwnProperty('sheetsChart')) {
+        additional.isReplacable = true;
+        additional.originalType = 'sheetsChart';
+        additional.contentUrl = [src.sheetsChart.contentUrl];
+    }
+    pageElement['additional'] = additional;
+    return pageElement;
+}
+
 function objRec(dst, src, prefix, dict) {
     if (typeof src !== 'object' || src === null) {
         return src;
     }
 
     if (Array.isArray(src)) {
-        // do smth else
         dst = [];
         let field = prefix + '.0';
         if (REQ_FIELDS.includes(field)) {
             for (let obj of src) {
-                dst.push(objRec({}, obj, field, dict));
+                if (prefix.endsWith('pageElements')) {
+                    let pageElement = objRec({}, obj, field, dict);
+                    pageElement = calculateAdditional(pageElement, obj);
+                    dst.push(pageElement);
+                }
+                else {
+                    dst.push(objRec({}, obj, field, dict));
+                }
             }
         }
         return dst;
@@ -144,28 +236,23 @@ function objRec(dst, src, prefix, dict) {
                 }
             }
         }
+        else if (type === 'link') {
+            dst['hasLink'] = !isEmpty(src[type]);
+        }
+        else if (type === 'startConnection') {
+            if (dst['hasConnection'] === undefined) {
+                dst['hasConnection'] = false;
+            }
+            dst['hasConnection'] |= !isEmpty(src[type]);
+        }
+        else if (type === 'endConnection') {
+            if (dst['hasConnection'] === undefined) {
+                dst['hasConnection'] = false;
+            }
+            dst['hasConnection'] |= !isEmpty(src[type]);
+        }
     }
     return dst;
-}
-
-/**
- * TODO: Calculate Additional Information
- * @param {Object} page 
- * @returns 
- */
-
-function calculateAdditional(page) {
-    // additional: {
-    //     isReplacable: true, // not line;
-    //     //union start
-    //     originalType: '', // elementGroup, shape, image, video, line, table, sheetsChart, wordArt
-    //     amountText: 0,
-    //     mainColors: {
-    //         colors: [opaqueColorTemplate],
-    //     },
-    //     //union end
-    // }
-    return page;
 }
 
 function extractPage(pages, dict) {
@@ -174,7 +261,6 @@ function extractPage(pages, dict) {
     for (let page of pages) {
         template = objRec(template, page, '', dict);
     }
-    template = calculateAdditional(template);
     return template;
 }
 
@@ -227,8 +313,6 @@ function initializePage(pageId, source, dict, index) {
 
     let pageTemplate = extractPage(pages.reverse(), source);
     
-    console.log(pages, pageTemplate);
-
     let requests = [];
     
     return requests;
