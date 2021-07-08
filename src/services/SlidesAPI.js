@@ -28,20 +28,34 @@ export function listSlides(presentationId) {
     });
 }
 
-function findByObjectId(list, objectId) {
-    for (let obj of list) {
-        if (obj.objectId === objectId) {
-            return obj;
+function updateObjectId(src) {
+    if (typeof src !== 'object' || src === null) {
+        return {};
+    }
+    let ret = {};
+    if (Array.isArray(src)) {
+        for (let obj of src) {
+           ret = Object.assign(ret, updateObjectId(obj));
         }
     }
-    return null;
+    else {
+        if (src.hasOwnProperty('objectId')) {
+            ret[src.objectId] = src;
+        }
+        for (let field in src) {
+            if (src.hasOwnProperty(field)) {
+                ret = Object.assign(ret, updateObjectId(src[field]));
+            }
+        }
+    }
+    return ret;
 }
 
 function isEmpty(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
-function objRec(dst, src, prefix = '') {
+function objRec(dst, src, prefix, dict) {
     if (typeof src !== 'object' || src === null) {
         return src;
     }
@@ -52,8 +66,20 @@ function objRec(dst, src, prefix = '') {
         let field = prefix + '.0';
         if (REQ_FIELDS.includes(field)) {
             for (let obj of src) {
-                dst.push(objRec({}, obj, field));
+                dst.push(objRec({}, obj, field, dict));
             }
+        }
+        return dst;
+    }
+
+    if (prefix.endsWith('lists') || prefix.endsWith('key.nestingLevel')) {
+        // dictionary
+        let field = prefix + '.key';
+        for (let type in src) {
+            if (dst[type] === undefined) {
+                dst[type] = {};
+            }
+            dst[type] = objRec(dst[type], src[type], field, dict);
         }
         return dst;
     }
@@ -63,8 +89,22 @@ function objRec(dst, src, prefix = '') {
             if (src[type] === 'INHERIT') {
                 return dst;
             }
+            break;
         }
     }
+
+    for (let type in src) {
+        if (type === 'placeholder') {
+            if (src[type].hasOwnProperty('parentObjectId')
+                && dict.hasOwnProperty(src[type].parentObjectId)
+            ) {
+                let parentObject = dict[src[type].parentObjectId];
+                dst = objRec(dst, parentObject, prefix, dict);
+            }
+            break;
+        }
+    }
+
     for (let type in src) {
         if (type === 'propertyState') {
             continue;
@@ -76,7 +116,7 @@ function objRec(dst, src, prefix = '') {
             if (type === 'children') {
                 field = '.pageElements';
             }
-            dst[type] = objRec(dst[type], src[type], field);
+            dst[type] = objRec(dst[type], src[type], field, dict);
         }
         else if (type === 'video') {
             if (src[type].hasOwnProperty('videoProperties')) {
@@ -87,7 +127,7 @@ function objRec(dst, src, prefix = '') {
                     dst[actType] = {};
                 if (dst[actType][chField] === undefined)
                     dst[actType][chField] = {};
-                dst[actType][chField] = objRec(dst[actType][chField], src[type]['videoProperties'], field);    
+                dst[actType][chField] = objRec(dst[actType][chField], src[type]['videoProperties'], field, dict);    
             }
         }
         else if (type === 'sheetsChart') {
@@ -100,84 +140,12 @@ function objRec(dst, src, prefix = '') {
                         dst[actType] = {};
                     if (dst[actType][chField] === undefined)
                         dst[actType][chField] = {};
-                    dst[actType][chField] = objRec(dst[actType][chField], src[type]['sheetsChartProperties']['chartImageProperties'], field);        
+                    dst[actType][chField] = objRec(dst[actType][chField], src[type]['sheetsChartProperties']['chartImageProperties'], field, dict);        
                 }
             }
         }
     }
     return dst;
-}
-
-function extractPageBackgroundFill(page, layout, master) {
-    let rgbColorTemplate = {
-        red: 0, // <= 1.0
-        green: 0, // <= 1.0
-        blue: 0, // <= 1.0
-    };
-
-    let dimensionTemplate = {
-        magnitude: 0,
-        unit: 'EMU',
-    };
-
-    let sizeTemplate = {
-        width: dimensionTemplate,
-        height: dimensionTemplate,
-    };
-
-    let opaqueColorTemplate = {
-        rgbColor: rgbColorTemplate,
-        themeColor: 'THEME_COLOR_TYPE_UNSPECIFIED',
-    };
-    let solidFillTemplate = {
-        color: opaqueColorTemplate,
-        alpha: 1.0,
-    };
-    let pageBackgroundFill = {
-        solidFill: solidFillTemplate,
-        stretchedPictureFill: {
-            contentUrl: '',
-            size: sizeTemplate,
-        }
-    }
-
-    if (page.propertyState === 'NO_RENDER') {
-        return pageBackgroundFill;
-    }
-
-    pageBackgroundFill = objRec(pageBackgroundFill, master);
-    pageBackgroundFill = objRec(pageBackgroundFill, layout);
-    pageBackgroundFill = objRec(pageBackgroundFill, page);
-    return pageBackgroundFill;
-}
-
-function extractColorScheme(page, layout, master) {
-    let colorsDict = {};
-    if (master !== undefined && master.colors !== undefined && master.colors.length > 0) {
-        for (let themeColorPair of master.colors) {
-            colorsDict[themeColorPair.type] = themeColorPair.color;
-        }
-    }
-    if (layout !== undefined && layout.colors !== undefined && layout.colors.length > 0) {
-        for (let themeColorPair of layout.colors) {
-            colorsDict[themeColorPair.type] = themeColorPair.color;
-        }
-    }
-    if (page !== undefined && page.colors !== undefined && page.colors.length > 0) {
-        for (let themeColorPair of page.colors) {
-            colorsDict[themeColorPair.type] = themeColorPair.color;
-        }
-    }
-    let colorScheme = {
-        colors: [],
-    }
-    for (let type in colorsDict) {
-        colorScheme.colors.push({
-            type: type,
-            color: colorsDict[type],
-        });
-    }
-    return colorScheme;
 }
 
 /**
@@ -200,16 +168,17 @@ function calculateAdditional(page) {
     return page;
 }
 
-function extractPage(pages) {
+function extractPage(pages, dict) {
     let template = {};
+
     for (let page of pages) {
-        template = objRec(template, page, '');
+        template = objRec(template, page, '', dict);
     }
     template = calculateAdditional(template);
     return template;
 }
 
-function initializePage(pageId, source, index) {
+function initializePage(pageId, source, dict, index) {
     let pages = [];
     if (source === undefined) {
         return {};
@@ -223,8 +192,9 @@ function initializePage(pageId, source, index) {
     if (Array.isArray(source.layouts) 
         && pages[0].hasOwnProperty('slideProperties') 
         && pages[0]['slideProperties'].hasOwnProperty('layoutObjectId')
+        && dict.hasOwnProperty(source.layouts, pages[0].slideProperties.layoutObjectId)
     ) {
-        let layout = findByObjectId(source.layouts, pages[0].slideProperties.layoutObjectId);
+        let layout = dict[pages[0].slideProperties.layoutObjectId];
         if (layout != null) {
             pages.push(layout);
         }
@@ -232,32 +202,34 @@ function initializePage(pageId, source, index) {
     if (Array.isArray(source.masters) 
         && pages[0].hasOwnProperty('slideProperties') 
         && pages[0]['slideProperties'].hasOwnProperty('masterObjectId')
+        && dict.hasOwnProperty(source.layouts, pages[0].slideProperties.masterObjectId)
     ) {
         if (pages.length > 1) {
             if (pages[1].hasOwnProperty('layoutProperties') 
                 && pages[1]['layoutProperties'].hasOwnProperty('masterObjectId')
+                && dict.hasOwnProperty(source.layouts, pages[1].layoutProperties.masterObjectId)
             ) {
                 if (pages[0].slideProperties.masterObjectId !== pages[1].layoutProperties.masterObjectId) {
-                    let masterLayout = findByObjectId(source.masters, pages[1].layoutProperties.masterObjectId);
+                    let masterLayout = dict[pages[1].layoutProperties.masterObjectId];
                     if (masterLayout != null) {
                         pages.push(masterLayout);
                     }
                 }
             }
         }
-        let master = findByObjectId(source.masters, pages[0].slideProperties.masterObjectId);
+        let master = dict[pages[0].slideProperties.masterObjectId];
         if (master != null) {
             pages.push(master);
         }
     }
     
-    let pageTemplate = extractPage(pages);
 
-    console.log(pageTemplate);
+
+    let pageTemplate = extractPage(pages.reverse(), source);
+    
+    console.log(pages, pageTemplate);
+
     let requests = [];
-    
-    
-    
     
     return requests;
 }
@@ -270,19 +242,20 @@ function initializePage(pageId, source, index) {
  */
 
 export async function extract(forId) {
-    const initializeSlide = (pageId, source, index) => {
+    const initializeSlide = (pageId, source, dict, index) => {
         let requests = [];
         
-        requests.concat(initializePage(pageId, source, index));
+        requests.concat(initializePage(pageId, source, dict, index));
         
         return requests;
     }
 
     const initializePresentation = (resolve, source, id) => {
         console.log(source);
+        let dict = updateObjectId(source);
         //Extract the Template From `source`
         let titlePageId = 'p';
-        let requests = initializeSlide(titlePageId, source, 0);
+        let requests = initializeSlide(titlePageId, source, dict, 0);
         
         for (let index = 1; index < source.slides.length; index++) {
             let pageId = random(); 
@@ -292,7 +265,7 @@ export async function extract(forId) {
                     insertionIndex: index.toString(),
                 },
             });
-            requests = requests.concat(initializeSlide(pageId, source, index));
+            requests = requests.concat(initializeSlide(pageId, source, dict, index));
         }
         gapi.client.slides.presentations.batchUpdate({
             presentationId: id,
