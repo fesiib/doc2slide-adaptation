@@ -1,4 +1,5 @@
-import {gapi} from 'gapi-script';
+import { gapi } from 'gapi-script';
+import { appendPre } from './GoogleAPI';
 
 const FOLDER_ID = '1-CAXsYgbb2lgdQuMN7EHrZdVgzsn6yhD';
 const FILE_TYPE = 'application/vnd.google-apps.presentation';
@@ -19,5 +20,23 @@ export function parsePresentations(callback) {
                 callback(file.name, file.id);
             }
         }
+    });
+}
+
+const TEMPLATES_FOLDER_ID = '1Njrblq2ifh7iKWkNwCM5uvhtue_8o5Qj';
+
+export function createPresentation(title, callback) {
+    let presentationMetaData = {
+        name: title,
+        parents: [TEMPLATES_FOLDER_ID],
+        mimeType: FILE_TYPE,
+    };
+    gapi.client.drive.files.create({
+        resource: presentationMetaData,
+        fields: 'id',
+    }).then(function(response) {
+        callback(response.result.id);
+    }, function(response) {
+        appendPre('Error in createPresentation: ' + response.result.error.message);
     });
 }
