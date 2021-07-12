@@ -272,12 +272,14 @@ function assignElementProperties(pageObjectId, size, transform) {
     }
     if (size !== undefined) {
         if (!size.width.hasOwnProperty('magnitude')) {
-            size.width.magnitude = 1;
+            size.width.magnitude = 10000;
             size.width.unit = 'EMU';
+            console.log("width = 0");
         }
         if (!size.height.hasOwnProperty('magnitude')) {
-            size.height.magnitude = 1;
+            size.height.magnitude = 10000;
             size.height.unit = 'EMU';
+            console.log("height = 0");
         }
         ret['size'] = size;
     }
@@ -289,6 +291,7 @@ function assignElementProperties(pageObjectId, size, transform) {
 
 function getPageElementRequests(pageId, pageElement, suffix) {
     let objectId = random();
+    let validObjectId = false;
     let requests = [];
     let request = {
         objectId,
@@ -300,7 +303,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
         //         let num_pageElement = 0;
         //         let childrenObjectIds = [];
         //         for (let obj of pageElement.elementGroup.children) {
-        //             let result = getPageElementRequests(pageId, obj, suffix + (num_pageElement.toString()));
+        //             let result = getPageElementRequests(pageId, obj, suffix + '_' + (num_pageElement.toString()));
         //             requests = requests.concat(result.requests);
         //             let hasRequest = false;
         //             for (let r of requests) {
@@ -324,6 +327,54 @@ function getPageElementRequests(pageId, pageElement, suffix) {
         //         }
         //     }
         //     break;
+        
+        case 'elementGroup':
+            console.log(pageElement.size, pageElement.transform);
+            if (Array.isArray(pageElement.elementGroup.children)) {
+                let num_pageElement = 0;
+                let childrenObjectIds = [];
+                for (let obj of pageElement.elementGroup.children) {
+                    let result = getPageElementRequests(pageId, obj, suffix + '_' + (num_pageElement.toString()));
+                    requests = requests.concat(result.requests);
+                    if (result.validObjectId) {
+                        childrenObjectIds.push(result.objectId);
+                        num_pageElement++;
+                    }
+                }
+                if (childrenObjectIds.length > 1) {
+                    requests.push({
+                        groupObjects: {
+                            groupObjectId: objectId,
+                            childrenObjectIds,
+                        }
+                    });
+                    validObjectId = true;
+                    if (pageElement.transform !== undefined) {
+                        requests.push({
+                            updatePageElementTransform: {
+                                objectId,
+                                transform: pageElement.transform,
+                                applyMode: 'ABSOLUTE',
+                            }
+                        });
+                    }
+                }
+                else {
+                    for (let ch of childrenObjectIds) {
+                        if (pageElement.transform !== undefined) {
+                            requests.push({
+                                updatePageElementTransform: {
+                                    objectId: ch,
+                                    transform: pageElement.transform,
+                                    applyMode: 'RELATIVE',
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            break;
+        
         case 'shape':
             request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
             
@@ -336,6 +387,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             requests.push({
                 createShape: request
             });
+            validObjectId = true;
 
             if (pageElement.additional.text.length > 0) {
                 /// TEXT FORMAT: TEXT_BOX_{NUMBER}
@@ -440,6 +492,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             requests.push({
                 createImage: request
             });
+            validObjectId = true;
             if (pageElement.image.hasOwnProperty('imageProperties')) {
                 let fields = objRecTraverse(pageElement.image.imageProperties, '');
                 if (fields.length > 0) {
@@ -470,6 +523,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             requests.push({
                 createLine: request
             });
+            validObjectId = true;
             if (pageElement.line.hasOwnProperty('lineProperties')) {
                 let fields = objRecTraverse(pageElement.line.lineProperties, '');
                 if (fields.length > 0) {
@@ -488,7 +542,8 @@ function getPageElementRequests(pageId, pageElement, suffix) {
     }
     return {
         requests,
-        objectId
+        objectId,
+        validObjectId,
     };
 }
 
