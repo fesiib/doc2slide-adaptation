@@ -193,8 +193,6 @@ export const REQ_FIELDS = [
     ".pageElements.0.shape.shapeProperties.outline.weight.unit",
     ".pageElements.0.shape.shapeProperties.outline.dashStyle",
     ".pageElements.0.shape.shapeProperties.contentAlignment",
-    ".pageElements.0.shape.shapeProperties.autofit",
-    ".pageElements.0.shape.shapeProperties.autofit.autofitType",
     ".pageElements.0.shape.placeholder",
     ".pageElements.0.shape.placeholder.type",
     ".pageElements.0.shape.placeholder.index",
