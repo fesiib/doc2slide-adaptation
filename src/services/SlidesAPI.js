@@ -298,82 +298,53 @@ function getPageElementRequests(pageId, pageElement, suffix) {
         elementProperties: {},
     };
     switch (pageElement.additional.originalType) {
+        
         // case 'elementGroup':
+        //     console.log(pageElement.size, pageElement.transform);
         //     if (Array.isArray(pageElement.elementGroup.children)) {
         //         let num_pageElement = 0;
         //         let childrenObjectIds = [];
         //         for (let obj of pageElement.elementGroup.children) {
         //             let result = getPageElementRequests(pageId, obj, suffix + '_' + (num_pageElement.toString()));
         //             requests = requests.concat(result.requests);
-        //             let hasRequest = false;
-        //             for (let r of requests) {
-        //                 if (r.objectId === result.objectId) {
-        //                     hasRequest = true;
-        //                     break;
-        //                 }
-        //             }
-        //             if (hasRequest) {
+        //             if (result.validObjectId) {
         //                 childrenObjectIds.push(result.objectId);
         //                 num_pageElement++;
         //             }
         //         }
-        //         if (childrenObjectIds.length > 0) {
+        //         if (childrenObjectIds.length > 1) {
         //             requests.push({
         //                 groupObjects: {
         //                     groupObjectId: objectId,
         //                     childrenObjectIds,
         //                 }
         //             });
+        //             validObjectId = true;
+        //             if (pageElement.transform !== undefined) {
+        //                 requests.push({
+        //                     updatePageElementTransform: {
+        //                         objectId,
+        //                         transform: pageElement.transform,
+        //                         applyMode: 'ABSOLUTE',
+        //                     }
+        //                 });
+        //             }
+        //         }
+        //         else {
+        //             for (let ch of childrenObjectIds) {
+        //                 if (pageElement.transform !== undefined) {
+        //                     requests.push({
+        //                         updatePageElementTransform: {
+        //                             objectId: ch,
+        //                             transform: pageElement.transform,
+        //                             applyMode: 'RELATIVE',
+        //                         }
+        //                     });
+        //                 }
+        //             }
         //         }
         //     }
         //     break;
-        
-        case 'elementGroup':
-            console.log(pageElement.size, pageElement.transform);
-            if (Array.isArray(pageElement.elementGroup.children)) {
-                let num_pageElement = 0;
-                let childrenObjectIds = [];
-                for (let obj of pageElement.elementGroup.children) {
-                    let result = getPageElementRequests(pageId, obj, suffix + '_' + (num_pageElement.toString()));
-                    requests = requests.concat(result.requests);
-                    if (result.validObjectId) {
-                        childrenObjectIds.push(result.objectId);
-                        num_pageElement++;
-                    }
-                }
-                if (childrenObjectIds.length > 1) {
-                    requests.push({
-                        groupObjects: {
-                            groupObjectId: objectId,
-                            childrenObjectIds,
-                        }
-                    });
-                    validObjectId = true;
-                    if (pageElement.transform !== undefined) {
-                        requests.push({
-                            updatePageElementTransform: {
-                                objectId,
-                                transform: pageElement.transform,
-                                applyMode: 'ABSOLUTE',
-                            }
-                        });
-                    }
-                }
-                else {
-                    for (let ch of childrenObjectIds) {
-                        if (pageElement.transform !== undefined) {
-                            requests.push({
-                                updatePageElementTransform: {
-                                    objectId: ch,
-                                    transform: pageElement.transform,
-                                    applyMode: 'RELATIVE',
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-            break;
         
         case 'shape':
             request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
@@ -416,7 +387,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
                                         textRange: {
                                             type: 'ALL',
                                         },
-                                        fields: fields.join(" "),
+                                        fields: fields.join(),
                                     }
                                 });
                             }
@@ -436,7 +407,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
                                         textRange: {
                                             type: 'ALL',
                                         },
-                                        fields: fields.join(" "),
+                                        fields: fields.join(),
                                     }
                                 });
                             }
@@ -456,7 +427,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
                                         textRange: {
                                             type: 'ALL',
                                         },
-                                        fields: fields.join(" "),
+                                        fields: fields.join(),
                                     }
                                 });
                             }
@@ -467,12 +438,13 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             }
             if (pageElement.shape.hasOwnProperty('shapeProperties')) {
                 let fields = objRecTraverse(pageElement.shape.shapeProperties);
+                console.log(fields, pageElement.shape.shapeProperties);
                 if (fields.length > 0) {
                     requests.push({
                         updateShapeProperties: {
                             objectId,
                             shapeProperties: pageElement.shape.shapeProperties,
-                            fields: fields.join(" "),
+                            fields: fields.join(),
                         }
                     });
                 }
@@ -495,12 +467,13 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             validObjectId = true;
             if (pageElement.image.hasOwnProperty('imageProperties')) {
                 let fields = objRecTraverse(pageElement.image.imageProperties, '');
+                console.log(fields, pageElement.image.imageProperties);
                 if (fields.length > 0) {
                     requests.push({
                         updateImageProperties: {
                             objectId,
                             imageProperties: pageElement.image.imageProperties,
-                            fields: fields.join(" "),
+                            fields: fields.join(),
                         }
                     });
                 }
@@ -531,7 +504,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
                         updateLineProperties: {
                             objectId,
                             lineProperties: pageElement.line.lineProperties,
-                            fields: fields.join(" "),
+                            fields: fields.join(),
                         }
                     });
                 }
@@ -607,7 +580,7 @@ function initializePage(pageId, source, dict, index) {
     //     //         updatePageProperties: {
     //     //             objectId,
     //     //             pageProperties: pageTemplate.pageProperties,
-    //     //             fields: fields.join(" "),
+    //     //             fields: fields.join(),
     //     //         }
     //     //     });
     //     // }

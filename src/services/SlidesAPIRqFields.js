@@ -283,7 +283,10 @@ const CUSTOM_FIELDS = [
 
 export function objRecTraverse(obj, prefix = '') {
     if (typeof obj !== 'object' || obj === null) {
-        return [];
+        if (prefix === '') {
+            return [];
+        }
+        return [prefix];
     }
     let fields = [];
     for (let field in obj) {
