@@ -284,22 +284,34 @@ const CUSTOM_FIELDS = [
 export function objRecTraverse(obj, prefix = '') {
     if (typeof obj !== 'object' || obj === null) {
         if (prefix === '') {
-            return [];
+            return {
+                fields: [],
+                dst: obj,
+            };
         }
-        return [prefix];
+        return {
+            fields: [prefix],
+            dst: obj,
+        };
     }
     let fields = [];
+    let dst = {};
     for (let field in obj) {
-        if (CUSTOM_FIELDS.hasOwnProperty(field)) {
+        if (CUSTOM_FIELDS.includes(field)) {
             continue;
         }
         let field_txt = prefix + '.' + field;
         if (prefix === '') {
             field_txt = field;
         }
-        fields = fields.concat(objRecTraverse(obj[field], field_txt));
+        let result = objRecTraverse(obj[field], field_txt);
+        fields = fields.concat(result.fields);
+        dst[field] = result.dst;
     }
-    return fields;
+    return {
+        fields,
+        dst
+    };
 }
 
 export function parse() {
