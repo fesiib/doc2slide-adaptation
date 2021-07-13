@@ -2,7 +2,7 @@ import { v4 as random} from 'uuid';
 
 import { objRecTraverse } from './SlidesAPIRqFields';
 import { extractPage } from './extractSlide';
-import { tryAddNewTemplate } from './processSlide';
+import Templates from './Templates';
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
@@ -362,35 +362,33 @@ export function initializePresentation(source) {
     console.log(source);
     let dict = updateObjectId(source);
 
-    let templates = [];
+    let templates = new Templates(source.pageSize);
 
     //Extract Layouts from `source`
     for (let layout of source.layouts) {
         let page = extractPage(dict, layout);
-        templates.push({
-            pageId: random(),
-            page: page,
-            weight: 1,
-            originalId: layout.objectId,
-        });
+        templates.addDefault(random(), layout.objectId, page);
     }
 
     //Extract the Template From `source`
     let titlePage = extractPage(dict, source.slides[0]);
-    templates = tryAddNewTemplate(templates, random(), titlePage, 2);
+    
+    templates.addCustom(random(), '0', titlePage);
     
     for (let index = 1; index < source.slides.length; index++) {
         let page = extractPage(dict, source.slides[index]);
-        templates = tryAddNewTemplate(templates, random(), page, 2);
+        templates.addCustom(random(), index.toString(), page);
     }
 
     console.log(templates);
 
     let requests = [];
-    for (let template of templates) {
+    for (let template of templates.getTemplates()) {
         let pageId = template.pageId;
         let page = template.page;
         let weight = template.weight;
+        let originalId = template.originalId;
+
         requests.push({
             createSlide: {
                 objectId: pageId,
@@ -400,8 +398,10 @@ export function initializePresentation(source) {
     
         if (weight === 1) {
             ///layout
-            let originalId = template.originalId;
             requests = requests.concat(addTextBox(pageId, "Layout: " + originalId));
+        }
+        else {
+            requests = requests.concat(addTextBox(pageId, "Page: " + originalId));    
         }
     }
     return requests;
