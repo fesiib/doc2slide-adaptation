@@ -325,7 +325,7 @@ function initializePage(pageId, pageTemplate) {
     return requests;
 }
 
-export function initializePresentation(resolve, source, id) {
+export function initializePresentation(source) {
     console.log(source);
     let dict = updateObjectId(source);
 

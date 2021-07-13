@@ -45,7 +45,7 @@ export async function extract(forId) {
                 if (id === undefined) {
                     throw Error('Could not create Presentation');
                 }
-                let requests = initializePresentation(resolve, response.result, id);
+                let requests = initializePresentation(response.result);
                 gapi.client.slides.presentations.batchUpdate({
                     presentationId: id,
                     requests: requests,
