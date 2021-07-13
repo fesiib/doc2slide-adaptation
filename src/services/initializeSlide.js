@@ -6,6 +6,39 @@ import { tryAddNewTemplate } from './processSlide';
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
+function addTextBox(pageId, text) {
+    let requests = [];
+    
+    let shapeId = random();
+    
+    requests.push({
+        createShape: {
+            objectId: shapeId,
+            elementProperties: {
+                pageObjectId: pageId,
+                size: {
+                    width: {
+                        magnitude: 500,
+                        unit: 'PT',
+                    },
+                    height: {
+                        magnitude: 40,
+                        unit: 'PT',
+                    },
+                },
+            },
+            shapeType: 'TEXT_BOX',
+        }
+    });
+    requests.push({
+        insertText: {
+            objectId: shapeId,
+            text: text,
+        }
+    });
+    return requests;
+}
+
 function updateObjectId(src) {
     if (typeof src !== 'object' || src === null) {
         return {};
@@ -333,10 +366,12 @@ export function initializePresentation(source) {
 
     //Extract Layouts from `source`
     for (let layout of source.layouts) {
+        let page = extractPage(dict, layout);
         templates.push({
             pageId: random(),
-            page: extractPage(dict, layout),
+            page: page,
             weight: 1,
+            originalId: layout.objectId,
         });
     }
 
@@ -362,6 +397,12 @@ export function initializePresentation(source) {
             },
         });
         requests = requests.concat(initializePage(pageId, page));
+    
+        if (weight === 1) {
+            ///layout
+            let originalId = template.originalId;
+            requests = requests.concat(addTextBox(pageId, "Layout: " + originalId));
+        }
     }
     return requests;
 }
