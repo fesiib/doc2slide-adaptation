@@ -308,7 +308,7 @@ export function objRecTraverse(obj, prefix = '') {
     }
     return {
         fields,
-        dst
+        dst,
     };
 }
 

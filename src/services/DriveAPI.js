@@ -31,7 +31,7 @@ export function createPresentation(title, callback) {
         parents: [TEMPLATES_FOLDER_ID],
         mimeType: FILE_TYPE,
     };
-    callback('faskldjlaksd');
+    //callback('faskldjlaksd');
     gapi.client.drive.files.create({
         resource: presentationMetaData,
         fields: 'id',

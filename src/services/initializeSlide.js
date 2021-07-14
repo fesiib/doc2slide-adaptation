@@ -66,22 +66,17 @@ function assignElementProperties(pageObjectId, size, transform) {
     let ret = {
         pageObjectId,
     }
-    if (size !== undefined) {
-        if (!size.width.hasOwnProperty('magnitude')) {
-            size.width.magnitude = 10000;
-            size.width.unit = 'EMU';
-            console.log("width = 0");
-        }
-        if (!size.height.hasOwnProperty('magnitude')) {
-            size.height.magnitude = 10000;
-            size.height.unit = 'EMU';
-            console.log("height = 0");
-        }
-        ret['size'] = size;
+    if (size === undefined || transform === undefined) {
+        throw Error('no size or transform', size, transform);
     }
-    if (transform !== undefined) {
-        ret['transform'] = transform;
+    if (!size.width.hasOwnProperty('magnitude')) {
+        throw Error('no width');
     }
+    if (!size.height.hasOwnProperty('magnitude')) {
+        throw Error('no height');
+    }
+    ret.size = JSON.parse(JSON.stringify(size));
+    ret.transform = { ...transform };
     return ret;
 }
 
@@ -141,15 +136,14 @@ function getPageElementRequests(pageId, pageElement, suffix) {
         //         }
         //     }
         //     break;
-        
+        case 'elementGroup':
         case 'shape':
             request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
-            
             if (pageElement.shape.hasOwnProperty('shapeType')) {
-                request['shapeType'] = pageElement.shapeType;
+                request.shapeType = pageElement.shapeType;
             }
             if (request.shapeType === undefined) {
-                request['shapeType'] = 'RECTANGLE';
+                request.shapeType = 'RECTANGLE';
             }
             requests.push({
                 createShape: request
@@ -364,11 +358,11 @@ export function initializePresentation(source) {
 
     let templates = new Templates(source.pageSize);
 
-    //Extract Layouts from `source`
-    for (let layout of source.layouts) {
-        let page = extractPage(dict, layout);
-        templates.addDefault(random(), layout.objectId, page);
-    }
+    // //Extract Layouts from `source`
+    // for (let layout of source.layouts) {
+    //     let page = extractPage(dict, layout);
+    //     templates.addDefault(random(), layout.objectId, page);
+    // }
 
     //Extract the Template From `source`
     let titlePage = extractPage(dict, source.slides[0]);
