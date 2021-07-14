@@ -5,6 +5,8 @@ const PT = 12700;
 
 const EMU = 1;
 
+const SMALL_ELEMENT_AREA_PERCENTAGE = 3;
+
 const DEFAULT_SIZE = {
     width: {
         magnitude: 0,
@@ -140,6 +142,7 @@ function getPageElementType(element) {
 }
 
 function toLines(layout) {
+    return [];
     let lines = [];
 
     let horPts = [];
@@ -185,15 +188,15 @@ function toLines(layout) {
 
     let open = 0;
     for (let e of horPts) {
-        if (e.type === 1) {
-            open -= 1;
-        }
-        else {
-            open += 1;
-        }
-        if (open === 0) {
-            continue;
-        }
+        // if (e.type === 1) {
+        //     open -= 1;
+        // }
+        // else {
+        //     open += 1;
+        // }
+        // if (open === 0) {
+        //     continue;
+        // }
         let color = {
             rgbColor: {
                 red: 1,
@@ -257,15 +260,15 @@ function toLines(layout) {
 
     open = 0;
     for (let e of verPts) {
-        if (e.type === 1) {
-            open -= 1;
-        }
-        else {
-            open += 1;
-        }
-        if (open === 0) {
-            continue;
-        }
+        // if (e.type === 1) {
+        //     open -= 1;
+        // }
+        // else {
+        //     open += 1;
+        // }
+        // if (open === 0) {
+        //     continue;
+        // }
         let color = {
             rgbColor: {
                 red: 1,
@@ -327,6 +330,17 @@ function toLines(layout) {
         });
     }
     return lines;
+}
+
+function isSmall(rectangle, pageSize) {
+    let total = pageSize.width * pageSize.height;
+    let width = rectangle.finishX - rectangle.startX;
+    let height = rectangle.finishY - rectangle.startY;
+    let area = width * height;
+    if (area / total * 100 < SMALL_ELEMENT_AREA_PERCENTAGE) {
+        return true;
+    }
+    return false;
 }
 
 class Templates {
@@ -425,8 +439,6 @@ class Templates {
 
     __add(layout, pageId, originalId, page, weight) {
 
-        page = this.sanitizePage(page);
-
         page.pageElements = page.pageElements.concat(toLines(layout));
 
         this.__templates.push({
@@ -441,6 +453,8 @@ class Templates {
     }
 
     addCustom(pageId, originalId, page) {
+        page = this.sanitizePage(page);
+
         if (this.__getComplexity(page) <= 0.5) {
             let layout = this.__getLayout(page);
             this.__add(layout, pageId, originalId, page, 2);
@@ -456,7 +470,7 @@ class Templates {
         return this.__templates;
     }
 
-    __transformElementGroups(pageElements) {
+    __transformElementGroups(pageElements, method = 'extract') {
         let newPageElements = [];
         for (let pageElement of pageElements) {
             if (!pageElement.hasOwnProperty('elementGroup')) {
@@ -466,168 +480,112 @@ class Templates {
             if (!pageElement.elementGroup.hasOwnProperty('children')) {
                 continue;
             }
-            let children = this.__transformElementGroups(pageElement.elementGroup.children);
+            let children = this.__transformElementGroups(pageElement.elementGroup.children, method);
             if (children.length === 0) {
                 continue;
             }
-            
-            let result = this.__getCoveringRectangle(children);
-
-            if (pageElement.hasOwnProperty('transform')) {
-                result.transform = multiplyTransforms(pageElement.transform, result.transform);
-            }
-
-            if (result.size.height.magnitude === 0 || result.size.width.magnitude === 0) {
-                continue;
-            }
-            if (result.size.height.magnitude < 0 || result.size.width.magnitude < 0) {
-                console.log(result, pageElements, this.__getLayout({pageElements: children}));
-            }
-
-
-            let newPageElement = {
-                additional: pageElement.additional,
-                size: result.size,
-                transform: result.transform,
-                shape: {
-                    shapeType: 'RECTANGLE',
-                    shapeProperties: {
-                        outline: {
-                            outlineFill: {
-                                solidFill: {
-                                    color: {
-                                        rgbColor: {
-                                            red: 0,
-                                            green: 1,
-                                            blue: 0,
-                                        },
-                                    },
-                                    alpha: 1,
-                                }
-                            },
-                            weight: {
-                                magnitude: PT,
-                                unit: 'EMU',
-                            },
-                            dashStyle: 'DOT',
-                        }
-                    },
-                    placeholder: {
-                        type: 'OBJECT',
+            if (method === 'extract') {
+                for (let ch of children) {
+                    if (pageElement.hasOwnProperty('transform')) {
+                        let transform = { ...ch.transform };
+                        transform = multiplyTransforms(pageElement.transform, transform);
+                        ch.transform = { ...transform };
+                    }
+                    if (ch.hasOwnProperty('image')) {
+                        newPageElements.push(ch);
+                    }
+                    else if (ch.hasOwnProperty('shape') 
+                        && ch.shape.hasOwnProperty('shapeType') 
+                        && ch.shape.shapeType === 'TEXT_BOX'
+                    ) {
+                        newPageElements.push(ch);
                     }
                 }
             }
-            
-            newPageElements.push(newPageElement);
+            else if (method === 'merge') {
+                let result = this.__getCoveringRectangle(children);
+
+                if (pageElement.hasOwnProperty('transform')) {
+                    result.transform = multiplyTransforms(pageElement.transform, result.transform);
+                }
+
+                if (result.size.height.magnitude === 0 || result.size.width.magnitude === 0) {
+                    continue;
+                }
+                if (result.size.height.magnitude < 0 || result.size.width.magnitude < 0) {
+                    console.log(result, pageElements, this.__getLayout({pageElements: children}));
+                }
+
+
+                let newPageElement = {
+                    additional: pageElement.additional,
+                    size: result.size,
+                    transform: result.transform,
+                    shape: {
+                        shapeType: 'RECTANGLE',
+                        shapeProperties: {
+                            outline: {
+                                outlineFill: {
+                                    solidFill: {
+                                        color: {
+                                            rgbColor: {
+                                                red: 0,
+                                                green: 1,
+                                                blue: 0,
+                                            },
+                                        },
+                                        alpha: 1,
+                                    }
+                                },
+                                weight: {
+                                    magnitude: PT,
+                                    unit: 'EMU',
+                                },
+                                dashStyle: 'DOT',
+                            }
+                        },
+                        placeholder: {
+                            type: 'OBJECT',
+                        }
+                    }
+                }
+                
+                newPageElements.push(newPageElement);
+            }
         }
         return newPageElements;
     }
     
-    __mergeSmallElements(page) {
+    __mergeIntersectingElements(page) {
+
         return page;
     }
     
     __deleteSmallElements(page) {
+        let layout = this.__getLayout(page);
+        let n = layout.pageElements.length;
+        if (n !== page.pageElements.length) {
+            throw Error("issue with layout and page");
+        }
+        let newPageElements = [];
+        for (let i = 0; i < n; i++) {
+            let rectangle = layout.pageElements[i];
+            let pageElement = page.pageElements[i];
+            if (isSmall(rectangle, layout.pageSize)) {
+                continue;
+            }
+            newPageElements.push(pageElement);
+        }
+        page.pageElements = newPageElements;
         return page;
     }
 
     sanitizePage(page) {
         page.pageElements = this.__transformElementGroups(page.pageElements);
-        page = this.__mergeSmallElements(page);
         page = this.__deleteSmallElements(page);
+        page = this.__mergeIntersectingElements(page);
         return page;
     }
 }
 
 export default Templates;
-
-/**
- * {
-  "createShape": {
-    "objectId": "9f1eae2a-4501-410a-aca9-c2cf69197c0e",
-    "elementProperties": {
-      "pageObjectId": "550a9847-26a3-46b1-ac3d-15c705b5af8f",
-      "size": {
-        "width": {
-          "magnitude": 6845931.665,
-          "unit": "EMU"
-        },
-        "height": {
-          "magnitude": 6058938.7825,
-          "unit": "EMU"
-        }
-      },
-      "transform": {
-        "scaleX": 0.9548,
-        "scaleY": 0.9548,
-        "translateX": 717473.419651,
-        "translateY": 588354.976263,
-        "unit": "EMU",
-        "shearX": 0,
-        "shearY": 0
-      }
-    },
-    "shapeType": "RECTANGLE"
-  }
-}
-
-{
-  "createShape": {
-    "objectId": "3c6654ed-2313-4b93-9067-369877f343c2",
-    "elementProperties": {
-      "pageObjectId": "550a9847-26a3-46b1-ac3d-15c705b5af8f",
-      "size": {
-        "width": {
-          "magnitude": 6845931.665,
-          "unit": "EMU"
-        },
-        "height": {
-          "magnitude": 6058938.7825,
-          "unit": "EMU"
-        }
-      },
-      "transform": {
-        "scaleX": 1,
-        "scaleY": 1,
-        "translateX": 5266783.6975,
-        "translateY": 773321.9425,
-        "unit": "EMU",
-        "shearX": 0,
-        "shearY": 0
-      }
-    },
-    "shapeType": "RECTANGLE"
-  }
-}
- */
-
-/*
-{
-  "createShape": {
-    "objectId": "a1578be1-9b00-4c92-b897-d0dacf7a43a9",
-    "elementProperties": {
-      "pageObjectId": "2858f0d4-8547-4a80-b4ff-fcbe3791a480",
-      "size": {
-        "width": {
-          "magnitude": 125332.80249999929,
-          "unit": "EMU"
-        },
-        "height": {
-          "magnitude": 1148318.4525000004,
-          "unit": "EMU"
-        }
-      },
-      "transform": {
-        "scaleX": 1,
-        "scaleY": 1,
-        "translateX": 5266783.6975,
-        "translateY": 773321.9425,
-        "unit": "EMU",
-        "shearX": 0,
-        "shearY": 0
-      }
-    },
-    "shapeType": "RECTANGLE"
-  }
-}
-*/
