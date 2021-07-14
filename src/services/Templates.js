@@ -35,6 +35,19 @@ function solve(prevLayouts, layout, weight) {
     }
 }
 
+function correctDimension(dimension) {
+    if (dimension === undefined) {
+        return false;
+    }
+    if (!dimension.hasOwnProperty('magnitude')) {
+        return false;
+    }
+    if (!dimension.hasOwnProperty('unit')) {
+        return false;
+    }
+    return true;
+}
+
 function consumeDimension(dimension) {
     if (dimension === undefined) {
         throw Error('no dimension');
@@ -142,7 +155,6 @@ function getPageElementType(element) {
 }
 
 function toLines(layout) {
-    return [];
     let lines = [];
 
     let horPts = [];
@@ -343,6 +355,49 @@ function isSmall(rectangle, pageSize) {
     return false;
 }
 
+function sanitizePageElements(pageElements) {
+    let newPageElements = [];
+    for (let pageElement of pageElements) {
+        let type = getPageElementType(pageElement);
+        if (type === 'unspecified') {
+            continue;
+        }
+        if (type === 'elementGroup') {
+            if (pageElement.elementGroup.hasOwnProperty('children') && Array.isArray(pageElement.elementGroup.children)) {
+                pageElement.elementGroup.children = sanitizePageElements(pageElement.elementGroup.children);
+            }
+            else {
+                continue;
+            }
+        }
+        else if (type === 'image' || type === 'shape') {
+            if (!pageElement.hasOwnProperty('size'))
+                continue;
+            if (!pageElement.size.hasOwnProperty('width') || !pageElement.size.hasOwnProperty('height')) {
+                continue;
+            }
+            if (!correctDimension(pageElement.size.width) || !correctDimension(pageElement.size.height)) {
+                continue;
+            }
+            if (pageElement.size.width.magnitude === 0 || pageElement.size.height.magnitude === 0) {
+                continue;
+            }
+        }
+        else {
+            if (!pageElement.hasOwnProperty('size'))
+                continue;
+            if (!pageElement.size.hasOwnProperty('width') && !pageElement.size.hasOwnProperty('height')) {
+                continue;
+            }
+            if (!correctDimension(pageElement.size.width) && !correctDimension(pageElement.size.height)) {
+                continue;
+            }
+        }
+        newPageElements.push(pageElement);
+    }
+    return newPageElements;
+}
+
 class Templates {
     constructor(pageSize) {
         this.pageSize = consumeSize(pageSize);
@@ -453,6 +508,12 @@ class Templates {
     }
 
     addCustom(pageId, originalId, page) {
+        if (Array.isArray(page.pageElements)) {
+            page.pageElements = sanitizePageElements(page.pageElements);
+        }
+        else {
+            console.log('no page elements', page);
+        }
         page = this.sanitizePage(page);
 
         if (this.__getComplexity(page) <= 0.5) {
@@ -462,6 +523,12 @@ class Templates {
     }
 
     addDefault(pageId, originalId, page) {
+        if (Array.isArray(page.pageElements)) {
+            page.pageElements = sanitizePageElements(page.pageElements);
+        }
+        else {
+            console.log('no page elements', page);
+        }
         let layout = this.__getLayout(page);
         this.__add(layout, pageId, originalId, page, 1);
     }
@@ -581,6 +648,7 @@ class Templates {
     }
 
     sanitizePage(page) {
+
         page.pageElements = this.__transformElementGroups(page.pageElements);
         page = this.__deleteSmallElements(page);
         page = this.__mergeIntersectingElements(page);

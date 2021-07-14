@@ -277,7 +277,7 @@ const CUSTOM_FIELDS = [
     'hasLink',
     'hasConnection',
     'additional',
-]
+];
 
 export function objRecTraverse(obj, prefix = '') {
     if (typeof obj !== 'object' || obj === null) {

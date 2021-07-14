@@ -213,6 +213,35 @@ function objRec(dst, src, prefix, dict) {
                 }
             }
         }
+        // else if (type === 'table') {
+        //     dst.shape = {
+        //         shapeType: 'TEXT_BOX',
+        //         shapeProperties: {
+        //             outline: {
+        //                 outlineFill: {
+        //                     solidFill: {
+        //                         color: {
+        //                             rgbColor: {
+        //                                 red: 0,
+        //                                 green: 1,
+        //                                 blue: 0,
+        //                             },
+        //                         },
+        //                         alpha: 1,
+        //                     }
+        //                 },
+        //                 weight: {
+        //                     magnitude: 12700,
+        //                     unit: 'EMU',
+        //                 },
+        //                 dashStyle: 'DOT',
+        //             }
+        //         },
+        //         placeholder: {
+        //             type: 'OBJECT',
+        //         },
+        //     };
+        // }
         else if (type === 'link') {
             dst['hasLink'] = !isEmpty(src[type]);
         }
