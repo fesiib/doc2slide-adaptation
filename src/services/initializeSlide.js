@@ -148,12 +148,21 @@ function getPageElementRequests(pageId, pageElement, suffix) {
 
         if (pageElement.additional.text.length > 0) {
             /// TEXT FORMAT: TEXT_BOX_{NUMBER}
-            let text = "TEXT_BOX_" + suffix;
+            let textJSON = {};
+            if (pageElement.shape.hasOwnProperty('placeholder')
+                && pageElement.shape.placeholder.hasOwnProperty('type')) {
+                textJSON.placeholderType = pageElement.shape.placeholder.type;
+            }
+            else {
+                textJSON.placeholderType = 'BODY';
+            }
             
+            textJSON.additional = pageElement.additional;
+
             requests.push({
                 insertText: {
                     objectId,
-                    text: text,
+                    text: JSON.stringify(textJSON),
                 }
             });
 

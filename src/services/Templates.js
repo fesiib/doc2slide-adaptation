@@ -155,6 +155,7 @@ function getPageElementType(element) {
 }
 
 function toLines(layout) {
+    return [];
     let lines = [];
 
     let horPts = [];

@@ -1,5 +1,6 @@
 import {gapi} from 'gapi-script';
 import { createPresentation } from './DriveAPI';
+import { fitToAllSlides } from './fitContent';
 
 import {appendPre} from './GoogleAPI';
 import {initializePresentation} from './initializeSlide';
@@ -58,6 +59,28 @@ export async function extract(forId) {
             });
         }, function(response) {
             appendPre('Error in extract: ' + response.result.error.message);
+        });
+    });
+}
+
+export async function tryFitContent(content, presentationId) {
+    return new Promise((resolve, reject) => {
+        gapi.client.slides.presentations.get({
+            presentationId,
+        }).then(function(response) {
+            let requests = fitToAllSlides(content, response.result);
+
+            console.log(requests);
+            gapi.client.slides.presentations.batchUpdate({
+                presentationId,
+                requests,
+            }).then((response) => {
+                resolve(true);
+            }, (response) => {
+                reject(response.result.error.messge);
+            });
+        }, function(response) {
+            appendPre('Fit Error' + response.result.error.message);
         });
     });
 }
