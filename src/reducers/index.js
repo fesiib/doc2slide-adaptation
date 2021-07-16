@@ -2,11 +2,13 @@ import {combineReducers} from 'redux';
 //import user from "./user";
 
 import presentationFiles from './presentationFiles';
+import content from './content';
 
 const RESET_APP = "RESET_APP";
 
 const appReducer = combineReducers({
-    presentationFiles
+    presentationFiles,
+    content,
 });
 
 export const resetApp = () => ({
