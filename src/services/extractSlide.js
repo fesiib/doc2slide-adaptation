@@ -113,6 +113,7 @@ function isEmpty(obj) {
         additional.contentUrl = [src.sheetsChart.contentUrl];
     }
     pageElement['additional'] = additional;
+    pageElement.objectId = random();
     return pageElement;
 }
 
@@ -292,10 +293,6 @@ function mergePages(pages, dict) {
 
     for (let page of pages) {
         template = objRec(template, page, '', dict);
-    }
-
-    for (let pageElement of template.pageElements) {
-        pageElement.objectId = random();
     }
     return template;
 }

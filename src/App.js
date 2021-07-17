@@ -9,7 +9,7 @@ import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates } from
 import { extract } from './services/SlidesAPI';
 import { Container, Col, Row } from 'reactstrap';
 import { appendPre } from './services/GoogleAPI';
-import InputContent, { loadingActivate, loadingDeactivate } from './components/InputContent';
+import InputContent, { EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
 import { useEffect } from 'react';
 
 function App() {
@@ -40,7 +40,7 @@ function App() {
 			let templates = result.templates;
 			_extractedTemplates(forId, templates);
 			_extractedFile(forId, presentationId);
-			loadingDeactivate();
+			loadingDeactivate(EXTRACTING);
 		}).catch((error) => {
 			_extractedFile(forId, ERROR_SIGNAL);
 			appendPre('Error: ' + error);
@@ -54,10 +54,10 @@ function App() {
 			|| selectedExt === undefined 
 			|| selectedExt === ''
 		) {
-			loadingActivate();
+			loadingActivate(EXTRACTING);
 		}
 		else {
-			loadingDeactivate();
+			loadingDeactivate(EXTRACTING);
 		}
 	});
 	return (

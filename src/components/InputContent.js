@@ -10,19 +10,40 @@ import { processContent } from '../services/TextAPI';
 import { tryFitContent } from '../services/SlidesAPI';
 import { appendPre } from '../services/GoogleAPI';
 
+export const EXTRACTING = 'extracting';
+export const COMPILING = 'compiling';
 
-export function loadingActivate() {
+let loadingState = {
+    extracting: false, 
+    compiling: false,
+};
+
+export function loadingActivate(process) {
+    if (process === EXTRACTING) {
+        loadingState.extracting = true;
+    }
+    if (process === COMPILING) {
+        loadingState.compiling = true;
+    }
     let divForm = document.getElementById('contentForm');
     let divLoading = document.getElementById('loading');
     divForm.setAttribute('style', 'display: none');
     divLoading.setAttribute('style', 'display: block');
 }
 
-export function loadingDeactivate() {
-    let divForm = document.getElementById('contentForm');
-    let divLoading = document.getElementById('loading');
-    divForm.setAttribute('style', 'display: block');
-    divLoading.setAttribute('style', 'display: none');
+export function loadingDeactivate(process) {
+    if (process === EXTRACTING) {
+        loadingState.extracting = false;
+    }
+    if (process === COMPILING) {
+        loadingState.compiling = false;
+    }
+    if (!loadingState.extracting && !loadingState.compiling) {
+        let divForm = document.getElementById('contentForm');
+        let divLoading = document.getElementById('loading');
+        divForm.setAttribute('style', 'display: block');
+        divLoading.setAttribute('style', 'display: none');
+    }
 }
 
 function InputContent(props) {
@@ -68,16 +89,16 @@ function InputContent(props) {
     const submitHandler = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        loadingActivate();
+        loadingActivate(COMPILING);
         processContent(header, body).then((response) => {
             _compileContent(response.header, response.body);
             tryFitContent({header, body}, selectedExt, templates[selected]).then((result) => {
 				console.log("Result: ", result);
-                loadingDeactivate();
+                loadingDeactivate(COMPILING);
                 forceUpdateSelected();
 			}).catch((error) => {
 				appendPre('Couldn`t fit content: ' + error);
-                loadingDeactivate();
+                loadingDeactivate(COMPILING);
 			});
         });
     };
