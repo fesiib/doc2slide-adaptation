@@ -1,8 +1,6 @@
 import { v4 as random} from 'uuid';
 
 import { objRecTraverse } from './SlidesAPIRqFields';
-import { extractPage } from './extractSlide';
-import Templates from './Templates';
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
@@ -39,29 +37,6 @@ function addTextBox(pageId, text) {
     return requests;
 }
 
-function updateObjectId(src) {
-    if (typeof src !== 'object' || src === null) {
-        return {};
-    }
-    let ret = {};
-    if (Array.isArray(src)) {
-        for (let obj of src) {
-           ret = Object.assign(ret, updateObjectId(obj));
-        }
-    }
-    else {
-        if (src.hasOwnProperty('objectId')) {
-            ret[src.objectId] = src;
-        }
-        for (let field in src) {
-            if (src.hasOwnProperty(field)) {
-                ret = Object.assign(ret, updateObjectId(src[field]));
-            }
-        }
-    }
-    return ret;
-}
-
 function assignElementProperties(pageObjectId, size, transform) {
     let ret = {
         pageObjectId,
@@ -81,7 +56,7 @@ function assignElementProperties(pageObjectId, size, transform) {
 }
 
 function getPageElementRequests(pageId, pageElement, suffix) {
-    let objectId = random();
+    let objectId = pageElement.objectId;
     let validObjectId = false;
     let requests = [];
     let request = {
@@ -359,30 +334,7 @@ function initializePage(pageId, pageTemplate) {
     return requests;
 }
 
-export function initializePresentation(source) {
-    console.log(source);
-    let dict = updateObjectId(source);
-
-    let templates = new Templates(source.pageSize);
-
-    //Extract Layouts from `source`
-    for (let layout of source.layouts) {
-        let page = extractPage(dict, layout);
-        templates.addDefault(random(), layout.objectId, page);
-    }
-
-    //Extract the Template From `source`
-    let titlePage = extractPage(dict, source.slides[0]);
-    
-    templates.addCustom(random(), '0', titlePage);
-    
-    for (let index = 1; index < source.slides.length; index++) {
-        let page = extractPage(dict, source.slides[index]);
-        templates.addCustom(random(), index.toString(), page);
-    }
-
-    console.log(templates);
-
+export function initializePresentation(templates) {
     let requests = [];
     for (let template of templates.getTemplates()) {
         let pageId = template.pageId;

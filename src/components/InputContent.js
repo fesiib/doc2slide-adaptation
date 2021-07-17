@@ -30,7 +30,7 @@ function InputContent(props) {
 
     const { header, body, headerResult, bodyResult } = useSelector(state => state.content);
 
-    const { selected, selectedExt } = useSelector(state => state.presentationFiles);
+    const { selected, selectedExt, templates } = useSelector(state => state.presentationFiles);
 
     const _changeHeaderContent = (text) => {
         dispatch(changeHeaderContent({
@@ -71,7 +71,7 @@ function InputContent(props) {
         loadingActivate();
         processContent(header, body).then((response) => {
             _compileContent(response.header, response.body);
-            tryFitContent({header, body}, selectedExt).then((result) => {
+            tryFitContent({header, body}, selectedExt, templates[selected]).then((result) => {
 				console.log("Result: ", result);
                 loadingDeactivate();
                 forceUpdateSelected();

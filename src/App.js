@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Authorize from './components/Authorize';
 import FileManager from './components/FileManager';
 import ViewPresentation from './components/ViewPresentation';
-import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
+import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates } from './reducers/presentationFiles';
 import { extract } from './services/SlidesAPI';
 import { Container, Col, Row } from 'reactstrap';
 import { appendPre } from './services/GoogleAPI';
@@ -24,12 +24,21 @@ function App() {
 		}));
 	}
 
+	const _extractedTemplates = (forId, templates) => {
+		dispatch(extractedTemplates({
+			forId,
+			templates,
+		}));
+	}
+
 	let _selectedExt = selectedExt;
 	if (selectedExt === CREATION_SIGNAL) {
 		_selectedExt = '';
 		let forId = selected;
 		extract(forId).then((result) => {
-			let presentationId = result;
+			let presentationId = result.id;
+			let templates = result.templates;
+			_extractedTemplates(forId, templates);
 			_extractedFile(forId, presentationId);
 			loadingDeactivate();
 		}).catch((error) => {
@@ -39,7 +48,6 @@ function App() {
 	}
 	
 	useEffect(() => {
-		console.log(selectedExt, selected);
 		if (selectedExt === CREATION_SIGNAL
 			|| selectedExt === ERROR_SIGNAL 
 			|| selectedExt === null 

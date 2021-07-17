@@ -535,7 +535,7 @@ class Templates {
     }
 
     getTemplates() {
-        return this.__templates;
+        return this.__templates.slice(0);
     }
 
     __transformElementGroups(pageElements, method = 'extract') {

@@ -1,10 +1,14 @@
-export function fitToAllSlides(content, source) {
-    if (!Array.isArray(source.slides)) {
-        throw Error('There is no slides');
+import Templates from './Templates';
+
+export function fitToAllSlides(content, templates) {
+    console.log(content, templates);
+    if (!(templates instanceof Templates)) {
+        throw Error(templates + 'not instance of Templates');
     }
+
     let globalRequests = [];
-    for (let slide of source.slides) {
-        console.log(slide);
+    for (let template of templates.getTemplates()) {
+        let slide = template.page;
         if (!Array.isArray(slide.pageElements)) {
             continue;
         }
@@ -13,45 +17,31 @@ export function fitToAllSlides(content, source) {
         let imageElements = [];
 
         for (let pageElement of slide.pageElements) {
-            if (!pageElement.hasOwnProperty('shape')
-                || !pageElement.shape.hasOwnProperty('text')
-                || !Array.isArray(pageElement.shape.text.textElements)
-                || pageElement.shape.text.textElements.length !== 2
-            ) {
-                continue;
-            }
-            console.log(pageElement.shape.text.textElements[1].textRun.content);
-            let info = {};
-            try {
-                info = JSON.parse(pageElement.shape.text.textElements[1].textRun.content);
-            }
-            catch(error) {
-                console.log(error);
-                continue;
-            }
-            if (info.hasOwnProperty('additional')) {
-                globalRequests.push({
-                    deleteText: {
-                        objectId: pageElement.objectId,
-                        textRange: {
-                            type: 'ALL',
+            if (pageElement.hasOwnProperty('additional')) {
+                if (pageElement.hasOwnProperty('shape')) {
+                    globalRequests.push({
+                        insertText: {
+                            objectId: pageElement.objectId,
+                            text: 'TEXT_BOX',
+                            insertionIndex: 0,
                         }
-                    }
-                });
-                if (Array.isArray(info.additional.text)
-                    && info.additional.text.length > 0    
-                ) {
-                    // TEXT BOX, 
-                    let shape = { ...info };
+                    });
+                    
+                    globalRequests.push({
+                        deleteText: {
+                            objectId: pageElement.objectId,
+                            textRange: {
+                                type: 'ALL',
+                            }
+                        }
+                    });
+                    let shape = JSON.parse(JSON.stringify(pageElement.shape));
                     shape.mapped = false;
                     shape.objectId = pageElement.objectId;
                     shapeElements.push(shape);
-    
                 }
-                else if (Array.isArray(info.additional.contentUrl)
-                    && info.additional.contentUrl.length > 0
-                ) {
-                    let image = { ...info };
+                else if (pageElement.hasOwnProperty('image')) {
+                    let image = JSON.parse(JSON.stringify(pageElement.image));
                     image.mapped = false;
                     image.objectId = pageElement.objectId;
                     imageElements.push(image);
@@ -62,11 +52,13 @@ export function fitToAllSlides(content, source) {
         // Fit the header
         if (content.hasOwnProperty('header') && content.header.length > 0) {
             for (let shape of shapeElements) {
-                if (shape.hasOwnProperty('placeholderType')   ) {
-                    if (shape.placeholderType === 'HEADER'
-                        || shape.placeholderType === 'TITLE'
-                        || shape.placeholderType === 'CENTERED_TITLE'
-                        || shape.placeholderType === 'SUBTITLE'
+                if (shape.hasOwnProperty('placeholder')
+                    && shape.placeholder.hasOwnProperty('type')
+                ) {
+                    if (shape.placeholder.type === 'HEADER'
+                        || shape.placeholder.type === 'TITLE'
+                        || shape.placeholder.type === 'CENTERED_TITLE'
+                        || shape.placeholder.type === 'SUBTITLE'
                     ) {
                         shape.taken = true;
                         globalRequests.push({
@@ -92,10 +84,12 @@ export function fitToAllSlides(content, source) {
                 if (contentId >= content.body.length) {
                     break;
                 }
-                if (shape.hasOwnProperty('placeholderType')) {
-                    if (shape.placeholderType === 'BODY'
-                        || shape.placeholderType === 'FOOTER'
-                        || shape.placeholderType === 'OBJECT'
+                if (shape.hasOwnProperty('placeholder')
+                    && shape.placeholder.hasOwnProperty('type')
+                ) {
+                    if (shape.placeholder.type === 'BODY'
+                        || shape.placeholder.type === 'FOOTER'
+                        || shape.placeholder.type === 'OBJECT'
                     ) {
                         globalRequests.push({
                             insertText: {

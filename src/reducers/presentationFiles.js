@@ -2,6 +2,7 @@ const ADD_FILE = "ADD_FILE";
 const REMOVE_FILE = "REMOVE_FILE";
 const SELECT_FILE = "SELECT_FILE";
 const EXTRACTED_FILE = "EXTRACTED_FILE";
+const EXTRACTED_TEMPLATES = "EXTRACTED_TEMPLATES";
 
 export const CREATION_SIGNAL = "signal";
 export const ERROR_SIGNAL = "error";
@@ -26,12 +27,18 @@ export const extractedFile = (payload) => ({
     payload,
 });
 
+export const extractedTemplates = (payload) => ({
+    type: EXTRACTED_TEMPLATES,
+    payload,
+});
+
 const initialState = {
     cnt: 0,
     files: [],
     filesExt: {},
     selected: null,
     selectedExt: null,
+    templates: {},
 };
 
 const presentationFiles = (state = initialState, action) => {
@@ -108,6 +115,16 @@ const presentationFiles = (state = initialState, action) => {
                     filesExt: filesExt,
                 }
             }
+        }
+        case EXTRACTED_TEMPLATES: {
+            let templates = action.payload.templates;
+            let forId = action.payload.forId;
+            let newTemplates = { ...state.templates };
+            newTemplates[forId] = templates;
+            return {
+                ...state,
+                templates: newTemplates,
+            };
         }
         default:
                 return state;

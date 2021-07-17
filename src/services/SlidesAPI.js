@@ -4,6 +4,7 @@ import { fitToAllSlides } from './fitContent';
 
 import {appendPre} from './GoogleAPI';
 import {initializePresentation} from './initializeSlide';
+import { extractTemplates } from './extractSlide';
 
 /**
  * Prints the number of slides and elements in a sample presentation:
@@ -46,7 +47,8 @@ export async function extract(forId) {
                 if (id === undefined) {
                     throw Error('Could not create Presentation');
                 }
-                let requests = initializePresentation(response.result);
+                let templates = extractTemplates(response.result)
+                let requests = initializePresentation(templates);
                 // reject('Testing');
                 // return;
                 console.log(requests);
@@ -54,7 +56,10 @@ export async function extract(forId) {
                     presentationId: id,
                     requests: requests,
                 }).then((response) => {
-                    resolve(id);
+                    resolve({
+                        id,
+                        templates,
+                    });
                 });
             });
         }, function(response) {
@@ -63,24 +68,18 @@ export async function extract(forId) {
     });
 }
 
-export async function tryFitContent(content, presentationId) {
+export async function tryFitContent(content, presentationId, templates) {
     return new Promise((resolve, reject) => {
-        gapi.client.slides.presentations.get({
-            presentationId,
-        }).then(function(response) {
-            let requests = fitToAllSlides(content, response.result);
+        let requests = fitToAllSlides(content, templates);
 
-            console.log(requests);
-            gapi.client.slides.presentations.batchUpdate({
-                presentationId,
-                requests,
-            }).then((response) => {
-                resolve(true);
-            }, (response) => {
-                reject(response.result.error.messge);
-            });
-        }, function(response) {
-            appendPre('Fit Error' + response.result.error.message);
+        console.log(requests);
+        gapi.client.slides.presentations.batchUpdate({
+            presentationId,
+            requests,
+        }).then((response) => {
+            resolve(true);
+        }, (response) => {
+            reject(response.result.error.messge);
         });
     });
 }
