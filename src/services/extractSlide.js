@@ -145,13 +145,14 @@ function objRec(dst, src, prefix, dict) {
                             ) {
                                 nestingLevel = obj.paragraphMarker.bullet.nestingLevel;
                             }
-                            parent['paragraphMarker'] = prev_dst[nestingLevel * 2].paragraphMarker;
+                            parent['paragraphMarker'] = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2].paragraphMarker));
                         }
                         else {
-                            parent['textRun'] = prev_dst[nestingLevel * 2 + 1].textRun;
+                            parent['textRun'] = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2 + 1].textRun));
                         }
                     }
-                    dst.push(objRec(parent, obj, field, dict));
+                    let dstElement = objRec(parent, obj, field, dict);
+                    dst.push(dstElement);
                 }
                 else {
                     dst.push(objRec({}, obj, field, dict));
@@ -329,11 +330,11 @@ export function extractTemplates(source) {
 
     let templates = new Templates(source.pageSize);
 
-    //Extract Layouts from `source`
-    for (let layout of source.layouts) {
-        let page = extractPage(dict, layout);
-        templates.addDefault(random(), layout.objectId, page);
-    }
+    // //Extract Layouts from `source`
+    // for (let layout of source.layouts) {
+    //     let page = extractPage(dict, layout);
+    //     templates.addDefault(random(), layout.objectId, page);
+    // }
 
     //Extract the Template From `source`
     let titlePage = extractPage(dict, source.slides[0]);
