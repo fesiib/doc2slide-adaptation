@@ -1,6 +1,50 @@
 import Templates from './Templates';
 
-export function fitToAllSlides(content, templates) {
+const HEADER_PLACEHOLDER = [
+    'HEADER',
+    'TITLE',
+    'CENTERED_TITLE',
+    'SUBTITLE',
+];
+
+const BODY_PLACEHOLDER = [
+    'BODY',
+    'FOOTER',
+    'OBJECT',
+];
+
+function extractShapeElements(slide) {
+    let shapeElements = [];
+    for (let pageElement of slide.pageElements) {
+        if (pageElement.hasOwnProperty('additional')) {
+            if (pageElement.hasOwnProperty('shape')) {
+                let copyPageElement = { ...pageElement };
+                copyPageElement.mapped = false;
+                shapeElements.push(copyPageElement);
+            }
+        }
+    }
+    return shapeElements;
+}
+
+function extractImageElements(slide) {
+    let imageElements = [];
+    for (let pageElement of slide.pageElements) {
+        if (pageElement.hasOwnProperty('additional')) {
+            if (pageElement.hasOwnProperty('image')) {
+                let copyPageElement = { ...pageElement };
+                copyPageElement.mapped = false;
+                imageElements.push(copyPageElement);
+            }
+        }
+    }
+    return imageElements;
+}
+
+
+
+
+export function fitToAllSlides_simple(content, templates) {
     console.log(content, templates);
     if (!(templates instanceof Templates)) {
         throw Error(templates + 'not instance of Templates');
@@ -13,57 +57,39 @@ export function fitToAllSlides(content, templates) {
             continue;
         }
 
-        let shapeElements = [];
-        let imageElements = [];
+        let shapeElements = extractShapeElements(slide);
 
-        for (let pageElement of slide.pageElements) {
-            if (pageElement.hasOwnProperty('additional')) {
-                if (pageElement.hasOwnProperty('shape')) {
-                    globalRequests.push({
-                        insertText: {
-                            objectId: pageElement.objectId,
-                            text: 'TEXT_BOX',
-                            insertionIndex: 0,
-                        }
-                    });
-                    
-                    globalRequests.push({
-                        deleteText: {
-                            objectId: pageElement.objectId,
-                            textRange: {
-                                type: 'ALL',
-                            }
-                        }
-                    });
-                    let shape = JSON.parse(JSON.stringify(pageElement.shape));
-                    shape.mapped = false;
-                    shape.objectId = pageElement.objectId;
-                    shapeElements.push(shape);
+        for (let pageElement of shapeElements) {
+            globalRequests.push({
+                insertText: {
+                    objectId: pageElement.objectId,
+                    text: 'TEXT_BOX',
+                    insertionIndex: 0,
                 }
-                else if (pageElement.hasOwnProperty('image')) {
-                    let image = JSON.parse(JSON.stringify(pageElement.image));
-                    image.mapped = false;
-                    image.objectId = pageElement.objectId;
-                    imageElements.push(image);
+            });
+            
+            globalRequests.push({
+                deleteText: {
+                    objectId: pageElement.objectId,
+                    textRange: {
+                        type: 'ALL',
+                    }
                 }
-            }
+            });
         }
 
         // Fit the header
         if (content.hasOwnProperty('header') && content.header.length > 0) {
-            for (let shape of shapeElements) {
-                if (shape.hasOwnProperty('placeholder')
-                    && shape.placeholder.hasOwnProperty('type')
+            for (let pageElement of shapeElements) {
+                if (pageElement.shape.hasOwnProperty('placeholder')
+                    && pageElement.shape.placeholder.hasOwnProperty('type')
                 ) {
-                    if (shape.placeholder.type === 'HEADER'
-                        || shape.placeholder.type === 'TITLE'
-                        || shape.placeholder.type === 'CENTERED_TITLE'
-                        || shape.placeholder.type === 'SUBTITLE'
-                    ) {
-                        shape.taken = true;
+                    let type = pageElement.shape.placeholder.type;
+                    if (HEADER_PLACEHOLDER.includes(type)) {
+                        pageElement.mapped = true;
                         globalRequests.push({
                             insertText: {
-                                objectId: shape.objectId,
+                                objectId: pageElement.objectId,
                                 text: content.header,
                                 insertionIndex: 0,
                             }
@@ -77,32 +103,30 @@ export function fitToAllSlides(content, templates) {
         // Fit the content
         if (content.hasOwnProperty('body') && Array.isArray(content.body)) {
             let contentId = 0;
-            for (let shape of shapeElements) {
-                if (shape.taken) {
+            for (let pageElement of shapeElements) {
+                if (pageElement.mapped) {
                     continue;
                 }
                 if (contentId >= content.body.length) {
                     break;
                 }
-                if (shape.hasOwnProperty('placeholder')
-                    && shape.placeholder.hasOwnProperty('type')
+                if (pageElement.shape.hasOwnProperty('placeholder')
+                    && pageElement.shape.placeholder.hasOwnProperty('type')
                 ) {
-                    if (shape.placeholder.type === 'BODY'
-                        || shape.placeholder.type === 'FOOTER'
-                        || shape.placeholder.type === 'OBJECT'
-                    ) {
+                    let type = pageElement.shape.placeholder.type;
+                    if (BODY_PLACEHOLDER.includes(type)) {
                         globalRequests.push({
                             insertText: {
-                                objectId: shape.objectId,
+                                objectId: pageElement.objectId,
                                 text: content.body[contentId],
                                 insertionIndex: 0,
                             }
                         });
                         contentId++;
-                        shape.taken = true;
+                        pageElement.mapped = true;
                     }
                     else {
-                        console.log("Cannot fit to shape: ", shape);
+                        console.log("Cannot fit to shape: ", pageElement);
                     }
                 }
             }

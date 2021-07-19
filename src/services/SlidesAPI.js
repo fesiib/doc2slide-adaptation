@@ -1,9 +1,9 @@
-import {gapi} from 'gapi-script';
+import { gapi } from 'gapi-script';
 import { createPresentation } from './DriveAPI';
-import { fitToAllSlides } from './fitContent';
+import { fitToAllSlides_simple } from './fitContent';
 
-import {appendPre} from './GoogleAPI';
-import {initializePresentation} from './initializeSlide';
+import { appendPre }  from './GoogleAPI';
+import { initializePresentation } from './initializeSlide';
 import { extractTemplates } from './extractSlide';
 
 /**
@@ -70,7 +70,7 @@ export async function extract(forId) {
 
 export async function tryFitContent(content, presentationId, templates) {
     return new Promise((resolve, reject) => {
-        let requests = fitToAllSlides(content, templates);
+        let requests = fitToAllSlides_simple(content, templates);
 
         console.log(requests);
         gapi.client.slides.presentations.batchUpdate({
