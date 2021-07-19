@@ -25,6 +25,8 @@ export const REQ_FIELDS = [
     ".pageElements.0.shape.text",
     ".pageElements.0.shape.text.textElements",
     ".pageElements.0.shape.text.textElements.0",
+    ".pageElements.0.shape.text.textElements.0.startIndex",
+    ".pageElements.0.shape.text.textElements.0.endIndex",
     ".pageElements.0.shape.text.textElements.0.paragraphMarker",
     ".pageElements.0.shape.text.textElements.0.paragraphMarker.style",
     ".pageElements.0.shape.text.textElements.0.paragraphMarker.style.lineSpacing",
@@ -406,6 +408,8 @@ export function parse() {
     };
 
     let textElementTemplate = {
+        startIndex: 0,
+        endIndex: 0,
         //union start
         paragraphMarker: {
             //in case unset inherits from parent.list.nestedLevel[cur_level]
