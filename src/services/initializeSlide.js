@@ -131,13 +131,11 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             else {
                 textJSON.placeholderType = 'BODY';
             }
-            
-            textJSON.additional = pageElement.additional;
 
             requests.push({
                 insertText: {
                     objectId,
-                    text: JSON.stringify(textJSON),
+                    text: textJSON.placeholderType,
                 }
             });
 
