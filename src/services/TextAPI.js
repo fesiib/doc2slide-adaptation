@@ -87,10 +87,7 @@ export async function processContent(headerText, bodyTexts) {
         bodyPromises.push(textTFIDF(text));
     }
     let header = await headerPromise;
-    let body = [];
-    for (let promise of bodyPromises) {
-        body.push(await promise);
-    }
+    let body = await Promise.all(bodyPromises);
     console.log(header, body);
     return {
         header,

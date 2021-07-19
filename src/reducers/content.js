@@ -49,8 +49,8 @@ const content = (state = initialState, action) => {
         case COMPILE: {
             return {
                 ...state,
-                headerResult: action.payload.headerResult.splice(0),
-                bodyResult: action.payload.bodyResult.splice(0),
+                headerResult: action.payload.headerResult.slice(0),
+                bodyResult: action.payload.bodyResult.slice(0),
             };
         }
         case CHANGE_HEADER: {
@@ -60,7 +60,7 @@ const content = (state = initialState, action) => {
             }
         }
         case CHANGE_BODY: {
-            let body = state.body.splice(0);
+            let body = state.body.slice(0);
             body[action.payload.pos] = action.payload.text;
             return {
                 ...state,

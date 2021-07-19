@@ -105,8 +105,8 @@ function InputContent(props) {
 
             tryFitContent(
                 {
-                    header: headerResult,
-                    body: bodyResult
+                    header: response.header,
+                    body: response.body,
                 }, selectedExt, templates[selected], fitToAllSlides_TextShortening
             ).then((result) => {
 				console.log("Result: ", result);
