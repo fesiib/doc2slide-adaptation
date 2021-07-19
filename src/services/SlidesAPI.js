@@ -68,9 +68,9 @@ export async function extract(forId) {
     });
 }
 
-export async function tryFitContent(content, presentationId, templates) {
+export async function tryFitContent(content, presentationId, templates, fitContent) {
     return new Promise((resolve, reject) => {
-        let requests = fitToAllSlides_simple(content, templates);
+        let requests = fitContent(content, templates);
 
         console.log(requests);
         gapi.client.slides.presentations.batchUpdate({
