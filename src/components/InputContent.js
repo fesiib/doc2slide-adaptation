@@ -50,7 +50,7 @@ export function loadingDeactivate(process) {
 function InputContent(props) {
     const dispatch = useDispatch();
 
-    const { header, body, headerResult, bodyResult } = useSelector(state => state.content);
+    const { header, body, headerResult, bodyResult, shouldUpdate } = useSelector(state => state.content);
 
     const { selected, selectedExt, templates } = useSelector(state => state.presentationFiles);
 
@@ -91,7 +91,7 @@ function InputContent(props) {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
-        processContent(header, body).then((response) => {
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate).then((response) => {
             _compileContent(response.header, response.body);
             
             // tryFitContent({header, body}, selectedExt, templates[selected], fitToAllSlides_simple).then((result) => {
@@ -121,14 +121,15 @@ function InputContent(props) {
 
     const renderBodyForm = () => {
         if (Array.isArray(body)) {
-            let result =  body.map((value, idx) => {
+            let result =  body.map((value, idx_0) => {
+                let idx = idx_0 + 1;
                 let id = 'body' + idx.toString();
                 return (
                     <FormGroup key={id}>
-                        <Label for={id}>  </Label>
-                        <Input type="textarea" name={id} id={id} value={body[idx]} 
+                        <Label for={id}> {'Body Text ' + idx.toString()} </Label>
+                        <Input type="textarea" name={id} id={id} value={body[idx_0]} 
                             onChange={(event) => {
-                                _changeBodyContent(event.target.value, idx);
+                                _changeBodyContent(event.target.value, idx_0);
                             }}
                         />
                     </FormGroup>

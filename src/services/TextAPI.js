@@ -80,7 +80,12 @@ export function textAbstract(text) {
     return sendRequest(text, REQUEST_TYPES.abstract);   
 }
 
-export async function processContent(headerText, bodyTexts) {
+export async function processContent(request, possibleResponse, shouldUpdate) {
+    if (!shouldUpdate) {
+        return possibleResponse;
+    }
+    let headerText = request.header;
+    let bodyTexts = request.body;
     let headerPromise = textTFIDF(headerText);
     let bodyPromises = [];
     for (let text of bodyTexts) {

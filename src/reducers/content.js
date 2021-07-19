@@ -38,10 +38,11 @@ export const changeBodyContent = (payload) => ({
 });
 
 const initialState = {
-    header: CONTENT_SIMPLE.header,
-    body: CONTENT_SIMPLE.body,
+    header: CONTENT_COMPLEX.header,
+    body: CONTENT_COMPLEX.body,
     headerResult: [],
     bodyResult: [],
+    shouldUpdate: true,
 };
 
 const content = (state = initialState, action) => {
@@ -51,12 +52,14 @@ const content = (state = initialState, action) => {
                 ...state,
                 headerResult: action.payload.headerResult.slice(0),
                 bodyResult: action.payload.bodyResult.slice(0),
+                shouldUpdate: false,
             };
         }
         case CHANGE_HEADER: {
             return {
                 ...state,
-                header: action.payload.text
+                header: action.payload.text,
+                shouldUpdate: true,
             }
         }
         case CHANGE_BODY: {
@@ -65,6 +68,7 @@ const content = (state = initialState, action) => {
             return {
                 ...state,
                 body,
+                shouldUpdate: true,
             }
         }
         default:

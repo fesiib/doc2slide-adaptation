@@ -1,9 +1,9 @@
 import Templates from './Templates';
 
 const HEADER_PLACEHOLDER = [
-    'HEADER',
-    'TITLE',
     'CENTERED_TITLE',
+    'TITLE',
+    'HEADER',
     'SUBTITLE',
 ];
 
@@ -11,6 +11,26 @@ const BODY_PLACEHOLDER = [
     'BODY',
     'FOOTER',
     'OBJECT',
+];
+
+const NOT_BODY_PLACEHOLDER = [
+    'NONE', // 	Default value, signifies it is not a placeholder.
+    //'BODY', // 	Body text.
+    //'CHART', // 	Chart or graph.
+    //'CLIP_ART', // 	Clip art image.
+    //'CENTERED_TITLE', // 	Title centered.
+    //'DIAGRAM', // 	Diagram.
+    //'DATE_AND_TIME', // 	Date and time.
+    //'FOOTER', // 	Footer text.
+    //'HEADER', // 	Header text.
+    //'MEDIA', // 	Multimedia.
+    //'OBJECT', // 	Any content type.
+    //'PICTURE', // 	Picture.
+    'SLIDE_NUMBER', // 	Number of a slide.
+    //'SUBTITLE', // 	Subtitle.
+    //'TABLE', // 	Table.
+    //'TITLE', // 	Slide title.
+    //'SLIDE_IMAGE', // 	Slide image. 
 ];
 
 function extractShapeElements(slide) {
@@ -39,6 +59,49 @@ function extractImageElements(slide) {
         }
     }
     return imageElements;
+}
+
+function fitSingleText(shortenings, shapeText) {
+    if (!Array.isArray(shapeText.textElements)
+        || shapeText.textElements.length === 0
+    ) {
+        console.log(shapeText);
+        return {
+            success: false,
+        }
+    }
+    let firstParagraphMarker = null;
+    for (let textElement of shapeText.textElements) {
+        if (textElement.hasOwnProperty('paragraphMarker')
+            && textElement.hasOwnProperty('endIndex')
+        ) {
+            firstParagraphMarker = { ...textElement };
+            if (!firstParagraphMarker.hasOwnProperty('startIndex')) {
+                firstParagraphMarker.startIndex = 0;
+            }
+        }
+    }
+
+    if (firstParagraphMarker === null) {
+        console.log(shapeText);
+        return {
+            success: false,
+        }
+    }
+
+    for (let shortening of shortenings) {
+        if (shortening.text.length <= firstParagraphMarker.endIndex) {
+            return {
+                success: true,
+                ...shortening,
+            }
+        }
+    }
+
+    return {
+        success: true,
+        ...shortenings[shortenings.length - 1],
+    };
 }
 
 
@@ -149,6 +212,11 @@ export function fitToAllSlides_TextShortening(content, obj) {
         let shapeElements = extractShapeElements(slide);
 
         for (let pageElement of shapeElements) {
+            if (!pageElement.shape.hasOwnProperty('placeholder')
+                || !pageElement.shape.placeholder.hasOwnProperty('type')
+            ) {
+                console.log('inappropriate shape for header: ', pageElement);
+            }
             globalRequests.push({
                 insertText: {
                     objectId: pageElement.objectId,
@@ -169,53 +237,72 @@ export function fitToAllSlides_TextShortening(content, obj) {
 
         // Fit the header
         if (Array.isArray(content.header)) {
+            let headerPageElement = null;
+            let headerIdx = HEADER_PLACEHOLDER.length;
             for (let pageElement of shapeElements) {
                 if (pageElement.shape.hasOwnProperty('placeholder')
                     && pageElement.shape.placeholder.hasOwnProperty('type')
                 ) {
                     let type = pageElement.shape.placeholder.type;
                     if (HEADER_PLACEHOLDER.includes(type)) {
-                        pageElement.mapped = true;
-                        globalRequests.push({
-                            insertText: {
-                                objectId: pageElement.objectId,
-                                text: content.header[0].text,
-                                insertionIndex: 0,
-                            }
-                        });
-                        break;
+                        let curIdx = HEADER_PLACEHOLDER.findIndex((el) => el === type);
+                        if (headerIdx <= curIdx) {
+                            continue;
+                        }
+                        let result = fitSingleText(content.header, pageElement.shape.text);
+                        if (!result.success) {
+                            continue;
+                        }
+                        headerPageElement = pageElement;
+                        headerIdx = curIdx;
                     }
                 }
+            }
+            if (headerPageElement !== null) {
+                
+                let result = fitSingleText(content.header, headerPageElement.shape.text);
+                headerPageElement.mapped = true;
+                globalRequests.push({
+                    insertText: {
+                        objectId: headerPageElement.objectId,
+                        text: result.text,
+                        insertionIndex: 0,
+                    }
+                });
             }
         }
         
         // Fit the content
         if (Array.isArray(content.body)) {
-            let contentId = 0;
-            for (let pageElement of shapeElements) {
-                if (pageElement.mapped) {
-                    continue;
-                }
-                if (contentId >= content.body.length) {
-                    break;
-                }
-                if (pageElement.shape.hasOwnProperty('placeholder')
-                    && pageElement.shape.placeholder.hasOwnProperty('type')
-                ) {
-                    let type = pageElement.shape.placeholder.type;
-                    if (BODY_PLACEHOLDER.includes(type)) {
+            for (let shortenings of content.body) {
+                for (let pageElement of shapeElements) {
+                    if (pageElement.mapped) {
+                        continue;
+                    }
+                    if (pageElement.shape.hasOwnProperty('placeholder')
+                        && pageElement.shape.placeholder.hasOwnProperty('type')
+                    ) {
+                        let type = pageElement.shape.placeholder.type;
+                        if (NOT_BODY_PLACEHOLDER.includes(type) || HEADER_PLACEHOLDER.includes(type)) {
+                            continue;
+                        }
+                    }
+                    if (pageElement.shape.hasOwnProperty('shapeType')
+                        && pageElement.shape.shapeType === 'TEXT_BOX'
+                    ) {
+                        let result = fitSingleText(shortenings, pageElement.shape.text);
+                        if (!result.success) {
+                            continue;
+                        }
                         globalRequests.push({
                             insertText: {
                                 objectId: pageElement.objectId,
-                                text: content.body[contentId][0].text,
+                                text: result.text,
                                 insertionIndex: 0,
                             }
                         });
-                        contentId++;
                         pageElement.mapped = true;
-                    }
-                    else {
-                        console.log("Cannot fit to shape: ", pageElement);
+                        break;
                     }
                 }
             }
