@@ -9,6 +9,7 @@ import { extractedFile } from '../reducers/presentationFiles';
 import { processContent } from '../services/TextAPI';
 import { tryFitContent } from '../services/SlidesAPI';
 import { appendPre } from '../services/GoogleAPI';
+import { fitToAllSlides_simple, fitToAllSlides_TextShortening } from '../services/fitContent';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';
@@ -92,7 +93,22 @@ function InputContent(props) {
         loadingActivate(COMPILING);
         processContent(header, body).then((response) => {
             _compileContent(response.header, response.body);
-            tryFitContent({header, body}, selectedExt, templates[selected]).then((result) => {
+            
+            // tryFitContent({header, body}, selectedExt, templates[selected], fitToAllSlides_simple).then((result) => {
+			// 	console.log("Result: ", result);
+            //     loadingDeactivate(COMPILING);
+            //     forceUpdateSelected();
+			// }).catch((error) => {
+			// 	appendPre('Couldn`t fit content: ' + error);
+            //     loadingDeactivate(COMPILING);
+			// });
+
+            tryFitContent(
+                {
+                    header: headerResult,
+                    body: bodyResult
+                }, selectedExt, templates[selected], fitToAllSlides_TextShortening
+            ).then((result) => {
 				console.log("Result: ", result);
                 loadingDeactivate(COMPILING);
                 forceUpdateSelected();

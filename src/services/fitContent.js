@@ -135,12 +135,10 @@ export function fitToAllSlides_simple(content, templates) {
     return globalRequests;
 }
 
-export function fitToAllSlides_TextShortening(content, templates) {
+export function fitToAllSlides_TextShortening(content, obj) {
+    let templates = new Templates({ width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
     console.log(content, templates);
-    if (!(templates instanceof Templates)) {
-        throw Error(templates + 'not instance of Templates');
-    }
-
     let globalRequests = [];
     for (let template of templates.getTemplates()) {
         let slide = template.page;
@@ -170,7 +168,7 @@ export function fitToAllSlides_TextShortening(content, templates) {
         }
 
         // Fit the header
-        if (content.hasOwnProperty('header') && content.header.length > 0) {
+        if (Array.isArray(content.header)) {
             for (let pageElement of shapeElements) {
                 if (pageElement.shape.hasOwnProperty('placeholder')
                     && pageElement.shape.placeholder.hasOwnProperty('type')
@@ -181,7 +179,7 @@ export function fitToAllSlides_TextShortening(content, templates) {
                         globalRequests.push({
                             insertText: {
                                 objectId: pageElement.objectId,
-                                text: content.header,
+                                text: content.header[0].text,
                                 insertionIndex: 0,
                             }
                         });
@@ -192,7 +190,7 @@ export function fitToAllSlides_TextShortening(content, templates) {
         }
         
         // Fit the content
-        if (content.hasOwnProperty('body') && Array.isArray(content.body)) {
+        if (Array.isArray(content.body)) {
             let contentId = 0;
             for (let pageElement of shapeElements) {
                 if (pageElement.mapped) {
@@ -209,7 +207,7 @@ export function fitToAllSlides_TextShortening(content, templates) {
                         globalRequests.push({
                             insertText: {
                                 objectId: pageElement.objectId,
-                                text: content.body[contentId],
+                                text: content.body[contentId][0].text,
                                 insertionIndex: 0,
                             }
                         });
