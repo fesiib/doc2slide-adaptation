@@ -2,7 +2,7 @@ const COMPILE = "COMPILE";
 const CHANGE_HEADER = "CHANGE_HEADER";
 const CHANGE_BODY = "CHANGE_BODY";
 
-const CONTENT = {
+const CONTENT_COMPLEX = {
 	header: 'Introduction',
 	body: [
 		'Communication takes place over time, and the presenter’s timed rehearsals, attention to timekeeping, and rhythm of spoken delivery all affect audience perceptions.',
@@ -10,7 +10,17 @@ const CONTENT = {
 		'The activity of preparing and delivering presentations, whether to teach, inform, or persuade, is of critical importance across education, academia, and business.',
 		'Our goal was therefore to uncover the gap between actual presentation practices and the “best practices” advocated in the presentation literature, before designing tools that help presenters to bridge that gap.',
 	],
-}
+};
+
+const CONTENT_SIMPLE = {
+	header: 'Introduction',
+	body: [
+		'Communication takes place over time.',
+		'Presentations are a crucial form of modern communication.',
+		'The activity of preparing and delivering presentations.',
+		'Our goal was therefore to uncover the gap between actual presentation practices.',
+	],
+};
 
 export const compileContent = (payload) => ({
     type: COMPILE,
@@ -28,8 +38,8 @@ export const changeBodyContent = (payload) => ({
 });
 
 const initialState = {
-    header: CONTENT.header,
-    body: CONTENT.body,
+    header: CONTENT_SIMPLE.header,
+    body: CONTENT_SIMPLE.body,
     headerResult: [],
     bodyResult: [],
 };
