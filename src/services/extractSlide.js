@@ -330,11 +330,11 @@ export function extractTemplates(source) {
 
     let templates = new Templates(source.pageSize);
 
-    // //Extract Layouts from `source`
-    // for (let layout of source.layouts) {
-    //     let page = extractPage(dict, layout);
-    //     templates.addDefault(random(), layout.objectId, page);
-    // }
+    //Extract Layouts from `source`
+    for (let layout of source.layouts) {
+        let page = extractPage(dict, layout);
+        templates.addDefault(random(), layout.objectId, page);
+    }
 
     //Extract the Template From `source`
     let titlePage = extractPage(dict, source.slides[0]);
