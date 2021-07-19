@@ -406,6 +406,10 @@ class Templates {
         this.__layouts = [];
     }
 
+    copyInstance(templates) {
+        Object.assign(this, templates);
+    }
+
     __getLayout(page) {
         // in EMU
         let layout = {

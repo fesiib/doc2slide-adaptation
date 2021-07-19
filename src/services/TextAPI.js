@@ -91,8 +91,9 @@ export async function processContent(headerText, bodyTexts) {
     for (let promise of bodyPromises) {
         body.push(await promise);
     }
+    console.log(header, body);
     return {
         header,
         body,
-    }
+    };
 }
