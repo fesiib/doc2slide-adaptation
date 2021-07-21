@@ -29,19 +29,18 @@ export function listSlides(presentationId) {
     });
 }
 
-/**
- * Function that extracts the template and creates slide with the template.
- * 
- * @param {str} forId 
- * @returns 
- */
-
 export async function getPresentation(presentationId) {
     return gapi.client.slides.presentations.get({
         presentationId
     });
 }
 
+/**
+ * Function that extracts the template and creates slide with the template.
+ * 
+ * @param {str} forId 
+ * @returns 
+ */
 export async function extract(forId) {
 
     return new Promise((resolve, reject) => {

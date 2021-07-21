@@ -84,7 +84,10 @@ const presentationFiles = (state = initialState, action) => {
                 selected = null;
                 selectedExt = null;
             }
-            else if (selectedExt === undefined || selectedExt === ERROR_SIGNAL) {
+            else if (selectedExt === undefined 
+                || selectedExt === ERROR_SIGNAL
+                || selectedExt === ''
+            ) {
                 filesExt[selected] = '';
                 selectedExt = CREATION_SIGNAL;
             }

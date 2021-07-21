@@ -35,6 +35,8 @@ function App() {
 	if (selectedExt === CREATION_SIGNAL) {
 		_selectedExt = '';
 		let forId = selected;
+
+		_extractedFile(forId, '');
 		extract(forId).then((result) => {
 			let presentationId = result.id;
 			let templates = result.templates;

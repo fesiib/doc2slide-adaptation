@@ -1,3 +1,5 @@
+import { scoreShapeElements } from './EvaluateAPI';
+import { getFirstParagraphMarker, initializeShapeText } from './initializeSlide';
 import Templates from './Templates';
 
 const HEADER_PLACEHOLDER = [
@@ -40,6 +42,14 @@ function extractShapeElements(slide) {
             if (pageElement.hasOwnProperty('shape')) {
                 let copyPageElement = { ...pageElement };
                 copyPageElement.mapped = false;
+                copyPageElement.mappedContent = {
+                    text: '',
+                    score: {
+                        grammatical: 0,
+                        semantic: 0,
+                        importantWords: 0,
+                    }
+                };
                 shapeElements.push(copyPageElement);
             }
         }
@@ -54,12 +64,20 @@ function extractImageElements(slide) {
             if (pageElement.hasOwnProperty('image')) {
                 let copyPageElement = { ...pageElement };
                 copyPageElement.mapped = false;
+                copyPageElement.mappedContent =  {
+                    text: '',
+                    score: {
+                        grammatical: 0,
+                        semantic: 0,
+                        importantWords: 0,
+                    }
+                };
                 imageElements.push(copyPageElement);
             }
         }
     }
     return imageElements;
-}
+} 
 
 function fitSingleText(content, shapeText, isCustom) {
     let shortenings = content.shortenings;
@@ -72,18 +90,7 @@ function fitSingleText(content, shapeText, isCustom) {
             success: false,
         }
     }
-    let firstParagraphMarker = null;
-    for (let textElement of shapeText.textElements) {
-        if (textElement.hasOwnProperty('paragraphMarker')
-            && textElement.hasOwnProperty('endIndex')
-        ) {
-            firstParagraphMarker = { ...textElement };
-            if (!firstParagraphMarker.hasOwnProperty('startIndex')) {
-                firstParagraphMarker.startIndex = 0;
-            }
-        }
-    }
-
+    let firstParagraphMarker = getFirstParagraphMarker(shapeText);
     if (firstParagraphMarker === null) {
         console.log(shapeText);
         return {
@@ -139,25 +146,6 @@ export function fitToAllSlides_simple(content, templates) {
 
         let shapeElements = extractShapeElements(slide);
 
-        for (let pageElement of shapeElements) {
-            globalRequests.push({
-                insertText: {
-                    objectId: pageElement.objectId,
-                    text: 'TEXT_BOX',
-                    insertionIndex: 0,
-                }
-            });
-            
-            globalRequests.push({
-                deleteText: {
-                    objectId: pageElement.objectId,
-                    textRange: {
-                        type: 'ALL',
-                    }
-                }
-            });
-        }
-
         // Fit the header
         if (content.hasOwnProperty('header') && content.header.length > 0) {
             for (let pageElement of shapeElements) {
@@ -166,14 +154,9 @@ export function fitToAllSlides_simple(content, templates) {
                 ) {
                     let type = pageElement.shape.placeholder.type;
                     if (HEADER_PLACEHOLDER.includes(type)) {
+                        globalRequests = globalRequests.concat(initializeShapeText(pageElement, content.header));
                         pageElement.mapped = true;
-                        globalRequests.push({
-                            insertText: {
-                                objectId: pageElement.objectId,
-                                text: content.header,
-                                insertionIndex: 0,
-                            }
-                        });
+                        pageElement.mappedContent.text = content.header;
                         break;
                     }
                 }
@@ -195,15 +178,10 @@ export function fitToAllSlides_simple(content, templates) {
                 ) {
                     let type = pageElement.shape.placeholder.type;
                     if (BODY_PLACEHOLDER.includes(type)) {
-                        globalRequests.push({
-                            insertText: {
-                                objectId: pageElement.objectId,
-                                text: content.body[contentId],
-                                insertionIndex: 0,
-                            }
-                        });
-                        contentId++;
+                        globalRequests = globalRequests.concat(initializeShapeText(pageElement, content.body[contentId]));
                         pageElement.mapped = true;
+                        pageElement.mappedContent.text = content.body[contentId];
+                        contentId++;
                     }
                     else {
                         console.log("Cannot fit to shape: ", pageElement);
@@ -260,32 +238,12 @@ export function fitToAllSlides_TextShortening(content, obj) {
                 }
             }
             if (headerPageElement !== null) {
-                globalRequests.push({
-                    insertText: {
-                        objectId: headerPageElement.objectId,
-                        text: 'TEXT_BOX',
-                        insertionIndex: 0,
-                    }
-                });
-                
-                globalRequests.push({
-                    deleteText: {
-                        objectId: headerPageElement.objectId,
-                        textRange: {
-                            type: 'ALL',
-                        }
-                    }
-                });
                 let result = fitSingleText(content.header, headerPageElement.shape.text, template.isCustom);
+                globalRequests = globalRequests.concat(initializeShapeText(headerPageElement, result.text));
                 headerPageElement.mapped = true;
-                globalRequests.push({
-                    insertText: {
-                        objectId: headerPageElement.objectId,
-                        text: result.text,
-                        insertionIndex: 0,
-                    }
-                });
-                headerPageElement.mapped = true;
+                headerPageElement.mappedContent.text = result.text;
+                headerPageElement.mappedContent.score = result.score;
+                
             }
         }
         
@@ -306,42 +264,23 @@ export function fitToAllSlides_TextShortening(content, obj) {
                     }
                     if (pageElement.shape.hasOwnProperty('shapeType')
                         && pageElement.shape.shapeType === 'TEXT_BOX'
+                        && pageElement.additional.text.length > 0
                     ) {
                         let result = fitSingleText(bodyContent, pageElement.shape.text, template.isCustom);
                         if (!result.success) {
                             continue;
                         }
-
-                        globalRequests.push({
-                            insertText: {
-                                objectId: pageElement.objectId,
-                                text: 'TEXT_BOX',
-                                insertionIndex: 0,
-                            }
-                        });
-                        
-                        globalRequests.push({
-                            deleteText: {
-                                objectId: pageElement.objectId,
-                                textRange: {
-                                    type: 'ALL',
-                                }
-                            }
-                        });
-                        
-                        globalRequests.push({
-                            insertText: {
-                                objectId: pageElement.objectId,
-                                text: result.text,
-                                insertionIndex: 0,
-                            }
-                        });
+                        globalRequests = globalRequests.concat(initializeShapeText(pageElement, result.text));
                         pageElement.mapped = true;
+                        pageElement.mappedContent.text = result.text;
+                        pageElement.mappedContent.score = result.score;
                         break;
                     }
                 }
             }
         }
+        let score = scoreShapeElements(shapeElements, template);
+        console.log("Score of page: ", template.pageId, score);
     }
     return globalRequests;
 }

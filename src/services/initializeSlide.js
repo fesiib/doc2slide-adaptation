@@ -37,6 +37,119 @@ function addTextBox(pageId, text) {
     return requests;
 }
 
+export function getFirstParagraphMarker(shapeText) {
+    let firstParagraphMarker = null;
+    for (let textElement of shapeText.textElements) {
+        if (textElement.hasOwnProperty('paragraphMarker')
+            && textElement.hasOwnProperty('endIndex')
+        ) {
+            firstParagraphMarker = { ...textElement };
+            if (!firstParagraphMarker.hasOwnProperty('startIndex')) {
+                firstParagraphMarker.startIndex = 0;
+            }
+        }
+    }
+    return firstParagraphMarker;
+}
+
+export function getFirstText(shapeText) {
+    let firstText = null;
+    for (let textElement of shapeText.textElements) {
+        if (textElement.hasOwnProperty('textRun')
+            || textElement.hasOwnProperty('autoText')
+        ) {
+            firstText = { ...textElement };
+            if (!firstText.hasOwnProperty('startIndex')) {
+                firstText.startIndex = 0;
+            }
+            if (!firstText.hasOwnProperty('endIndex')) {
+                firstText.endIndex = firstText.startIndex;
+            }
+        }
+    }
+    return firstText;
+}
+
+
+export function initializeShapeText(pageElement, text) {
+    if (!pageElement.hasOwnProperty('shape')
+        || !pageElement.hasOwnProperty('additional')
+        || pageElement.additional.text.length === 0
+        || !pageElement.shape.hasOwnProperty('text')
+        || !Array.isArray(pageElement.shape.text.textElements)
+    ) {
+        return [];
+    }
+    let requests = [];
+    requests.push({
+        insertText: {
+            objectId: pageElement.objectId,
+            text: 'TEXT_BOX',
+            insertionIndex: 0,
+        }
+    });
+    
+    requests.push({
+        deleteText: {
+            objectId: pageElement.objectId,
+            textRange: {
+                type: 'ALL',
+            }
+        }
+    });
+
+    requests.push({
+        insertText: {
+            objectId: pageElement.objectId,
+            text,
+        }
+    });
+
+    let firstParagraphMarker = getFirstParagraphMarker(pageElement.shape.text);
+    let firstText = getFirstText(pageElement.shape.text);
+    console.log(pageElement.shape.text, firstParagraphMarker, firstText);
+    if (firstParagraphMarker !== null
+        && firstParagraphMarker.paragraphMarker.hasOwnProperty('style')
+    ) {
+        let result = objRecTraverse(firstParagraphMarker.paragraphMarker.style, '');
+        if (result.fields.length > 0) {
+            requests.push({
+                updateParagraphStyle: {
+                    objectId: pageElement.objectId,
+                    style: result.dst,
+                    textRange: {
+                        type: 'ALL',
+                    },
+                    fields: result.fields.join(),
+                }
+            });
+        }
+    }
+    if (firstText !== null) {
+        let style = null;
+        if (firstText.hasOwnProperty('textRun')) {
+            style = firstText.textRun.style;
+        }
+        else {
+            style = firstText.autoText.style;
+        }
+        let result = objRecTraverse(style)
+        if (result.fields.length > 0) {
+            requests.push({
+                updateTextStyle: {
+                    objectId: pageElement.objectId,
+                    style: result.dst,
+                    textRange: {
+                        type: 'ALL',
+                    },
+                    fields: result.fields.join(),
+                }
+            });
+        }
+    }
+    return requests;
+}
+
 function assignElementProperties(pageObjectId, size, transform) {
     let ret = {
         pageObjectId,
@@ -56,11 +169,10 @@ function assignElementProperties(pageObjectId, size, transform) {
 }
 
 function getPageElementRequests(pageId, pageElement, suffix) {
-    let objectId = pageElement.objectId;
     let validObjectId = false;
     let requests = [];
     let request = {
-        objectId,
+        objectId: pageElement.objectId,
         elementProperties: {},
     };
     if (pageElement.hasOwnProperty('elementGroup')) {
@@ -78,7 +190,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             if (childrenObjectIds.length > 1) {
                 requests.push({
                     groupObjects: {
-                        groupObjectId: objectId,
+                        groupObjectId: pageElement.objectId,
                         childrenObjectIds,
                     }
                 });
@@ -86,7 +198,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
                 if (pageElement.transform !== undefined) {
                     requests.push({
                         updatePageElementTransform: {
-                            objectId,
+                            objectId: pageElement.objectId,
                             transform: pageElement.transform,
                             applyMode: 'ABSOLUTE',
                         }
@@ -132,84 +244,14 @@ function getPageElementRequests(pageId, pageElement, suffix) {
                 textJSON.placeholderType = 'BODY';
             }
 
-            requests.push({
-                insertText: {
-                    objectId,
-                    text: textJSON.placeholderType,
-                }
-            });
-
-            if (pageElement.shape.hasOwnProperty('text')
-                && Array.isArray(pageElement.shape.text.textElements)
-            ) {
-                for (let textElement of pageElement.shape.text.textElements) {
-                    if (textElement.hasOwnProperty('paragraphMarker')
-                        && textElement.paragraphMarker.hasOwnProperty('style')
-                    ) {
-                        let result = objRecTraverse(textElement.paragraphMarker.style, '');
-                        if (result.fields.length > 0) {
-                            requests.push({
-                                updateParagraphStyle: {
-                                    objectId,
-                                    style: result.dst,
-                                    textRange: {
-                                        type: 'ALL',
-                                    },
-                                    fields: result.fields.join(),
-                                }
-                            });
-                        }
-                        break;
-                    }
-                }
-                for (let textElement of pageElement.shape.text.textElements) {
-                    if (textElement.hasOwnProperty('textRun')    
-                        && textElement.textRun.hasOwnProperty('style')
-                    ) {
-                        let result = objRecTraverse(textElement.textRun.style)
-                        if (result.fields.length > 0) {
-                            requests.push({
-                                updateTextStyle: {
-                                    objectId,
-                                    style: result.dst,
-                                    textRange: {
-                                        type: 'ALL',
-                                    },
-                                    fields: result.fields.join(),
-                                }
-                            });
-                        }
-                        break;
-                    }
-                }
-                for (let textElement of pageElement.shape.text.textElements) {
-                    if (textElement.hasOwnProperty('autoText')    
-                        && textElement.autoText.hasOwnProperty('style')
-                    ) {
-                        let result = objRecTraverse(textElement.autoText.style);
-                        if (result.fields.length > 0) {
-                            requests.push({
-                                updateTextStyle: {
-                                    objectId,
-                                    style: result.dst,
-                                    textRange: {
-                                        type: 'ALL',
-                                    },
-                                    fields: result.fields.join(),
-                                }
-                            });
-                        }
-                        break;
-                    }
-                }
-            }
+            requests = requests.concat(initializeShapeText(pageElement, textJSON.placeholderType));
         }
         if (pageElement.shape.hasOwnProperty('shapeProperties')) {
             let result = objRecTraverse(pageElement.shape.shapeProperties);
             if (result.fields.length > 0) {
                 requests.push({
                     updateShapeProperties: {
-                        objectId,
+                        objectId: pageElement.objectId,
                         shapeProperties: result.dst,
                         fields: result.fields.join(),
                     }
@@ -235,7 +277,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             if (result.fields.length > 0) {
                 requests.push({
                     updateImageProperties: {
-                        objectId,
+                        objectId: pageElement.objectId,
                         imageProperties: result.dst,
                         fields: result.fields.join(),
                     }
@@ -250,7 +292,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             || pageElement.line.lineProperties['hasConnection'] === 1) {
                 return {
                     requests: [],
-                    objectId,
+                    objectId: pageElement.objectId,
                     validObjectId: false,
                 }
             }
@@ -270,7 +312,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             if (result.fields.length > 0) {
                 requests.push({
                     updateLineProperties: {
-                        objectId,
+                        objectId: pageElement.objectId,
                         lineProperties: result.dst,
                         fields: result.fields.join(),
                     }
@@ -283,7 +325,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
     }
     return {
         requests,
-        objectId,
+        objectId: pageElement.objectId,
         validObjectId,
     };
 }
