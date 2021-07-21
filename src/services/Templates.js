@@ -68,7 +68,7 @@ function consumeDimension(dimension) {
     return result;
 }
 
-function consumeSize(size) {
+export function consumeSize(size) {
     if (size === undefined) {
         throw Error('no field size');
     }
@@ -356,6 +356,31 @@ function isSmall(rectangle, pageSize) {
     return false;
 }
 
+export function getRectangle(size, transform) {
+    size = consumeSize(size);
+    transform = consumeTransform(transform);
+    
+    let startX = transform.translateX;
+    let startY = transform.translateY;
+
+    let finishX = size.width * transform.scaleX + size.height * transform.shearX + transform.translateX;
+    let finishY = size.width * transform.shearY + size.height * transform.scaleY + transform.translateY;
+
+    if (startX > finishX) {
+        [startX, finishX] = [finishX, startX]; 
+    }
+
+    if (startY > finishY) {
+        [startY, finishY] = [finishY, startY]; 
+    }
+    return {
+        startX,
+        startY,
+        finishX,
+        finishY,
+    };
+}
+
 function sanitizePageElements(pageElements) {
     let newPageElements = [];
     for (let pageElement of pageElements) {
@@ -427,35 +452,17 @@ class Templates {
                 size = JSON.parse(JSON.stringify(pageElement.size));
             }
             let transform = { ...pageElement.transform };
-    
+
             if (pageElement.hasOwnProperty('elementGroup')) {
                 let result = this.__getCoveringRectangle(pageElement.elementGroup.children);
                 size = result.size;
                 transform = multiplyTransforms(transform, result.transform);
             }
             
-            size = consumeSize(size);
-            transform = consumeTransform(transform);
-    
-            let startX = transform.translateX;
-            let startY = transform.translateY;
-    
-            let finishX = size.width * transform.scaleX + size.height * transform.shearX + transform.translateX;
-            let finishY = size.width * transform.shearY + size.height * transform.scaleY + transform.translateY;
-    
-            if (startX > finishX) {
-                [startX, finishX] = [finishX, startX]; 
-            }
-
-            if (startY > finishY) {
-                [startY, finishY] = [finishY, startY]; 
-            }
+            let rectangle = getRectangle(size, transform);
 
             layout.pageElements.push({
-                startX,
-                startY,
-                finishX,
-                finishY,
+                ...rectangle,
                 type: getPageElementType(pageElement),
             });
         }

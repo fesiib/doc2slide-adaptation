@@ -47,6 +47,7 @@ export function getFirstParagraphMarker(shapeText) {
             if (!firstParagraphMarker.hasOwnProperty('startIndex')) {
                 firstParagraphMarker.startIndex = 0;
             }
+            break;
         }
     }
     return firstParagraphMarker;
@@ -65,6 +66,7 @@ export function getFirstText(shapeText) {
             if (!firstText.hasOwnProperty('endIndex')) {
                 firstText.endIndex = firstText.startIndex;
             }
+            break;
         }
     }
     return firstText;
@@ -107,7 +109,6 @@ export function initializeShapeText(pageElement, text) {
 
     let firstParagraphMarker = getFirstParagraphMarker(pageElement.shape.text);
     let firstText = getFirstText(pageElement.shape.text);
-    console.log(pageElement.shape.text, firstParagraphMarker, firstText);
     if (firstParagraphMarker !== null
         && firstParagraphMarker.paragraphMarker.hasOwnProperty('style')
     ) {

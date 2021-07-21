@@ -1,9 +1,12 @@
 import { getFirstParagraphMarker, getFirstText } from "./initializeSlide";
+import { getRectangle } from "./Templates";
+
+const EMU = 12700;
 
 export function scoreShapeElements(shapeElements, template) {
     for (let pageElement of shapeElements) {
         if (pageElement.mapped)
-            console.log(getFontStyle(pageElement.shape.text));
+            console.log(getBoxStyle(pageElement));
     }
     return 0.0;
 }
@@ -28,10 +31,259 @@ function normDistributionAround(mean, std, x) {
     return __normal(mean, std, x) / maxValue;
 }
 
-function getFontStyle(shapeText) {
-    let firstParagraphMarker = getFirstParagraphMarker(shapeText);
-    let firstText = getFirstText(shapeText);
+function consumeRGBColor(rgbColor) {
+    let ret = {
+        red: 0,
+        green: 0,
+        blue: 0,
+    };
+    if (rgbColor.hasOwnProperty('red'))
+        ret.red = rgbColor.red;
+    if (rgbColor.hasOwnProperty('green'))
+        ret.green = rgbColor.green;
+    if (rgbColor.hasOwnProperty('blue'))
+        ret.blue = rgbColor.blue;
+    return ret;
+}
+
+function consumeWeightedFontFamily(weightedFontFamily) {
+    if (typeof weightedFontFamily === 'object') {
+        return weightedFontFamily;
+    }
     return null;
+}
+
+function consumeOptionalColor(optionalColor) {
+    if (typeof optionalColor === 'object') {
+        if (optionalColor.hasOwnProperty('opaqueColor')) {
+            if (optionalColor.opaqueColor.hasOwnProperty('rgbColor')) {
+                let rgbColor = consumeRGBColor(optionalColor.opaqueColor.rgbColor);
+                return 'rgb(' + rgbColor.red + ', ' + rgbColor.green + ', ' + rgbColor.blue + ')';
+            }
+            else if (optionalColor.opaqueColor.hasOwnProperty('themeColor')) {
+                if (optionalColor.opaqueColor.themeColor.startsWith('DARK'))
+                    return 'black';
+                else
+                    return 'gray';
+            }
+        }
+    }
+    return null;
+}
+
+function consumeFontSize(fontSize) {
+    if (typeof fontSize === 'object') {
+        if (fontSize.hasOwnProperty('unit')) {
+            if (fontSize.hasOwnProperty('magnitude')) {
+                if (fontSize.unit === 'PT') {
+                    return fontSize.magnitude;
+                }
+                else if (fontSize.unit === 'EMU') {
+                    return fontSize.magnitude / EMU;
+                }
+                else {
+                    return null;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function getBoxStyle(pageElement) {
+    let rectangle = getRectangle(pageElement.size, pageElement.transform);
+    
+    let firstParagraphMarker = getFirstParagraphMarker(pageElement.shape.text);
+    let paragraphStyle = {};
+
+    if (firstParagraphMarker.hasOwnProperty('paragraphMarker')
+        && firstParagraphMarker.paragraphMarker.hasOwnProperty('style')
+    ) {
+        paragraphStyle = firstParagraphMarker.paragraphMarker.style;
+    }
+
+    if (paragraphStyle.hasOwnProperty('direction') 
+        && paragraphStyle.direction !== 'LEFT_TO_RIGHT'
+    ) {
+            throw Error("text is not left to right");
+    }
+
+    let paddingLeft = 0;
+    if (consumeFontSize(paragraphStyle.indentStart)) {
+        let magnitude = consumeFontSize(paragraphStyle.indentStart);
+        paddingLeft = magnitude;
+    }
+
+    let paddingRight = 0
+    if (consumeFontSize(paragraphStyle.indentEnd)) {
+        let magnitude = consumeFontSize(paragraphStyle.indentEnd);
+        paddingRight = magnitude;
+    }
+
+    let paddingBottom = 0;
+    if (consumeFontSize(paragraphStyle.spaceBelow)) {
+        let magnitude = consumeFontSize(paragraphStyle.spaceBelow);
+        paddingBottom = magnitude;
+    }
+
+    let paddingTop = 0;
+    if (consumeFontSize(paragraphStyle.spaceAbove)) {
+        let magnitude = consumeFontSize(paragraphStyle.spaceAbove);
+        paddingTop = magnitude;
+    }
+
+    let width = (rectangle.finishX - rectangle.startX) / EMU;
+    let height = (rectangle.finishY - rectangle.startY) / EMU;
+    
+    let boxStyle = {
+        paddingLeft,
+        paddingRight,
+        paddingBottom,
+        paddingTop,
+        width,
+        height,
+        position: {
+            x: rectangle.startX,
+            y: rectangle.startY,
+        },
+    };
+    return boxStyle;
+}
+
+function getFontStyle(shapeText) {
+    let firstText = getFirstText(shapeText);
+    let firstParagraphMarker = getFirstParagraphMarker(shapeText);
+    
+    let textStyle = {};
+    let paragraphStyle = {};
+
+    if (firstParagraphMarker.hasOwnProperty('paragraphMarker')
+        && firstParagraphMarker.paragraphMarker.hasOwnProperty('style')
+    ) {
+        paragraphStyle = firstParagraphMarker.paragraphMarker.style;
+    }
+
+    if (paragraphStyle.hasOwnProperty('direction') 
+        && paragraphStyle.direction !== 'LEFT_TO_RIGHT'
+    ) {
+            throw Error("text is not left to right");
+    }
+
+    if (firstText.hasOwnProperty('textRun')
+        && firstText.textRun.hasOwnProperty('style')
+    ) {
+        textStyle = firstText.textRun.style;
+    }
+
+    if (firstText.hasOwnProperty('autoText')
+        && firstText.autoText.hasOwnProperty('style')
+    ) {
+        textStyle = firstText.autoText.style;
+    }
+    let weightedFontFamily = consumeWeightedFontFamily(textStyle.weightedFontFamily);
+
+    let backgroundColor = 'transparent';
+    let color = 'transparent';
+    let fontSize = 16;
+    let fontFamily = 'Arial';
+    let fontWeight = 400;
+
+    if (consumeOptionalColor(textStyle.backgroundColor) !== null) {
+        backgroundColor = consumeOptionalColor(textStyle.backgroundColor);
+    }
+    if (consumeOptionalColor(textStyle.foregroundColor) !== null) {
+        color = consumeOptionalColor(textStyle.foregroundColor);
+    }
+    else {
+        throw Error('no color');
+    }
+    if (consumeFontSize(textStyle.fontSize) !== null) {
+        let magnitude = consumeFontSize(textStyle.fontSize);
+        fontSize = magnitude;
+    }
+    else {
+        throw Error('no font size');
+    }
+    if (weightedFontFamily !== null && weightedFontFamily.hasOwnProperty('fontFamily')) {
+        fontFamily = weightedFontFamily.fontFamily;
+    }
+    else {
+        throw Error('no fontFamily');
+    }
+    if (weightedFontFamily !== null && weightedFontFamily.hasOwnProperty('weight')) {
+        fontWeight = weightedFontFamily.weight;
+    }
+
+    let fontStyle = 'normal';
+    if (textStyle.italic) {
+        fontStyle = 'italic';
+    }
+    
+    let textDecoration = 'normal';
+    if (textStyle.strikethrough) {
+        textDecoration = 'line-through';
+    }
+    if (textStyle.underline) {
+        textDecoration += ' underline';
+    }
+
+    let baselineShift = 'baseline';
+    if (textStyle.baselineOffset === 'SUPERSCRIPT') {
+        baselineShift = 'super';
+    }
+    if (textStyle.bselineOffset === 'SUBSCRIPT') {
+        baselineShift = 'sub';
+    }
+
+    let fontVariant = 'normal';
+    if (textStyle.smallCaps) {
+        fontVariant = 'small-caps';
+    }
+
+    let lineHeight = 'normal';
+    if (paragraphStyle.hasOwnProperty('lineSpacing')) {
+        lineHeight = paragraphStyle.lineSpacing.toString() + '%';
+    }
+
+    let letterSpacing = 'normal';
+    let fontKerning = 'normal';
+
+    let textAlign = 'left';
+    if (paragraphStyle.hasOwnProperty('alignment')) {
+        if (paragraphStyle.alignment === 'END') {
+            textAlign = 'right';    
+        }
+        if (paragraphStyle.alignment === 'CENTER') {
+            textAlign = 'center';    
+        }
+        if (paragraphStyle.alignment === 'JUSTIFIED') {
+            textAlign = 'justified';    
+        }
+    }
+
+    let indentFirstLine = 0;
+    if (consumeFontSize(paragraphStyle.indentFirstLine)) {
+        let magnitude = consumeFontSize(paragraphStyle.indentFirstLine);
+        indentFirstLine = magnitude;
+    }
+
+    let retFontStyle = {
+        backgroundColor,
+        color,
+        fontSize,
+        fontFamily,
+        fontWeight,
+        fontStyle,
+        textDecoration,
+        baselineShift,
+        fontVariant,
+        lineHeight,
+        letterSpacing,
+        fontKerning,
+        textAlign,
+        indentFirstLine,
+    }
+    return retFontStyle;
 }
 
 function renderShape(text, fontStyle) {
