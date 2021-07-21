@@ -50,8 +50,8 @@ const content = (state = initialState, action) => {
         case COMPILE: {
             return {
                 ...state,
-                headerResult: action.payload.headerResult.slice(0),
-                bodyResult: action.payload.bodyResult.slice(0),
+                headerResult: action.payload.headerResult,
+                bodyResult: action.payload.bodyResult,
                 shouldUpdate: false,
             };
         }

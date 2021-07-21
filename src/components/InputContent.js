@@ -7,7 +7,7 @@ import {
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { extractedFile } from '../reducers/presentationFiles';
 import { processContent } from '../services/TextAPI';
-import { tryFitContent } from '../services/SlidesAPI';
+import { tryFitContent, getPresentation } from '../services/SlidesAPI';
 import { appendPre } from '../services/GoogleAPI';
 import { fitToAllSlides_simple, fitToAllSlides_TextShortening } from '../services/fitContent';
 
@@ -92,8 +92,6 @@ function InputContent(props) {
         event.stopPropagation();
         loadingActivate(COMPILING);
         processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate).then((response) => {
-            _compileContent(response.header, response.body);
-            
             // tryFitContent({header, body}, selectedExt, templates[selected], fitToAllSlides_simple).then((result) => {
 			// 	console.log("Result: ", result);
             //     loadingDeactivate(COMPILING);
@@ -116,6 +114,7 @@ function InputContent(props) {
 				appendPre('Couldn`t fit content: ' + error);
                 loadingDeactivate(COMPILING);
 			});
+            _compileContent(response.header, response.body);
         });
     };
 

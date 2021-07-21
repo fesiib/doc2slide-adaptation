@@ -497,7 +497,7 @@ class Templates {
         return 0;
     }
 
-    __add(layout, pageId, originalId, page, weight) {
+    __add(layout, pageId, originalId, page, weight, isCustom) {
 
         page.pageElements = page.pageElements.concat(toLines(layout));
 
@@ -506,6 +506,7 @@ class Templates {
             page,
             weight,
             originalId,
+            isCustom
         });
         this.__layouts.push({
             layout,
@@ -523,7 +524,7 @@ class Templates {
 
         if (this.__getComplexity(page) <= 0.5) {
             let layout = this.__getLayout(page);
-            this.__add(layout, pageId, originalId, page, 2);
+            this.__add(layout, pageId, originalId, page, 2, true);
         }
     }
 
@@ -535,7 +536,7 @@ class Templates {
             console.log('no page elements', page);
         }
         let layout = this.__getLayout(page);
-        this.__add(layout, pageId, originalId, page, 1);
+        this.__add(layout, pageId, originalId, page, 1, false);
     }
 
     getTemplates() {

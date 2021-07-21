@@ -61,7 +61,9 @@ function extractImageElements(slide) {
     return imageElements;
 }
 
-function fitSingleText(shortenings, shapeText) {
+function fitSingleText(content, shapeText, isCustom) {
+    let shortenings = content.shortenings;
+    let phrases = content.phrases;
     if (!Array.isArray(shapeText.textElements)
         || shapeText.textElements.length === 0
     ) {
@@ -90,7 +92,7 @@ function fitSingleText(shortenings, shapeText) {
     }
 
     for (let shortening of shortenings) {
-        if (shortening.text.length <= firstParagraphMarker.endIndex) {
+        if (shortening.text.length <= firstParagraphMarker.endIndex || !isCustom) {
             return {
                 success: true,
                 ...shortening,
@@ -98,9 +100,24 @@ function fitSingleText(shortenings, shapeText) {
         }
     }
 
+    for (let phrase of phrases) {
+        if (phrase.text.length <= firstParagraphMarker.endIndex || !isCustom) {
+            return {
+                success: true,
+                ...phrase,
+            }
+        }
+    }
+
+    if (content.singleWord.text.length <= firstParagraphMarker.endIndex || !isCustom) {
+        return {
+            success: true,
+            ...content.singleWord,
+        };   
+    }
     return {
         success: true,
-        ...shortenings[shortenings.length - 1],
+        ...content.singleWord,
     };
 }
 
@@ -217,26 +234,10 @@ export function fitToAllSlides_TextShortening(content, obj) {
             ) {
                 console.log('inappropriate shape for header: ', pageElement);
             }
-            globalRequests.push({
-                insertText: {
-                    objectId: pageElement.objectId,
-                    text: 'TEXT_BOX',
-                    insertionIndex: 0,
-                }
-            });
-            
-            globalRequests.push({
-                deleteText: {
-                    objectId: pageElement.objectId,
-                    textRange: {
-                        type: 'ALL',
-                    }
-                }
-            });
         }
 
         // Fit the header
-        if (Array.isArray(content.header)) {
+        if (content.hasOwnProperty('header')) {
             let headerPageElement = null;
             let headerIdx = HEADER_PLACEHOLDER.length;
             for (let pageElement of shapeElements) {
@@ -249,7 +250,7 @@ export function fitToAllSlides_TextShortening(content, obj) {
                         if (headerIdx <= curIdx) {
                             continue;
                         }
-                        let result = fitSingleText(content.header, pageElement.shape.text);
+                        let result = fitSingleText(content.header, pageElement.shape.text, template.isCustom);
                         if (!result.success) {
                             continue;
                         }
@@ -259,8 +260,23 @@ export function fitToAllSlides_TextShortening(content, obj) {
                 }
             }
             if (headerPageElement !== null) {
+                globalRequests.push({
+                    insertText: {
+                        objectId: headerPageElement.objectId,
+                        text: 'TEXT_BOX',
+                        insertionIndex: 0,
+                    }
+                });
                 
-                let result = fitSingleText(content.header, headerPageElement.shape.text);
+                globalRequests.push({
+                    deleteText: {
+                        objectId: headerPageElement.objectId,
+                        textRange: {
+                            type: 'ALL',
+                        }
+                    }
+                });
+                let result = fitSingleText(content.header, headerPageElement.shape.text, template.isCustom);
                 headerPageElement.mapped = true;
                 globalRequests.push({
                     insertText: {
@@ -269,12 +285,13 @@ export function fitToAllSlides_TextShortening(content, obj) {
                         insertionIndex: 0,
                     }
                 });
+                headerPageElement.mapped = true;
             }
         }
         
         // Fit the content
         if (Array.isArray(content.body)) {
-            for (let shortenings of content.body) {
+            for (let bodyContent of content.body) {
                 for (let pageElement of shapeElements) {
                     if (pageElement.mapped) {
                         continue;
@@ -290,10 +307,28 @@ export function fitToAllSlides_TextShortening(content, obj) {
                     if (pageElement.shape.hasOwnProperty('shapeType')
                         && pageElement.shape.shapeType === 'TEXT_BOX'
                     ) {
-                        let result = fitSingleText(shortenings, pageElement.shape.text);
+                        let result = fitSingleText(bodyContent, pageElement.shape.text, template.isCustom);
                         if (!result.success) {
                             continue;
                         }
+
+                        globalRequests.push({
+                            insertText: {
+                                objectId: pageElement.objectId,
+                                text: 'TEXT_BOX',
+                                insertionIndex: 0,
+                            }
+                        });
+                        
+                        globalRequests.push({
+                            deleteText: {
+                                objectId: pageElement.objectId,
+                                textRange: {
+                                    type: 'ALL',
+                                }
+                            }
+                        });
+                        
                         globalRequests.push({
                             insertText: {
                                 objectId: pageElement.objectId,

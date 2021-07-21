@@ -36,6 +36,12 @@ export function listSlides(presentationId) {
  * @returns 
  */
 
+export async function getPresentation(presentationId) {
+    return gapi.client.slides.presentations.get({
+        presentationId
+    });
+}
+
 export async function extract(forId) {
 
     return new Promise((resolve, reject) => {

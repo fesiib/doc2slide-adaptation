@@ -24,15 +24,21 @@ const REQUEST_PATTERN = {
 };
 
 function processResult(response) {
-    let results = [];
+    let results = {
+        shortenings: [],
+        singleWord: {},
+        phrases: [],
+    };
     let shortenings = response.result.shortenings;
+    results.singleWord = response.result.singleWord;
+    results.phrases = response.result.phrases;
     let importantSegments = response.result.importantSegments;
     let originalText = response.request.content.text;
     for (let tuple of shortenings) {
         let text = tuple.text;
         let score = tuple.score;
         let deletedSegments = tuple.deleted;
-        results.push({
+        results.shortenings.push({
             text, score
         });            
     }
