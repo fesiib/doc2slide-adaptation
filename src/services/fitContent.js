@@ -280,7 +280,32 @@ export function fitToAllSlides_TextShortening(content, obj) {
             }
         }
         let score = scoreShapeElements(shapeElements, template);
-        console.log("Score of page: ", template.pageId, score);
+
+        globalRequests.push({
+            deleteText: {
+                objectId: template.informationBoxId,
+                textRange: {
+                    type: 'ALL',
+                }
+            }
+        });
+
+        let informationText = '';
+        if (template.isCustom) {
+            informationText = 'Page ' + template.originalId + ' ';
+        }
+        else {
+            informationText = 'Layout ' + template.originalId + ' ';   
+        }
+
+        informationText += "SCORE: " + score.toString();
+
+        globalRequests.push({
+            insertText: {
+                objectId: template.informationBoxId,
+                text: informationText,
+            }
+        });
     }
     return globalRequests;
 }

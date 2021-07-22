@@ -1,13 +1,9 @@
-import { v4 as random} from 'uuid';
-
 import { objRecTraverse } from './SlidesAPIRqFields';
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
-function addTextBox(pageId, text) {
+function addTextBox(shapeId, pageId, text) {
     let requests = [];
-    
-    let shapeId = random();
     
     requests.push({
         createShape: {
@@ -382,6 +378,7 @@ export function initializePresentation(templates) {
         let page = template.page;
         let weight = template.weight;
         let originalId = template.originalId;
+        let informationBoxId = template.informationBoxId;
 
         requests.push({
             createSlide: {
@@ -392,10 +389,10 @@ export function initializePresentation(templates) {
     
         if (weight === 1) {
             ///layout
-            requests = requests.concat(addTextBox(pageId, "Layout: " + originalId));
+            requests = requests.concat(addTextBox(informationBoxId, pageId, "Layout: " + originalId));
         }
         else {
-            requests = requests.concat(addTextBox(pageId, "Page: " + originalId));    
+            requests = requests.concat(addTextBox(informationBoxId, pageId, "Page: " + originalId));    
         }
     }
     return requests;

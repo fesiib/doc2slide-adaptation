@@ -1,3 +1,4 @@
+import { v4 as random} from 'uuid';
 
 const INCH = 914400;
 
@@ -508,12 +509,15 @@ class Templates {
 
         page.pageElements = page.pageElements.concat(toLines(layout));
 
+        let informationBoxId = random();
+
         this.__templates.push({
             pageId,
             page,
             weight,
             originalId,
-            isCustom
+            isCustom,
+            informationBoxId,
         });
         this.__layouts.push({
             layout,

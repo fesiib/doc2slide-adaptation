@@ -26,7 +26,8 @@
     "redux-state-sync": "^3.1.2",
     "redux-thunk": "^2.3.0",
     "uuid": "^3.4.0",
-    "web-vitals": "^1.1.2"
+    "web-vitals": "^1.1.2",
+    "webfontloader": "^1.6.28"
   },
   "scripts": {
     "start": "react-scripts start",
