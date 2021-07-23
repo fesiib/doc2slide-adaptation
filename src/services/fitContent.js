@@ -42,14 +42,7 @@ function extractShapeElements(slide) {
             if (pageElement.hasOwnProperty('shape')) {
                 let copyPageElement = { ...pageElement };
                 copyPageElement.mapped = false;
-                copyPageElement.mappedContent = {
-                    text: '',
-                    score: {
-                        grammatical: 0,
-                        semantic: 0,
-                        importantWords: 0,
-                    }
-                };
+                copyPageElement.mappedContents = [];
                 shapeElements.push(copyPageElement);
             }
         }
@@ -64,14 +57,7 @@ function extractImageElements(slide) {
             if (pageElement.hasOwnProperty('image')) {
                 let copyPageElement = { ...pageElement };
                 copyPageElement.mapped = false;
-                copyPageElement.mappedContent =  {
-                    text: '',
-                    score: {
-                        grammatical: 0,
-                        semantic: 0,
-                        importantWords: 0,
-                    }
-                };
+                copyPageElement.mappedContents = [];
                 imageElements.push(copyPageElement);
             }
         }
@@ -156,7 +142,15 @@ export function fitToAllSlides_simple(content, templates) {
                     if (HEADER_PLACEHOLDER.includes(type)) {
                         globalRequests = globalRequests.concat(initializeShapeText(pageElement, content.header));
                         pageElement.mapped = true;
-                        pageElement.mappedContent.text = content.header;
+                        let mappedContent = {
+                            text: content.header,
+                            score: {
+                                grammatical: 1,
+                                semantic: 1,
+                                importantWords: 1,
+                            },
+                        };
+                        pageElement.mappedContents.push(mappedContent);
                         break;
                     }
                 }
@@ -180,7 +174,15 @@ export function fitToAllSlides_simple(content, templates) {
                     if (BODY_PLACEHOLDER.includes(type)) {
                         globalRequests = globalRequests.concat(initializeShapeText(pageElement, content.body[contentId]));
                         pageElement.mapped = true;
-                        pageElement.mappedContent.text = content.body[contentId];
+                        let mappedContent = {
+                            text: content.body[contentId],
+                            score: {
+                                grammatical: 1,
+                                semantic: 1,
+                                importantWords: 1,
+                            },
+                        };
+                        pageElement.mappedContents.push(mappedContent);
                         contentId++;
                     }
                     else {
@@ -241,8 +243,11 @@ export function fitToAllSlides_TextShortening(content, obj) {
                 let result = fitSingleText(content.header, headerPageElement.shape.text, template.isCustom);
                 globalRequests = globalRequests.concat(initializeShapeText(headerPageElement, result.text));
                 headerPageElement.mapped = true;
-                headerPageElement.mappedContent.text = result.text;
-                headerPageElement.mappedContent.score = result.score;
+                let mappedContent = {
+                    text: result.text,
+                    score: result.score,
+                };
+                headerPageElement.mappedContents.push(mappedContent);
                 
             }
         }
@@ -272,14 +277,17 @@ export function fitToAllSlides_TextShortening(content, obj) {
                         }
                         globalRequests = globalRequests.concat(initializeShapeText(pageElement, result.text));
                         pageElement.mapped = true;
-                        pageElement.mappedContent.text = result.text;
-                        pageElement.mappedContent.score = result.score;
+                        let mappedContent = {
+                            text: result.text,
+                            score: result.score,
+                        };
+                        pageElement.mappedContents.push(mappedContent);
                         break;
                     }
                 }
             }
         }
-        let score = scoreShapeElements(shapeElements, template);
+        let score = scoreShapeElements(shapeElements, templates.pageSize);
 
         globalRequests.push({
             deleteText: {
@@ -298,8 +306,12 @@ export function fitToAllSlides_TextShortening(content, obj) {
             informationText = 'Layout ' + template.originalId + ' ';   
         }
 
-        informationText += "SCORE: " + score.toString();
-
+        for (let field in score) {
+            let curScore = score[field];
+            curScore = Math.round(curScore * 100) / 100;
+            informationText += field + ": " + curScore.toString() + ', ';
+        }
+        
         globalRequests.push({
             insertText: {
                 objectId: template.informationBoxId,
