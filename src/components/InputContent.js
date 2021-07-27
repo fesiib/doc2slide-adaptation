@@ -82,7 +82,6 @@ function InputContent(props) {
 	}
 
     const forceUpdateSelected = () => {
-        console.log('here 1');
         let prev = selectedExt;
         _extractedFile(selected, '');
         _extractedFile(selected, prev);

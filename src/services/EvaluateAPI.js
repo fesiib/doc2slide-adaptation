@@ -10,7 +10,7 @@ export function scoreShapeElements(shapeElements, pageSize) {
     for (let pageElement of shapeElements) {
         if (pageElement.mapped) {
             const statistics = calculateStatistics(pageElement);
-            console.log(statistics);
+            //console.log(statistics);
             statisticsList.push(statistics);    
         }
     }
