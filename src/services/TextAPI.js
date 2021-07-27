@@ -32,12 +32,12 @@ function processResult(response) {
     let shortenings = response.result.shortenings;
     results.singleWord = response.result.singleWord;
     results.phrases = response.result.phrases;
-    let importantSegments = response.result.importantSegments;
-    let originalText = response.request.content.text;
+    //let importantSegments = response.result.importantSegments;
+    //let originalText = response.request.content.text;
     for (let tuple of shortenings) {
         let text = tuple.text;
         let score = tuple.score;
-        let deletedSegments = tuple.deleted;
+        //let deletedSegments = tuple.deleted;
         results.shortenings.push({
             text, score
         });            

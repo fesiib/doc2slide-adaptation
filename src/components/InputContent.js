@@ -7,7 +7,7 @@ import {
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { extractedFile } from '../reducers/presentationFiles';
 import { processContent } from '../services/TextAPI';
-import { tryFitContent, getPresentation } from '../services/SlidesAPI';
+import { tryFitContent } from '../services/SlidesAPI';
 import { appendPre } from '../services/GoogleAPI';
 import { fitToAllSlides_simple, fitToAllSlides_TextShortening } from '../services/fitContent';
 
@@ -82,6 +82,7 @@ function InputContent(props) {
 	}
 
     const forceUpdateSelected = () => {
+        console.log('here 1');
         let prev = selectedExt;
         _extractedFile(selected, '');
         _extractedFile(selected, prev);

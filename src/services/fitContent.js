@@ -234,6 +234,10 @@ export function fitToAllSlides_TextShortening(content, obj) {
                         if (!result.success) {
                             continue;
                         }
+                        let curRequests = initializeShapeText(pageElement, result.text);
+                        if (curRequests.length === 0) {
+                            continue;
+                        }
                         headerPageElement = pageElement;
                         headerIdx = curIdx;
                     }
@@ -241,14 +245,19 @@ export function fitToAllSlides_TextShortening(content, obj) {
             }
             if (headerPageElement !== null) {
                 let result = fitSingleText(content.header, headerPageElement.shape.text, template.isCustom);
-                globalRequests = globalRequests.concat(initializeShapeText(headerPageElement, result.text));
-                headerPageElement.mapped = true;
-                let mappedContent = {
-                    text: result.text,
-                    score: result.score,
-                };
-                headerPageElement.mappedContents.push(mappedContent);
-                
+                let curRequests = initializeShapeText(headerPageElement, result.text);
+                if (curRequests.length > 0) {
+                    globalRequests = globalRequests.concat(curRequests);
+                    headerPageElement.mapped = true;
+                    let mappedContent = {
+                        text: result.text,
+                        score: result.score,
+                    };
+                    headerPageElement.mappedContents.push(mappedContent);
+                }
+                else {
+                    throw Error('Cannot get appropriate requests for HEADER');
+                }
             }
         }
         
@@ -269,13 +278,18 @@ export function fitToAllSlides_TextShortening(content, obj) {
                     }
                     if (pageElement.shape.hasOwnProperty('shapeType')
                         && pageElement.shape.shapeType === 'TEXT_BOX'
-                        && pageElement.additional.text.length > 0
                     ) {
                         let result = fitSingleText(bodyContent, pageElement.shape.text, template.isCustom);
                         if (!result.success) {
                             continue;
                         }
-                        globalRequests = globalRequests.concat(initializeShapeText(pageElement, result.text));
+                        let curRequests = initializeShapeText(pageElement, result.text);
+                        if (curRequests.length > 0) {
+                            globalRequests = globalRequests.concat(curRequests);
+                        }
+                        else {
+                            continue;
+                        }
                         pageElement.mapped = true;
                         let mappedContent = {
                             text: result.text,
@@ -288,7 +302,7 @@ export function fitToAllSlides_TextShortening(content, obj) {
             }
         }
         let score = scoreShapeElements(shapeElements, templates.pageSize);
-
+        console.log(template.originalId, score)
         globalRequests.push({
             deleteText: {
                 objectId: template.informationBoxId,

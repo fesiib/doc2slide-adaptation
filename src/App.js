@@ -35,7 +35,7 @@ function App() {
 	if (selectedExt === CREATION_SIGNAL) {
 		_selectedExt = '';
 		let forId = selected;
-
+		console.log('here 2');
 		_extractedFile(forId, '');
 		extract(forId).then((result) => {
 			let presentationId = result.id;

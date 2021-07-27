@@ -145,10 +145,16 @@ function objRec(dst, src, prefix, dict) {
                             ) {
                                 nestingLevel = obj.paragraphMarker.bullet.nestingLevel;
                             }
-                            parent['paragraphMarker'] = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2].paragraphMarker));
+                            else {
+                                nestingLevel = 0;
+                            }
+                            parent.paragraphMarker = {};
+                            parent.paragraphMarker.style = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2].paragraphMarker.style));
+                            
                         }
                         else {
-                            parent['textRun'] = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2 + 1].textRun));
+                            parent.textRun = {};
+                            parent.textRun.style = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2 + 1].textRun.style));
                         }
                     }
                     let dstElement = objRec(parent, obj, field, dict);
