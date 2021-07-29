@@ -31,60 +31,61 @@ export function listSlides(presentationId) {
 
 export async function getPresentation(presentationId) {
     return gapi.client.slides.presentations.get({
-        presentationId
+        presentationId,
     });
 }
 
-/**
- * Function that extracts the template and creates slide with the template.
- * 
- * @param {str} forId 
- * @returns 
- */
-export async function extract(forId) {
-
-    return new Promise((resolve, reject) => {
-        gapi.client.slides.presentations.get({
-            presentationId: forId
-        }).then(function(response) {
-            let title = 'TEMPLATE_' + response.result.title;
-            createPresentation(title, (id) => {
-                if (id === undefined) {
-                    throw Error('Could not create Presentation');
-                }
-                let templates = extractTemplates(response.result)
-                let requests = initializePresentation(templates);
-                // reject('Testing');
-                // return;
-                console.log(requests);
-                gapi.client.slides.presentations.batchUpdate({
-                    presentationId: id,
-                    requests: requests,
-                }).then((response) => {
-                    resolve({
-                        id,
-                        templates,
-                    });
-                });
-            });
-        }, function(response) {
-            appendPre('Error in extract: ' + response.result.error.message);
-        });
+export async function updatePresentation(presentationId, requests) {
+   return gapi.client.slides.presentations.batchUpdate({
+        presentationId,
+        requests,
     });
-}
+} 
 
-export async function tryFitContent(content, presentationId, templates, fitContent) {
-    return new Promise((resolve, reject) => {
-        let requests = fitContent(content, templates);
+// export async function extract(forId) {
 
-        console.log(requests);
-        gapi.client.slides.presentations.batchUpdate({
-            presentationId,
-            requests,
-        }).then((response) => {
-            resolve(true);
-        }, (response) => {
-            reject(response.result.error.messge);
-        });
-    });
-}
+//     return new Promise((resolve, reject) => {
+//         gapi.client.slides.presentations.get({
+//             presentationId: forId
+//         }).then(function(response) {
+//             let title = 'TEMPLATE_' + response.result.title;
+//             createPresentation(title, (id) => {
+//                 if (id === undefined) {
+//                     throw Error('Could not create Presentation');
+//                 }
+//                 let templates = extractTemplates(response.result)
+//                 let requests = initializePresentation(templates);
+//                 // reject('Testing');
+//                 // return;
+//                 console.log(requests);
+//                 gapi.client.slides.presentations.batchUpdate({
+//                     presentationId: id,
+//                     requests: requests,
+//                 }).then((response) => {
+//                     resolve({
+//                         id,
+//                         templates,
+//                     });
+//                 });
+//             });
+//         }, function(response) {
+//             appendPre('Error in extract: ' + response.result.error.message);
+//         });
+//     });
+// }
+
+// export async function tryFitContent(content, presentationId, templates, fitContent) {
+//     return new Promise((resolve, reject) => {
+//         let requests = fitContent(content, templates);
+
+//         console.log(requests);
+//         gapi.client.slides.presentations.batchUpdate({
+//             presentationId,
+//             requests,
+//         }).then((response) => {
+//             resolve(true);
+//         }, (response) => {
+//             reject(response.result.error.messge);
+//         });
+//     });
+// }

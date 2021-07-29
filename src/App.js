@@ -6,7 +6,7 @@ import Authorize from './components/Authorize';
 import FileManager from './components/FileManager';
 import ViewPresentation from './components/ViewPresentation';
 import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates } from './reducers/presentationFiles';
-import { extract } from './services/SlidesAPI';
+import { extract } from './services/SlidesTemplateServerAPI';
 import { Container, Col, Row } from 'reactstrap';
 import { appendPre } from './services/GoogleAPI';
 import InputContent, { EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
@@ -37,14 +37,14 @@ function App() {
 		let forId = selected;
 		_extractedFile(forId, '');
 		extract(forId).then((result) => {
-			let presentationId = result.id;
-			let templates = result.templates;
-			_extractedTemplates(forId, templates);
+			let presentationId = result.presentationId;
+			// let templates = result.templates;
+			// _extractedTemplates(forId, templates);
 			_extractedFile(forId, presentationId);
 			loadingDeactivate(EXTRACTING);
 		}).catch((error) => {
 			_extractedFile(forId, ERROR_SIGNAL);
-			appendPre('Error: ' + error);
+			console.log("Error: ", error)
 		});
 	}
 	

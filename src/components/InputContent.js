@@ -6,10 +6,8 @@ import {
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { extractedFile } from '../reducers/presentationFiles';
+import { generateSlideDeck } from '../services/SlidesTemplateServerAPI';
 import { processContent } from '../services/TextAPI';
-import { tryFitContent } from '../services/SlidesAPI';
-import { appendPre } from '../services/GoogleAPI';
-import { fitToAllSlides_simple, fitToAllSlides_TextShortening } from '../services/fitContent';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';
@@ -91,31 +89,25 @@ function InputContent(props) {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
-        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate).then((response) => {
-            // tryFitContent({header, body}, selectedExt, templates[selected], fitToAllSlides_simple).then((result) => {
-			// 	console.log("Result: ", result);
-            //     loadingDeactivate(COMPILING);
-            //     forceUpdateSelected();
-			// }).catch((error) => {
-			// 	appendPre('Couldn`t fit content: ' + error);
-            //     loadingDeactivate(COMPILING);
-			// });
-
-            tryFitContent(
-                {
-                    header: response.header,
-                    body: response.body,
-                }, selectedExt, templates[selected], fitToAllSlides_TextShortening
-            ).then((result) => {
-				console.log("Result: ", result);
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+            .then((response) => {
+                let resources = {
+                    ...response,
+                };
+                generateSlideDeck(selected, selectedExt, resources)
+                    .then((response) => {
+                        console.log("Generated Slide Deck: ", response);
+                        loadingDeactivate(COMPILING);
+                        forceUpdateSelected();
+                    }).catch((error) => {
+                        console.log('Couldn`t generate Slide Deck: ', error);
+                        loadingDeactivate(COMPILING);
+                    });
+                    _compileContent(resources.header, resources.body);
+            }).catch((error) => {
+                console.log('Couldn`t generate Slide Deck: ', error);
                 loadingDeactivate(COMPILING);
-                forceUpdateSelected();
-			}).catch((error) => {
-				appendPre('Couldn`t fit content: ' + error);
-                loadingDeactivate(COMPILING);
-			});
-            _compileContent(response.header, response.body);
-        });
+            });
     };
 
     const renderBodyForm = () => {
