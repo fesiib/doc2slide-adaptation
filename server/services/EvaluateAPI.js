@@ -1,26 +1,17 @@
 const { getRectangle } = require("./Templates");
-const puppeteer = require('puppeteer');
 
 const EMU = 1 / 12700;
 
-async function scoreShapeElements(shapeElements, template) {    
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-    await page.setContent('', {waitUntil: 'networkidle0'});
-    await page.addScriptTag({path: './renderBundle.js', type: 'text/javascript'});
-    page.on('console', (msg) => console.log('Puppeteer PAGELOG: ', msg.text()));
-
+async function scoreShapeElements(shapeElements, template, browserCluster) {    
     let statisticsList = [];
 
     for (let pageElement of shapeElements) {
         if (pageElement.mapped) {
-            statisticsList.push(calculateStatistics(pageElement, page));    
+            statisticsList.push(calculateStatistics(pageElement, browserCluster));    
         }
     }
 
     statisticsList = await Promise.all(statisticsList);
-
-    await browser.close();
 
     return {
         score: {
@@ -520,7 +511,7 @@ function getParagraphStyles(pageElement) {
     return paragraphStyles;
 }
 
-async function calculateStatistics(pageElement, browserPage) {
+async function calculateStatistics(pageElement, browserCluster) {
     if (!pageElement.mapped) {
         return {
             boxStyle: null,
@@ -542,16 +533,28 @@ async function calculateStatistics(pageElement, browserPage) {
     let texts = pageElement.mappedContents.map((val, idx) => val.text);
     let scores = pageElement.mappedContents.map((val, idx) => val.score);
 
-    let statistics = browserPage.evaluate(
-        (texts, paragraphStyles, boxStyle) => {
-            return window.renderTexts(texts, paragraphStyles, boxStyle);
-        }, texts, paragraphStyles, boxStyle
-    );
-    let originalStatistics = browserPage.evaluate(
-        (originalTexts, paragraphStyles, boxStyle) => {
-            return window.renderTexts(originalTexts, paragraphStyles, boxStyle);
-        }, originalTexts, paragraphStyles, boxStyle
-    );
+    let statistics = browserCluster.execute( async ({page}) => {
+        await page.goto('about:blank');
+        await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
+        page.on('console', (msg) => console.log('Puppeteer PAGELOG: ', msg.text()));
+    
+        return page.evaluate(
+            (texts, paragraphStyles, boxStyle) => {
+                return window.renderTexts(texts, paragraphStyles, boxStyle);
+            }, texts, paragraphStyles, boxStyle
+        );
+    });
+    let originalStatistics = browserCluster.execute( async ({page}) => {
+        await page.goto('about:blank');
+        await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
+        page.on('console', (msg) => console.log('Puppeteer PAGELOG: ', msg.text()));
+    
+        return page.evaluate(
+            (originalTexts, paragraphStyles, boxStyle) => {
+                return window.renderTexts(originalTexts, paragraphStyles, boxStyle);
+            }, originalTexts, paragraphStyles, boxStyle
+        );
+    });
 
     let result = await Promise.all([statistics, originalStatistics]);
 

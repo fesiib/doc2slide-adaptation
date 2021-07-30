@@ -195,7 +195,7 @@ async function fitToAllSlides_simple(content, templates) {
     return globalRequests;
 }
 
-async function fitToAllSlides_TextShortening(content, obj) {
+async function fitToAllSlides_TextShortening(content, obj, cluster) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     let globalRequests = [];
@@ -210,13 +210,13 @@ async function fitToAllSlides_TextShortening(content, obj) {
 
         let shapeElements = extractShapeElements(slide);
 
-        for (let pageElement of shapeElements) {
-            if (!pageElement.shape.hasOwnProperty('placeholder')
-                || !pageElement.shape.placeholder.hasOwnProperty('type')
-            ) {
-                console.log('inappropriate shape for header: ', pageElement);
-            }
-        }
+        // for (let pageElement of shapeElements) {
+        //     if (!pageElement.shape.hasOwnProperty('placeholder')
+        //         || !pageElement.shape.placeholder.hasOwnProperty('type')
+        //     ) {
+        //         console.log('inappropriate shape for header: ', pageElement);
+        //     }
+        // }
 
         // Fit the header
         if (content.hasOwnProperty('header')) {
@@ -303,7 +303,7 @@ async function fitToAllSlides_TextShortening(content, obj) {
                 }
             }
         }
-        scorePromises.push(scoreShapeElements(shapeElements, template));
+        scorePromises.push(scoreShapeElements(shapeElements, template, cluster));
     }
 
     let scores = await Promise.all(scorePromises);

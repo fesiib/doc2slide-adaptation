@@ -1,7 +1,7 @@
 import { createPresentation } from './DriveAPI';
 import { getPresentation, updatePresentation } from './SlidesAPI';
 
-const ADDR = 'http://localhost:2999';
+const ADDR = 'http://localhost:7777';
 
 
 export async function uploadSlides(presentation) {

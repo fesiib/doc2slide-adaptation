@@ -14,29 +14,42 @@ router.post('/upload_slides', function(req, res, next) {
     });;
 });
 
-/* POST get requests for slide deck */
 
-router.post('/generate_slide_deck_requests', function(req, res, next) {
-    console.log(req.body);
+const { Cluster } = require('puppeteer-cluster');
 
-    generateSlideDeckRequests(req.body).then((response) => {
-        res.json(response);
-    }).catch((reason) => {
-        console.log(reason);
-        next(reason);
+(async() => {
+    /* Setup Puppeteer Cluster */
+    
+    const cluster = await Cluster.launch({
+        concurrency: Cluster.CONCURRENCY_PAGE,
+        maxConcurrency: 2,
+        monitor: true,
     });
-});
 
-/* POST get requests for single slide */
+    /* POST get requests for slide deck */
 
-router.post('/generate_slide_single_requests', function(req, res, next) {
-    console.log(req.body);
+    router.post('/generate_slide_deck_requests', function(req, res, next) {
+        console.log(req.body);
 
-    generateSlideSingleRequests(req.body).then((response) => {
-        res.json(response);
-    }).catch((reason) => {
-        next(reason);
-    });;
-});
+        generateSlideDeckRequests(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            console.log(reason);
+            next(reason);
+        });
+    });
+
+    /* POST get requests for single slide */
+
+    router.post('/generate_slide_single_requests', function(req, res, next) {
+        console.log(req.body);
+
+        generateSlideSingleRequests(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            next(reason);
+        });;
+    });
+})();
 
 module.exports = router;

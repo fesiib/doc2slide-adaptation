@@ -21,7 +21,7 @@ async function uploadSlides(data) {
     });
 }
 
-async function generateSlideDeckRequests(data) {
+async function generateSlideDeckRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
@@ -29,14 +29,14 @@ async function generateSlideDeckRequests(data) {
     }
     let templates = templatesLibrary[presentationId];
     let initializeRequests = initializePresentation(templates);
-    let fitRequests = await fitToAllSlides_TextShortening(resources, templates);
+    let fitRequests = await fitToAllSlides_TextShortening(resources, templates, cluster);
     return {
         requests: initializeRequests.concat(fitRequests),
         matching: [],
     };
 }
 
-async function generateSlideSingleRequests(data) {
+async function generateSlideSingleRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
     return new Promise((resolve, reject) => {
