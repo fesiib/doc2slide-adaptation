@@ -8,7 +8,7 @@ async function scoreShapeElements(shapeElements, template) {
     const page = await browser.newPage();
     await page.setContent('', {waitUntil: 'networkidle0'});
     await page.addScriptTag({path: './renderBundle.js', type: 'text/javascript'});
-
+    page.on('console', (msg) => console.log('Puppeteer PAGELOG: ', msg.text()));
 
     let statisticsList = [];
 
