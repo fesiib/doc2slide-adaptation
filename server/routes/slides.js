@@ -24,6 +24,9 @@ const { Cluster } = require('puppeteer-cluster');
         concurrency: Cluster.CONCURRENCY_PAGE,
         maxConcurrency: 2,
         monitor: true,
+        puppeteerOptions: {
+            args: ['--no-sandbox'],
+        },
     });
 
     /* POST get requests for slide deck */
