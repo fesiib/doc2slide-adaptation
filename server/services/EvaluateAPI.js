@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
 const EMU = 1 / 12700;
 
 async function scoreShapeElements(shapeElements, template) {    
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
     const page = await browser.newPage();
     await page.setContent('', {waitUntil: 'networkidle0'});
     await page.addScriptTag({path: './renderBundle.js', type: 'text/javascript'});
