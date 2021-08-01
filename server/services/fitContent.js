@@ -187,6 +187,7 @@ function fitToShape(contents, pageElement, isCustom) {
 
             matching[content.id] = {
                 ...result,
+                rectangle: pageElement.rectangle,
                 objectId: pageElement.objectId,
                 textElementId,
             };

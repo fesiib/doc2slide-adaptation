@@ -460,6 +460,7 @@ class Templates {
                 ...rectangle,
                 type: getPageElementType(pageElement),
             });
+            pageElement.rectangle = { ...rectangle, unit: 'EMU' };
         }
         return layout;
     }
