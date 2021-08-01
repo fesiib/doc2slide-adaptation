@@ -72,7 +72,7 @@ function getFirstText(shapeText) {
 function initializePageElementShape(pageElement) {
     let requests = [];
 
-    if (!pageElement.hasOwnProperty('mapped') || !pageElement.mapped) {
+    if (!pageElement.hasOwnProperty('mapped')) {
         return requests;
     }
     if (!pageElement.mapped) {
