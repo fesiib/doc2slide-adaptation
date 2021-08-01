@@ -504,7 +504,7 @@ function initializeTemplate(template) {
     let pageId = template.pageId;
     let page = template.page;
     let weight = template.weight;
-    let originalId = template.originalId;
+    let pageNumStr = template.pageNum.toString();
     let informationBoxId = template.informationBoxId;
 
     requests.push({
@@ -516,10 +516,10 @@ function initializeTemplate(template) {
 
     if (weight === 1) {
         ///layout
-        requests = requests.concat(addTextBox(informationBoxId, pageId, "Layout: " + originalId));
+        requests = requests.concat(addTextBox(informationBoxId, pageId, "Layout: " + pageNumStr));
     }
     else {
-        requests = requests.concat(addTextBox(informationBoxId, pageId, "Page: " + originalId));    
+        requests = requests.concat(addTextBox(informationBoxId, pageId, "Page: " + pageNumStr));    
     }
     return requests;
 }

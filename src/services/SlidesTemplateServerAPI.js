@@ -114,8 +114,12 @@ export async function extract(presentationId) {
                     if (newId === undefined) {
                         reject('Creation failed');
                     }
-                    resolve({
-                        presentationId: newId,
+                    updatePresentation(newId, response.requests).then(() => {
+                        resolve({
+                            presentationId: newId,
+                        });
+                    }).catch((reason) => {
+                        reject(reason);
                     });
                 });
             });
@@ -148,6 +152,39 @@ export async function generateSlideDeck(referencePresentationId, presentationId,
     });
 }
 
+export async function generateSlideSingle(referencePresentationId, presentationId, pageNum, targetPageId, resources) {
+    return new Promise((resolve, reject) => {
+        clearSlideSingleRequests(presentationId, pageNum).then((response) => {
+            let clearRequests = response.requests;
+            generateSlideSingleRequests(referencePresentationId, targetPageId, resources)
+            .then((response) => {
+                let requests = clearRequests.concat(response.requests);
+
+                for (let request of requests) {
+                    if (request.hasOwnProperty('createSlide')) {
+                        request.createSlide.insertionIndex = pageNum;
+                    }
+                }
+
+                let matching = response.matching;
+                let matched = response.matched;
+                console.log('Matched:', matched, matching);
+                updatePresentation(presentationId, requests).then((response) => {
+                    resolve({
+                        response,
+                    });
+                }).catch((reason) => {
+                    reject(reason);
+                });
+            }).catch((reason) => {
+                reject(reason);
+            });
+        }).catch((reason) => {
+            reject(reason);
+        });
+    });
+}
+
 async function clearSlideDeckRequests(presentationId) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
@@ -160,6 +197,26 @@ async function clearSlideDeckRequests(presentationId) {
                         }
                     });
                 }    
+            }
+            resolve({
+                requests,
+            });
+        }).catch((reason) => {
+            reject(reason);
+        });
+    });
+}
+
+async function clearSlideSingleRequests(presentationId, pageNum) {
+    return new Promise((resolve, reject) => {
+        getPresentation(presentationId).then((response) => {
+            let requests = [];
+            if (response.result.hasOwnProperty('slides')) {
+                requests.push({
+                    deleteObject: {
+                        objectId: response.result.slides[pageNum].objectId,
+                    }
+                });  
             }
             resolve({
                 requests,

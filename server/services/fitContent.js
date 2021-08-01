@@ -447,11 +447,12 @@ async function fitToAllSlides_TextShortening(content, obj, cluster) {
         });
 
         let informationText = '';
+        let pageNumStr = template.pageNum.toString();
         if (template.isCustom) {
-            informationText = 'Page ' + template.originalId + ' ';
+            informationText = 'Page ' + pageNumStr + ' ';
         }
         else {
-            informationText = 'Layout ' + template.originalId + ' ';   
+            informationText = 'Layout ' + pageNumStr + ' ';   
         }
 
         for (let field in score) {
@@ -639,11 +640,12 @@ async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
         });
 
         let informationText = '';
+        let pageNumStr = template.pageNum.toString();
         if (template.isCustom) {
-            informationText = 'Page ' + template.originalId + ' ';
+            informationText = 'Page ' + pageNumStr + ' ';
         }
         else {
-            informationText = 'Layout ' + template.originalId + ' ';   
+            informationText = 'Layout ' + pageNumStr + ' ';   
         }
 
         for (let field in score) {
@@ -665,8 +667,61 @@ async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
     };
 }
 
+async function fitToSlideSingle_random(content, obj, pageId, clusterBrowser) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+
+    let template = templates.getByOriginalId(pageId);
+    let globalRequests = [];
+    let matching = {};
+
+    let result = await tryFitBody(content, 0, template, clusterBrowser);
+    console.log('Fitted', 0, result.done, result);
+    globalRequests = globalRequests.concat(initializeTemplate(result.template));
+    globalRequests = globalRequests.concat(result.requests);
+    matching[result.template.pageId] = result.matching;
+    
+    globalRequests.push({
+        deleteText: {
+            objectId: result.template.informationBoxId,
+            textRange: {
+                type: 'ALL',
+            }
+        }
+    });
+
+    let informationText = '';
+    let pageNumStr = result.template.pageNum.toString();
+        if (result.template.isCustom) {
+            informationText = 'Page ' + pageNumStr + ' ';
+        }
+        else {
+            informationText = 'Layout ' + pageNumStr + ' ';   
+        }
+
+
+    for (let field in result.score) {
+        let curScore = result.score[field];
+        curScore = Math.round(curScore * 100) / 100;
+        informationText += field + ": " + curScore.toString() + ', ';
+    }
+    
+    globalRequests.push({
+        insertText: {
+            objectId: result.template.informationBoxId,
+            text: informationText,
+        }
+    });
+    return {
+        requests: globalRequests,
+        matching: matching,
+        matched: result.done,
+    };
+}
+
 module.exports = {
     fitToAllSlides_simple,
     fitToAllSlides_TextShortening,
-    fitToSlideDeck_random
+    fitToSlideDeck_random,
+    fitToSlideSingle_random
 };

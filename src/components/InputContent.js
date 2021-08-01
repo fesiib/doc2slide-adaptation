@@ -6,7 +6,7 @@ import {
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { extractedFile } from '../reducers/presentationFiles';
-import { generateSlideDeck } from '../services/SlidesTemplateServerAPI';
+import { generateSlideSingle } from '../services/SlidesTemplateServerAPI';
 import { processContent } from '../services/TextAPI';
 
 export const EXTRACTING = 'extracting';
@@ -24,9 +24,11 @@ export function loadingActivate(process) {
     if (process === COMPILING) {
         loadingState.compiling = true;
     }
+    let divDocForm = document.getElementById('contentDocForm');
     let divForm = document.getElementById('contentForm');
     let divLoading = document.getElementById('loading');
     divForm.setAttribute('style', 'display: none');
+    divDocForm.setAttribute('style', 'display: none');
     divLoading.setAttribute('style', 'display: block');
 }
 
@@ -38,9 +40,11 @@ export function loadingDeactivate(process) {
         loadingState.compiling = false;
     }
     if (!loadingState.extracting && !loadingState.compiling) {
+        let divDocForm = document.getElementById('contentDocForm');
         let divForm = document.getElementById('contentForm');
         let divLoading = document.getElementById('loading');
         divForm.setAttribute('style', 'display: block');
+        divDocForm.setAttribute('style', 'display: block');
         divLoading.setAttribute('style', 'display: none');
     }
 }
@@ -86,6 +90,7 @@ function InputContent(props) {
     }
 
     const submitHandler = (event) => {
+        console.log(shouldUpdate);
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
@@ -94,7 +99,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlideDeck(selected, selectedExt, resources)
+                generateSlideSingle(selected, selectedExt, 0, 'g2cdf48e324_0_133', resources)
                     .then((response) => {
                         console.log("Generated Slide Deck: ", response);
                         loadingDeactivate(COMPILING);
@@ -145,7 +150,7 @@ function InputContent(props) {
                         />
                     </FormGroup>
                     {renderBodyForm()}
-                    <Button type='submit' > Compile </Button>
+                    <Button type='submit' > Compile Single Page </Button>
                 </Form>
             </div>
             <div style={ { display: 'none' } } id='loading'>

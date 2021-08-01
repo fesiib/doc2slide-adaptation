@@ -1,4 +1,4 @@
-const COMPILE = "COMPILE";
+const COMPILE_DOC = "COMPILE_DOC";
 const CHANGE_TITLE = "CHANGE_TITLE";
 const CHANGE_SECTIONS = "CHANGE_SECTIONS";
 
@@ -113,8 +113,8 @@ function parseSection(text) {
 }
 
 
-export const compileContent = (payload) => ({
-    type: COMPILE,
+export const compileDocContent = (payload) => ({
+    type: COMPILE_DOC,
     payload,
 });
 
@@ -138,7 +138,7 @@ const initialState = {
 
 const contentDoc = (state = initialState, action) => {
     switch (action.type) {
-        case COMPILE: {
+        case COMPILE_DOC: {
             return {
                 ...state,
                 titleResult: action.payload.titleResult,

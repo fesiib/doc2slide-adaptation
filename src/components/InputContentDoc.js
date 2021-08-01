@@ -4,7 +4,7 @@ import {
 
     Spinner,
 } from 'reactstrap';
-import { changeTitleContent, changeSectionsContent, compileContent } from '../reducers/contentDoc';
+import { changeTitleContent, changeSectionsContent, compileDocContent } from '../reducers/contentDoc';
 import { extractedFile } from '../reducers/presentationFiles';
 import { generateSlideDeck } from '../services/SlidesTemplateServerAPI';
 import { processContentDoc } from '../services/TextAPI';
@@ -31,7 +31,7 @@ function InputContentDoc(props) {
     };
     
     const _compileContent = (titleResult, sectionsResult) => {
-        dispatch(compileContent({
+        dispatch(compileDocContent({
             titleResult,
             sectionsResult,
         }));
@@ -51,6 +51,7 @@ function InputContentDoc(props) {
     }
 
     const submitHandler = (event) => {
+        console.log(shouldUpdate);
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
@@ -103,7 +104,7 @@ function InputContentDoc(props) {
 
     return (
         <div className={props.className} >
-            <div style={ { display: 'block' } } id='contentForm'>
+            <div style={ { display: 'block' } } id='contentDocForm'>
                 <Form onSubmit={submitHandler}>
                     <FormGroup>
                         <Label for="title"> Title </Label>
@@ -114,7 +115,7 @@ function InputContentDoc(props) {
                         />
                     </FormGroup>
                     {renderSectionsForm()}
-                    <Button type='submit' > Compile </Button>
+                    <Button type='submit' > Compile Slide Deck </Button>
                 </Form>
             </div>
             <div style={ { display: 'none' } } id='loading'>

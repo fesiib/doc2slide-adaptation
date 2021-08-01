@@ -58,7 +58,7 @@ function App() {
 		<div>
 			<Authorize/>
 			<FileManager/>
-			{/* <InputContent className='m-5'/> */}
+			<InputContent className='m-5'/>
 			<InputContentDoc className='m-5'/>
 			<Container>
 				<Row>

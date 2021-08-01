@@ -54,8 +54,8 @@ export const changeBodyContent = (payload) => ({
 });
 
 const initialState = {
-    header: CONTENT_COMPLEX.header,
-    body: CONTENT_COMPLEX.body.slice(),
+    header: CONTENT_SIMPLE.header,
+    body: CONTENT_SIMPLE.body.slice(),
     headerResult: [],
     bodyResult: [],
     shouldUpdate: true,

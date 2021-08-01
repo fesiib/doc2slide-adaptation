@@ -500,21 +500,45 @@ class Templates {
         return 0;
     }
 
+    getByOriginalId(originalId) {
+        for (let template of this.__templates) {
+            if (template.originalId === originalId) {
+                return this.copySingleTemplate(template);
+            }
+        }
+        throw Error('There is no such pageId in presentationId', originalId);
+    }
+
     randomDraw() {
         let id = Math.floor(Math.random() * this.__templates.length);
-        let template = JSON.parse(JSON.stringify(this.__templates[id]));
+        id = 5;
+        return this.copySingleTemplate(this.__templates[id]);
+    }
 
+    refreshIdsPageElement(pageElement) {
+        pageElement.objectId = random();
+        if (pageElement.hasOwnProperty('elementGroup')) {
+            if (!Array.isArray(pageElement.elementGroup.children))
+                return;
+            for (let child of pageElement.elementGroup.children) {
+                this.refreshIdsPageElement(child);
+            }
+        }
+    }
+
+    copySingleTemplate(originalTemplate) {
+        let template = JSON.parse(JSON.stringify(originalTemplate));
         template.pageId = random();
         template.informationBoxId = random();
 
         for (let pageElement of template.page.pageElements) {
-            pageElement.objectId = random();
+            this.refreshIdsPageElement(pageElement);
         }
         
         return template;
     }
-
-    __add(layout, pageId, originalId, page, weight, isCustom) {
+ 
+    __add(layout, pageId, originalId, pageNum, page, weight, isCustom) {
 
         page.pageElements = page.pageElements.concat(toLines(layout));
 
@@ -523,6 +547,7 @@ class Templates {
         this.__templates.push({
             pageId,
             page,
+            pageNum,
             weight,
             originalId,
             isCustom,
@@ -533,7 +558,7 @@ class Templates {
         });
     }
 
-    addCustom(pageId, originalId, page) {
+    addCustom(pageId, originalId, pageNum, page) {
         if (Array.isArray(page.pageElements)) {
             page.pageElements = sanitizePageElements(page.pageElements);
         }
@@ -544,11 +569,11 @@ class Templates {
 
         if (this.__getComplexity(page) <= 0.5) {
             let layout = this.__getLayout(page);
-            this.__add(layout, pageId, originalId, page, 2, true);
+            this.__add(layout, pageId, originalId, pageNum, page, 2, true);
         }
     }
 
-    addDefault(pageId, originalId, page) {
+    addDefault(pageId, originalId, pageNum, page) {
         if (Array.isArray(page.pageElements)) {
             page.pageElements = sanitizePageElements(page.pageElements);
         }
@@ -556,7 +581,7 @@ class Templates {
             console.log('no page elements', page);
         }
         let layout = this.__getLayout(page);
-        this.__add(layout, pageId, originalId, page, 1, false);
+        this.__add(layout, pageId, originalId, pageNum, page, 1, false);
     }
 
     getTemplates() {
