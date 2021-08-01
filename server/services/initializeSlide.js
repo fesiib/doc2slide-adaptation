@@ -103,7 +103,9 @@ function initializePageElementShape(pageElement) {
             break;
         }
         let start = text.length;
-        text += pageElement.mappedContents[contentId].text + '\n';
+        if (contentId > 0)
+            text += '\n';
+        text += pageElement.mappedContents[contentId].text;
         let end = text.length;
         if (textElement.hasOwnProperty('paragraphMarker')) {
             let bullet = {};
