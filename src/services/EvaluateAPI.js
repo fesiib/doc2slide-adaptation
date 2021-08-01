@@ -168,14 +168,14 @@ function createTextNode(text) {
 function boxStyleToCSS(boxStyle) {
     return (
         " display: flex;"
-        + " flex-direction: " + "column;"
+        + " flex-direction: column;"
         + " justify-content: " + boxStyle.alignItems + ";"
         + " height: " + boxStyle.height.toString() + "pt;"
         + " width: " + boxStyle.width.toString() + "pt;"
-        + " padding-left: " + "7.2pt;"
-        + " padding-right: " + "7.2pt;"
-        + " padding-top: " + "7.2pt;"
-        + " padding-bottom: " + "7.2pt;"
+        + " padding-left: 7.2pt;"
+        + " padding-right: 7.2pt;"
+        + " padding-top: 7.2pt;"
+        + " padding-bottom: 7.2pt;"
         + " overflow: visible;"
         + " border: solid black 1pt; "
     );

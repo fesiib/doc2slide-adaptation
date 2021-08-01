@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Authorize from './components/Authorize';
 import FileManager from './components/FileManager';
 import ViewPresentation from './components/ViewPresentation';
-import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates } from './reducers/presentationFiles';
+import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
 import { extract } from './services/SlidesTemplateServerAPI';
 import { Container, Col, Row } from 'reactstrap';
 import InputContent, { EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
@@ -21,13 +21,6 @@ function App() {
 		dispatch(extractedFile({
 			forId,
 			id,
-		}));
-	}
-
-	const _extractedTemplates = (forId, templates) => {
-		dispatch(extractedTemplates({
-			forId,
-			templates,
 		}));
 	}
 

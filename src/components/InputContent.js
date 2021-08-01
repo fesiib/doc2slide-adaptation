@@ -50,7 +50,7 @@ function InputContent(props) {
 
     const { header, body, headerResult, bodyResult, shouldUpdate } = useSelector(state => state.content);
 
-    const { selected, selectedExt, templates } = useSelector(state => state.presentationFiles);
+    const { selected, selectedExt } = useSelector(state => state.presentationFiles);
 
     const _changeHeaderContent = (text) => {
         dispatch(changeHeaderContent({

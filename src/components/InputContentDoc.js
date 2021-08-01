@@ -15,7 +15,7 @@ function InputContentDoc(props) {
 
     const { title, sections, titleResult, sectionsResult, shouldUpdate } = useSelector(state => state.contentDoc);
 
-    const { selected, selectedExt, templates } = useSelector(state => state.presentationFiles);
+    const { selected, selectedExt } = useSelector(state => state.presentationFiles);
 
     const _changeTitleContent = (text) => {
         dispatch(changeTitleContent({
