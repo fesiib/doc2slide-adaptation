@@ -658,7 +658,10 @@ async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
             }
         });
     }
-    return globalRequests;
+    return {
+        requests: globalRequests,
+        matching: matching,
+    };
 }
 
 module.exports = {

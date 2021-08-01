@@ -28,11 +28,8 @@ async function generateSlideDeckRequests(data, cluster) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let fitRequests = await fitToSlideDeck_random(resources, templates, cluster);
-    return {
-        requests: fitRequests,
-        matching: [],
-    };
+    let result = await fitToSlideDeck_random(resources, templates, cluster);
+    return result;
 }
 
 async function generateSlideSingleRequests(data, cluster) {
