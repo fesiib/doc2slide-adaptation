@@ -1,6 +1,6 @@
 const { extractTemplates } = require('./extractSlide');
 const { initializePresentation } = require('./initializeSlide');
-const { fitToAllSlides_TextShortening } = require('./fitContent');
+const { fitToAllSlides_TextShortening, fitToSlideDeck_random } = require('./fitContent');
 
 let templatesLibrary = {};
 
@@ -28,16 +28,16 @@ async function generateSlideDeckRequests(data, cluster) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let initializeRequests = initializePresentation(templates);
-    let fitRequests = await fitToAllSlides_TextShortening(resources, templates, cluster);
+    let fitRequests = await fitToSlideDeck_random(resources, templates, cluster);
     return {
-        requests: initializeRequests.concat(fitRequests),
+        requests: fitRequests,
         matching: [],
     };
 }
 
 async function generateSlideSingleRequests(data, cluster) {
     let presentationId = data.presentationId;
+    let pageId = data.pageId;
     let resources = data.resources;
     return new Promise((resolve, reject) => {
         resolve({

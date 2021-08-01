@@ -5,21 +5,37 @@ const CHANGE_BODY = "CHANGE_BODY";
 const CONTENT_COMPLEX = {
 	header: 'Introduction',
 	body: [
-		'Communication takes place over time, and the presenter’s timed rehearsals, attention to timekeeping, and rhythm of spoken delivery all affect audience perceptions.',
-		'Presentations are a crucial form of modern communication, yet there is a dissonance between everyday practices with presentation tools and best practices from the presentation literature.',
-		'The activity of preparing and delivering presentations, whether to teach, inform, or persuade, is of critical importance across education, academia, and business.',
-		'Our goal was therefore to uncover the gap between actual presentation practices and the “best practices” advocated in the presentation literature, before designing tools that help presenters to bridge that gap.',
-	],
+		{
+            paragraph: 'Communication takes place over time, and the presenter’s timed rehearsals, attention to timekeeping, and rhythm of spoken delivery all affect audience perceptions.',
+        },
+        {
+            paragraph: 'Presentations are a crucial form of modern communication, yet there is a dissonance between everyday practices with presentation tools and best practices from the presentation literature.',
+        },
+        {
+            paragraph: 'The activity of preparing and delivering presentations, whether to teach, inform, or persuade, is of critical importance across education, academia, and business.',
+        },
+        {
+            paragraph: 'Our goal was therefore to uncover the gap between actual presentation practices and the “best practices” advocated in the presentation literature, before designing tools that help presenters to bridge that gap.',
+        },
+    ],
 };
 
 const CONTENT_SIMPLE = {
 	header: 'Introduction',
 	body: [
-		'Communication takes place over time.',
-		'Presentations are a crucial form of modern communication.',
-		'The activity of preparing and delivering presentations.',
-		'Our goal was therefore to uncover the gap between actual presentation practices.',
-	],
+		{
+            paragraph: 'Communication takes place over time.',
+        },
+        {
+            paragraph: 'Presentations are a crucial form of modern communication.',
+        },
+        {
+            paragraph: 'The activity of preparing and delivering presentations.',
+        },
+        {
+            paragraph: 'Our goal was therefore to uncover the gap between actual presentation practices.',
+        },
+    ],
 };
 
 export const compileContent = (payload) => ({
@@ -39,7 +55,7 @@ export const changeBodyContent = (payload) => ({
 
 const initialState = {
     header: CONTENT_COMPLEX.header,
-    body: CONTENT_COMPLEX.body,
+    body: CONTENT_COMPLEX.body.slice(),
     headerResult: [],
     bodyResult: [],
     shouldUpdate: true,
@@ -64,7 +80,9 @@ const content = (state = initialState, action) => {
         }
         case CHANGE_BODY: {
             let body = state.body.slice(0);
-            body[action.payload.pos] = action.payload.text;
+            body[action.payload.pos] = {
+                paragraph: action.payload.text,
+            };
             return {
                 ...state,
                 body,

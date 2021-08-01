@@ -8,8 +8,8 @@ import ViewPresentation from './components/ViewPresentation';
 import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates } from './reducers/presentationFiles';
 import { extract } from './services/SlidesTemplateServerAPI';
 import { Container, Col, Row } from 'reactstrap';
-import { appendPre } from './services/GoogleAPI';
 import InputContent, { EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
+import InputContentDoc from './components/InputContentDoc';
 import { useEffect } from 'react';
 
 function App() {
@@ -65,7 +65,8 @@ function App() {
 		<div>
 			<Authorize/>
 			<FileManager/>
-			<InputContent className='m-5'/>
+			{/* <InputContent className='m-5'/> */}
+			<InputContentDoc className='m-5'/>
 			<Container>
 				<Row>
 					<Col xs="5" className="m-5">

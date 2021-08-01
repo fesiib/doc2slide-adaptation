@@ -1,4 +1,5 @@
 const { objRecTraverse } = require('./SlidesAPIRqFields');
+const { getDominantTextStyle } = require('./EvaluateAPI');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
@@ -68,6 +69,131 @@ function getFirstText(shapeText) {
     return firstText;
 }
 
+function initializePageElementShape(pageElement) {
+    let requests = [];
+
+    if (!pageElement.hasOwnProperty('mapped') || !pageElement.mapped) {
+        return requests;
+    }
+    if (!pageElement.mapped) {
+        requests.unshift({
+            deleteText: {
+                objectId: pageElement.objectId,
+                textRange: {
+                    type: 'ALL',
+                }
+            }
+        });
+        requests.unshift({
+            insertText: {
+                objectId: pageElement.objectId,
+                text: 'TEXT_BOX',
+                insertionIndex: 0,
+            }
+        });
+        return requests;
+    }
+    
+    let contentId = 0;
+    let text = '';
+    let textElements = pageElement.shape.text.textElements;
+    for (let i = 0; i < textElements.length; i++) {
+        let textElement = textElements[i];
+        if (contentId >= pageElement.mappedContents.length) {
+            break;
+        }
+        let start = text.length;
+        text += pageElement.mappedContents[contentId].text + '\n';
+        let end = text.length;
+        if (textElement.hasOwnProperty('paragraphMarker')) {
+            let bullet = {};
+            let style = {};
+
+            let listId = null;
+            let nestingLevel = 0;
+            if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
+                bullet = { ...textElement.paragraphMarker.bullet };
+                if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
+                    listId = textElement.paragraphMarker.bullet.listId;
+                }
+                if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
+                    nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
+                }
+            }
+            if (textElement.paragraphMarker.hasOwnProperty('style')) {
+                style = { ...textElement.paragraphMarker.style };
+            }
+            let l = 0;
+            let r = 0;
+            if (textElement.hasOwnProperty('startIndex'))
+                l = textElement.startIndex;
+            if (textElement.hasOwnProperty('endIndex')) {
+                r = textElement.endIndex;
+            }
+            let textStyle = {};
+            if (listId !== null) {
+                textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
+                if (typeof textStyle !== 'object') {
+                    textStyle = {};
+                }
+            }
+            
+            textStyle = getDominantTextStyle(textStyle, textElements, i, l, r);
+
+
+            let result = objRecTraverse(style, '')
+            requests.push({
+                updateParagraphStyle: {
+                    objectId: pageElement.objectId,
+                    style: result.dst,
+                    textRange: {
+                        startIndex: start,
+                        endIndex: end,
+                        type: 'FIXED_RANGE',
+                    },
+                    fields: result.fields.join(),
+                }
+            });
+
+            result = objRecTraverse(textStyle, '')
+            requests.push({
+                updateTextStyle: {
+                    objectId: pageElement.objectId,
+                    style: result.dst,
+                    textRange: {
+                        startIndex: start,
+                        endIndex: end,
+                        type: 'FIXED_RANGE',
+                    },
+                    fields: result.fields.join(),
+                }
+            });
+            contentId++;
+        }
+    }
+    requests.unshift({
+        insertText: {
+            objectId: pageElement.objectId,
+            text,
+        }
+    });
+    requests.unshift({
+        deleteText: {
+            objectId: pageElement.objectId,
+            textRange: {
+                type: 'ALL',
+            }
+        }
+    });
+    requests.unshift({
+        insertText: {
+            objectId: pageElement.objectId,
+            text: 'TEXT_BOX',
+            insertionIndex: 0,
+        }
+    });
+    return requests;
+}
 
 function initializeShapeText(pageElement, text) {
     if (!pageElement.hasOwnProperty('shape')
@@ -371,29 +497,35 @@ function initializePage(pageId, pageTemplate) {
     return requests;
 }
 
+function initializeTemplate(template) {
+    let requests = [];
+    let pageId = template.pageId;
+    let page = template.page;
+    let weight = template.weight;
+    let originalId = template.originalId;
+    let informationBoxId = template.informationBoxId;
+
+    requests.push({
+        createSlide: {
+            objectId: pageId,
+        },
+    });
+    requests = requests.concat(initializePage(pageId, page));
+
+    if (weight === 1) {
+        ///layout
+        requests = requests.concat(addTextBox(informationBoxId, pageId, "Layout: " + originalId));
+    }
+    else {
+        requests = requests.concat(addTextBox(informationBoxId, pageId, "Page: " + originalId));    
+    }
+    return requests;
+}
+
 function initializePresentation(templates) {
     let requests = [];
     for (let template of templates.getTemplates()) {
-        let pageId = template.pageId;
-        let page = template.page;
-        let weight = template.weight;
-        let originalId = template.originalId;
-        let informationBoxId = template.informationBoxId;
-
-        requests.push({
-            createSlide: {
-                objectId: pageId,
-            },
-        });
-        requests = requests.concat(initializePage(pageId, page));
-    
-        if (weight === 1) {
-            ///layout
-            requests = requests.concat(addTextBox(informationBoxId, pageId, "Layout: " + originalId));
-        }
-        else {
-            requests = requests.concat(addTextBox(informationBoxId, pageId, "Page: " + originalId));    
-        }
+        requests = requests.concat(initializeTemplate(template));
     }
     return requests;
 }
@@ -401,6 +533,8 @@ function initializePresentation(templates) {
 module.exports = {
     getFirstParagraphMarker,
     initializePresentation,
+    initializeTemplate,
     getFirstText,
-    initializeShapeText
+    initializeShapeText,
+    initializePageElementShape
 }

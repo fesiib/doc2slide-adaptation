@@ -149,7 +149,9 @@ async function renderTexts(texts, paragraphStyles, boxStyle) {
         const paragraphStyle = paragraphStyles[i].style;
         const text = texts[i];
         const innerDiv = element.innerDivs[i];
-
+        if (text === '') {
+            continue;
+        }
         element.outerDiv.appendChild(innerDiv);
 
         let lineHeight = getAbsLineHeight(paragraphStyle, fontStyle);

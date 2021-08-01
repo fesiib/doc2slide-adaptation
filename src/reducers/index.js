@@ -3,12 +3,14 @@ import {combineReducers} from 'redux';
 
 import presentationFiles from './presentationFiles';
 import content from './content';
+import contentDoc from './contentDoc';
 
 const RESET_APP = "RESET_APP";
 
 const appReducer = combineReducers({
     presentationFiles,
     content,
+    contentDoc,
 });
 
 export const resetApp = () => ({

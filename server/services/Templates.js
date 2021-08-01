@@ -499,6 +499,20 @@ class Templates {
         return 0;
     }
 
+    randomDraw() {
+        let id = Math.floor(Math.random() * this.__templates.length);
+        let template = JSON.parse(JSON.stringify(this.__templates[id]));
+
+        template.pageId = random();
+        template.informationBoxId = random();
+
+        for (let pageElement of template.page.pageElements) {
+            pageElement.objectId = random();
+        }
+        
+        return template;
+    }
+
     __add(layout, pageId, originalId, page, weight, isCustom) {
 
         page.pageElements = page.pageElements.concat(toLines(layout));

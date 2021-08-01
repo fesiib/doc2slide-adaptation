@@ -4,71 +4,36 @@ import {
 
     Spinner,
 } from 'reactstrap';
-import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
+import { changeTitleContent, changeSectionsContent, compileContent } from '../reducers/contentDoc';
 import { extractedFile } from '../reducers/presentationFiles';
 import { generateSlideDeck } from '../services/SlidesTemplateServerAPI';
-import { processContent } from '../services/TextAPI';
+import { processContentDoc } from '../services/TextAPI';
+import { COMPILING, loadingActivate, loadingDeactivate } from './InputContent';
 
-export const EXTRACTING = 'extracting';
-export const COMPILING = 'compiling';
-
-let loadingState = {
-    extracting: false, 
-    compiling: false,
-};
-
-export function loadingActivate(process) {
-    if (process === EXTRACTING) {
-        loadingState.extracting = true;
-    }
-    if (process === COMPILING) {
-        loadingState.compiling = true;
-    }
-    let divForm = document.getElementById('contentForm');
-    let divLoading = document.getElementById('loading');
-    divForm.setAttribute('style', 'display: none');
-    divLoading.setAttribute('style', 'display: block');
-}
-
-export function loadingDeactivate(process) {
-    if (process === EXTRACTING) {
-        loadingState.extracting = false;
-    }
-    if (process === COMPILING) {
-        loadingState.compiling = false;
-    }
-    if (!loadingState.extracting && !loadingState.compiling) {
-        let divForm = document.getElementById('contentForm');
-        let divLoading = document.getElementById('loading');
-        divForm.setAttribute('style', 'display: block');
-        divLoading.setAttribute('style', 'display: none');
-    }
-}
-
-function InputContent(props) {
+function InputContentDoc(props) {
     const dispatch = useDispatch();
 
-    const { header, body, headerResult, bodyResult, shouldUpdate } = useSelector(state => state.content);
+    const { title, sections, titleResult, sectionsResult, shouldUpdate } = useSelector(state => state.contentDoc);
 
     const { selected, selectedExt, templates } = useSelector(state => state.presentationFiles);
 
-    const _changeHeaderContent = (text) => {
-        dispatch(changeHeaderContent({
+    const _changeTitleContent = (text) => {
+        dispatch(changeTitleContent({
             text,
         }));
     };
 
-    const _changeBodyContent = (text, pos) => {
-        dispatch(changeBodyContent({
+    const _changeSectionsContent = (text, pos) => {
+        dispatch(changeSectionsContent({
             text,
             pos,
         }));
     };
     
-    const _compileContent = (headerResult, bodyResult) => {
+    const _compileContent = (titleResult, sectionsResult) => {
         dispatch(compileContent({
-            headerResult,
-            bodyResult,
+            titleResult,
+            sectionsResult,
         }));
     }
 
@@ -89,7 +54,7 @@ function InputContent(props) {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
-        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+        processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdate)
             .then((response) => {
                 let resources = {
                     ...response,
@@ -103,25 +68,29 @@ function InputContent(props) {
                         console.log('Couldn`t generate Slide Deck: ', error);
                         loadingDeactivate(COMPILING);
                     });
-                    _compileContent(resources.header, resources.body);
+                    _compileContent(resources.title, resources.sections);
             }).catch((error) => {
                 console.log('Couldn`t generate Slide Deck: ', error);
                 loadingDeactivate(COMPILING);
             });
     };
 
-    const renderBodyForm = () => {
-        if (Array.isArray(body)) {
-            let result =  body.map((value, idx_0) => {
+    const renderSectionsForm = () => {
+        if (Array.isArray(sections)) {
+            let result =  sections.map((value, idx_0) => {
                 let idx = idx_0 + 1;
                 let id = 'body' + idx.toString();
-                let text = value.paragraph;
+
+                let text = value.header + '\n';
+                for (let part of value.body) {
+                    text += part.paragraph + '\n';
+                }
                 return (
                     <FormGroup key={id}>
-                        <Label for={id}> {'Body Text ' + idx.toString()} </Label>
+                        <Label for={id}> {'Section Text ' + idx.toString()} </Label>
                         <Input type="textarea" name={id} id={id} value={text} 
                             onChange={(event) => {
-                                _changeBodyContent(event.target.value, idx_0);
+                                _changeSectionsContent(event.target.value, idx_0);
                             }}
                         />
                     </FormGroup>
@@ -137,14 +106,14 @@ function InputContent(props) {
             <div style={ { display: 'block' } } id='contentForm'>
                 <Form onSubmit={submitHandler}>
                     <FormGroup>
-                        <Label for="header"> Header </Label>
-                        <Input type="textarea" name="header" id="header" value={header} 
+                        <Label for="title"> Title </Label>
+                        <Input type="textarea" name="title" id="title" value={title} 
                             onChange={(event) => {
-                                _changeHeaderContent(event.target.value);
+                                _changeTitleContent(event.target.value);
                             }}
                         />
                     </FormGroup>
-                    {renderBodyForm()}
+                    {renderSectionsForm()}
                     <Button type='submit' > Compile </Button>
                 </Form>
             </div>
@@ -155,4 +124,4 @@ function InputContent(props) {
     );
 }
 
-export default InputContent;
+export default InputContentDoc;

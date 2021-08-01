@@ -2,7 +2,7 @@ const { getRectangle } = require("./Templates");
 
 const EMU = 1 / 12700;
 
-async function scoreShapeElements(shapeElements, template, browserCluster) {    
+async function scoreShapeElements(shapeElements, browserCluster) {    
     let statisticsList = [];
 
     for (let pageElement of shapeElements) {
@@ -14,15 +14,12 @@ async function scoreShapeElements(shapeElements, template, browserCluster) {
     statisticsList = await Promise.all(statisticsList);
 
     return {
-        score: {
-            readability: calculateTextReadabilitySimple(statisticsList),
-            engagement: calculateTextEngagement(statisticsList),
-            grammatical: calculateTextGrammatical(statisticsList),
-            semantic: calculateTextSemantic(statisticsList),
-            importantWords: calculateTextImportantWords(statisticsList),
-            similarity: calculateTextSimilarity(statisticsList),
-        },
-        template,
+        readability: calculateTextReadabilitySimple(statisticsList),
+        engagement: calculateTextEngagement(statisticsList),
+        grammatical: calculateTextGrammatical(statisticsList),
+        semantic: calculateTextSemantic(statisticsList),
+        importantWords: calculateTextImportantWords(statisticsList),
+        similarity: calculateTextSimilarity(statisticsList),
     };
 }
 
@@ -381,7 +378,7 @@ function getParagraphTexts(pageElement) {
     let text = '';
     for (let i = 0; i < textElements.length; i++) {
         const textElement = textElements[i];
-        if (textElement.hasOwnProperty('paragraphMarker') && text.length > 0) {
+        if (textElement.hasOwnProperty('paragraphMarker')) {
             paragraphContents.push(text);
             text = '';
         }
@@ -392,13 +389,15 @@ function getParagraphTexts(pageElement) {
             text += textElement.autoText.content;
         }
     }
-    if (text.length > 0) {
+    if (textElements.length > 0)
         paragraphContents.push(text);
-    }
     return paragraphContents;
 }
 
 function getDominantTextStyle(textStyle, textElements, start, L, R) {
+    if (L > R) {
+        return textStyle;
+    }
     let cntStyle = {};
     let dominantStyle = '{}';
     for (let i = start + 1; i < textElements.length; i++) {
@@ -747,4 +746,5 @@ function getAreaDiff(statistics) {
 }
 module.exports = {
     scoreShapeElements,
+    getDominantTextStyle,
 };
