@@ -600,7 +600,7 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
         while (done < section.body.length) {
             let iterations = 0;
             let result = null;
-            while (iterations < 10) {     
+            while (iterations < 3) {     
                 let template = templates.randomDraw();
                 let current = await tryFitBody(section, done, template, clusterBrowser);
                 if (current.done === done) {
