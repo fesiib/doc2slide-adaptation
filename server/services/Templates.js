@@ -511,7 +511,6 @@ class Templates {
 
     randomDraw() {
         let id = Math.floor(Math.random() * this.__templates.length);
-        id = 5;
         return this.copySingleTemplate(this.__templates[id]);
     }
 

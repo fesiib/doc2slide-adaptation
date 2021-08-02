@@ -6,7 +6,7 @@ import {
 } from 'reactstrap';
 import { changeTitleContent, changeSectionsContent, compileDocContent } from '../reducers/contentDoc';
 import { extractedFile } from '../reducers/presentationFiles';
-import { generateSlideDeck } from '../services/SlidesTemplateServerAPI';
+import { generatePresentation } from '../services/SlidesTemplateServerAPI';
 import { processContentDoc } from '../services/TextAPI';
 import { COMPILING, loadingActivate, loadingDeactivate } from './InputContent';
 
@@ -60,7 +60,7 @@ function InputContentDoc(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlideDeck(selected, selectedExt, resources)
+                generatePresentation(selected, selectedExt, resources)
                     .then((response) => {
                         console.log("Generated Slide Deck: ", response);
                         loadingDeactivate(COMPILING);

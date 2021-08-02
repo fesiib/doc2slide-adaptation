@@ -1,10 +1,10 @@
 const { extractTemplates } = require('./extractSlide');
 const { initializePresentation } = require('./initializeSlide');
-const { fitToAllSlides_TextShortening, fitToSlideDeck_random, fitToSlideSingle_random } = require('./fitContent');
+const { fitToPresentation_random, fitToSlide_random } = require('./fitContent');
 
 let templatesLibrary = {};
 
-async function uploadSlides(data) {
+async function uploadPresentation(data) {
     return new Promise((resolve, reject) => {
         let presentation = data.presentation;
         let presentationId = presentation.presentationId;
@@ -22,31 +22,32 @@ async function uploadSlides(data) {
     });
 }
 
-async function generateSlideDeckRequests(data, cluster) {
+async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let result = await fitToSlideDeck_random(resources, templates, cluster);
+    let result = await fitToPresentation_random(resources, templates, cluster);
     return result;
 }
 
-async function generateSlideSingleRequests(data, cluster) {
+async function generateSlideRequests(data, cluster) {
     let presentationId = data.presentationId;
     let pageId = data.pageId;
+    let insertionIndex = data.insertionIndex;
     let resources = data.resources;
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let result = await fitToSlideSingle_random(resources, templates, pageId, cluster);
+    let result = await fitToSlide_random(resources, templates, pageId, insertionIndex, cluster);
     return result;
 }
 
 module.exports = {
-    uploadSlides,
-    generateSlideDeckRequests,
-    generateSlideSingleRequests,
+    uploadPresentation,
+    generatePresentationRequests,
+    generateSlideRequests,
 };

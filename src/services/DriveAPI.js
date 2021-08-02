@@ -36,7 +36,8 @@ export function createPresentation(title, callback) {
         resource: presentationMetaData,
         fields: 'id',
     }).then(function(response) {
-        callback(response.result.id);
+        let presentation = response.result;
+        callback(presentation.id);
     }, function(response) {
         appendPre('Error in createPresentation: ' + response.result.error.message);
     });

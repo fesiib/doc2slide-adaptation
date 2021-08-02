@@ -499,7 +499,7 @@ function initializePage(pageId, pageTemplate) {
     return requests;
 }
 
-function initializeTemplate(template) {
+function initializeTemplate(template, insertionIndex = -1) {
     let requests = [];
     let pageId = template.pageId;
     let page = template.page;
@@ -507,12 +507,22 @@ function initializeTemplate(template) {
     let pageNumStr = template.pageNum.toString();
     let informationBoxId = template.informationBoxId;
 
-    requests.push({
-        createSlide: {
-            objectId: pageId,
-        },
-    });
-    requests = requests.concat(initializePage(pageId, page));
+    if (insertionIndex < 0) {
+        requests.push({
+            createSlide: {
+                objectId: pageId,
+            },
+        });
+    }
+    else {
+        requests.push({
+            createSlide: {
+                objectId: pageId,
+                insertionIndex: insertionIndex,
+            },
+        });
+    }
+        requests = requests.concat(initializePage(pageId, page));
 
     if (weight === 1) {
         ///layout

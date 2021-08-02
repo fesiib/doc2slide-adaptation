@@ -588,7 +588,7 @@ async function tryFitBody(content, start, template, clusterBrowser) {
     };
 }
 
-async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
+async function fitToPresentation_random(contents, obj, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     
@@ -601,7 +601,7 @@ async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
         while (done < section.body.length) {
             let iterations = 0;
             let result = null;
-            while (iterations < 2) {     
+            while (iterations < 10) {     
                 let template = templates.randomDraw();
                 let current = await tryFitBody(section, done, template, clusterBrowser);
                 if (current.done === done) {
@@ -619,7 +619,7 @@ async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
                 score: result.score,
                 template: result.template,
             });
-            console.log('Fitted', done, result.done, result);
+            //console.log('Fitted', done, result.done, result);
             globalRequests = globalRequests.concat(initializeTemplate(result.template));
             globalRequests = globalRequests.concat(result.requests);
             done = result.done;
@@ -667,7 +667,7 @@ async function fitToSlideDeck_random(contents, obj, clusterBrowser) {
     };
 }
 
-async function fitToSlideSingle_random(content, obj, pageId, clusterBrowser) {
+async function fitToSlide_random(content, obj, pageId, insertionIndex, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
 
@@ -677,7 +677,7 @@ async function fitToSlideSingle_random(content, obj, pageId, clusterBrowser) {
 
     let result = await tryFitBody(content, 0, template, clusterBrowser);
     console.log('Fitted', 0, result.done, result);
-    globalRequests = globalRequests.concat(initializeTemplate(result.template));
+    globalRequests = globalRequests.concat(initializeTemplate(result.template, insertionIndex));
     globalRequests = globalRequests.concat(result.requests);
     matching[result.template.pageId] = result.matching;
     
@@ -722,6 +722,6 @@ async function fitToSlideSingle_random(content, obj, pageId, clusterBrowser) {
 module.exports = {
     fitToAllSlides_simple,
     fitToAllSlides_TextShortening,
-    fitToSlideDeck_random,
-    fitToSlideSingle_random
+    fitToPresentation_random,
+    fitToSlide_random
 };

@@ -4,8 +4,8 @@ import { getPresentation, updatePresentation } from './SlidesAPI';
 const ADDR = 'http://localhost:7777';
 
 
-export async function uploadSlides(presentation) {
-    const SERVICE = '/slides/upload_slides';
+export async function uploadPresentation(presentation) {
+    const SERVICE = '/slides/upload_presentation';
 
     let data = {
         presentation
@@ -13,18 +13,22 @@ export async function uploadSlides(presentation) {
 
     const URL = ADDR + SERVICE;
     
+    const request = {
+        method: 'POST',
+        mode: 'cors',
+        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data)
+    };
+
+    console.log(data);
+    
     return new Promise((resolve, reject) => {
-        fetch(URL, {
-            method: 'POST',
-            mode: 'cors',
-            //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            //credentials: 'same-origin', // include, *same-origin, omit
-            headers: {
-            'Content-Type': 'application/json'
-            // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(data)
-        }).then( (response) => response.json())
+        fetch(URL, request).then( (response) => response.json())
             .then((response) => {
                 resolve(response);
             })
@@ -34,8 +38,8 @@ export async function uploadSlides(presentation) {
     });
 }
 
-export async function generateSlideDeckRequests(presentationId, resources) {
-    const SERVICE = '/slides/generate_slide_deck_requests';
+export async function generatePresentationRequests(presentationId, resources) {
+    const SERVICE = '/slides/generate_presentation_requests';
 
     let data = {
         presentationId,
@@ -44,18 +48,22 @@ export async function generateSlideDeckRequests(presentationId, resources) {
 
     const URL = ADDR + SERVICE;
     
+    const request = {
+        method: 'POST',
+        mode: 'cors',
+        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data)
+    };
+
+    console.log(data);
+
     return new Promise((resolve, reject) => {
-        fetch(URL, {
-            method: 'POST',
-            mode: 'cors',
-            //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            //credentials: 'same-origin', // include, *same-origin, omit
-            headers: {
-            'Content-Type': 'application/json'
-            // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(data)
-        }).then( (response) => response.json())
+        fetch(URL, request).then( (response) => response.json())
             .then((response) => {
                 resolve(response);
             })
@@ -65,29 +73,34 @@ export async function generateSlideDeckRequests(presentationId, resources) {
     });
 }
 
-export async function generateSlideSingleRequests(presentationId, pageId, resources) {
-    const SERVICE = '/slides/generate_slide_single_requests';
+export async function generateSlideRequests(presentationId, pageId, insertionIndex, resources) {
+    const SERVICE = '/slides/generate_slide_requests';
 
     let data = {
         presentationId,
         pageId,
+        insertionIndex,
         resources,
     };
 
     const URL = ADDR + SERVICE;
     
+    const request = {
+        method: 'POST',
+        mode: 'cors',
+        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data)
+    };
+
+    console.log(data);
+
     return new Promise((resolve, reject) => {
-        fetch(URL, {
-            method: 'POST',
-            mode: 'cors',
-            //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            //credentials: 'same-origin', // include, *same-origin, omit
-            headers: {
-            'Content-Type': 'application/json'
-            // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(data)
-        }).then( (response) => response.json())
+        fetch(URL, request).then( (response) => response.json())
             .then((response) => {
                 resolve(response);
             })
@@ -108,18 +121,22 @@ export async function extract(presentationId) {
         getPresentation(presentationId).then((response) => {
             let presentation = response.result;
             let title = 'TEMPLATE_' + presentation.title;
-            uploadSlides(presentation).then((response) => {
+            uploadPresentation(presentation).then((response) => {
                 console.log('Extraction Result: ', response);
+                let requests = response.requests;
                 createPresentation(title, (newId) => {
                     if (newId === undefined) {
                         reject('Creation failed');
                     }
-                    updatePresentation(newId, response.requests).then(() => {
-                        resolve({
-                            presentationId: newId,
+                    clearPresentationRequests(newId).then((response) => {
+                        requests = requests.concat(response.requests);
+                        updatePresentation(newId, requests).then(() => {
+                            resolve({
+                                presentationId: newId,
+                            });
+                        }).catch((reason) => {
+                            reject(reason);
                         });
-                    }).catch((reason) => {
-                        reject(reason);
                     });
                 });
             });
@@ -127,11 +144,11 @@ export async function extract(presentationId) {
     });
 }
 
-export async function generateSlideDeck(referencePresentationId, presentationId, resources) {
+export async function generatePresentation(referencePresentationId, presentationId, resources) {
     return new Promise((resolve, reject) => {
-        clearSlideDeckRequests(presentationId).then((response) => {
+        clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
-            generateSlideDeckRequests(referencePresentationId, resources)
+            generatePresentationRequests(referencePresentationId, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
@@ -152,20 +169,13 @@ export async function generateSlideDeck(referencePresentationId, presentationId,
     });
 }
 
-export async function generateSlideSingle(referencePresentationId, presentationId, pageNum, targetPageId, resources) {
+export async function generateSlide(referencePresentationId, presentationId, pageNum, targetPageId, resources) {
     return new Promise((resolve, reject) => {
-        clearSlideSingleRequests(presentationId, pageNum).then((response) => {
+        clearSlideRequests(presentationId, pageNum).then((response) => {
             let clearRequests = response.requests;
-            generateSlideSingleRequests(referencePresentationId, targetPageId, resources)
+            generateSlideRequests(referencePresentationId, targetPageId, pageNum, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
-
-                for (let request of requests) {
-                    if (request.hasOwnProperty('createSlide')) {
-                        request.createSlide.insertionIndex = pageNum;
-                    }
-                }
-
                 let matching = response.matching;
                 let matched = response.matched;
                 console.log('Matched:', matched, matching);
@@ -185,7 +195,7 @@ export async function generateSlideSingle(referencePresentationId, presentationI
     });
 }
 
-async function clearSlideDeckRequests(presentationId) {
+async function clearPresentationRequests(presentationId) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let requests = [];
@@ -207,7 +217,7 @@ async function clearSlideDeckRequests(presentationId) {
     });
 }
 
-async function clearSlideSingleRequests(presentationId, pageNum) {
+async function clearSlideRequests(presentationId, pageNum) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let requests = [];

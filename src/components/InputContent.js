@@ -6,7 +6,7 @@ import {
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { extractedFile } from '../reducers/presentationFiles';
-import { generateSlideSingle } from '../services/SlidesTemplateServerAPI';
+import { generateSlide } from '../services/SlidesTemplateServerAPI';
 import { processContent } from '../services/TextAPI';
 
 export const EXTRACTING = 'extracting';
@@ -99,7 +99,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlideSingle(selected, selectedExt, 0, 'g2cdf48e324_0_133', resources)
+                generateSlide(selected, selectedExt, 2, 'p2', resources)
                     .then((response) => {
                         console.log("Generated Slide Deck: ", response);
                         loadingDeactivate(COMPILING);
