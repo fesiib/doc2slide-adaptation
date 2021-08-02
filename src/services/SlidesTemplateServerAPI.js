@@ -25,8 +25,6 @@ export async function uploadPresentation(presentation) {
         body: JSON.stringify(data)
     };
 
-    console.log(data);
-    
     return new Promise((resolve, reject) => {
         fetch(URL, request).then( (response) => response.json())
             .then((response) => {
@@ -59,8 +57,6 @@ export async function generatePresentationRequests(presentationId, resources) {
         },
         body: JSON.stringify(data)
     };
-
-    console.log(data);
 
     return new Promise((resolve, reject) => {
         fetch(URL, request).then( (response) => response.json())
@@ -96,8 +92,6 @@ export async function generateSlideRequests(presentationId, pageId, insertionInd
         },
         body: JSON.stringify(data)
     };
-
-    console.log(data);
 
     return new Promise((resolve, reject) => {
         fetch(URL, request).then( (response) => response.json())

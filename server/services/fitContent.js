@@ -206,7 +206,6 @@ function fitSingleText(content, shapeText, isCustom) {
     let phrases = content.phrases;
     let firstParagraphMarker = getFirstParagraphMarker(shapeText);
     if (firstParagraphMarker === null) {
-        console.log(shapeText);
         return {
             success: false,
         }

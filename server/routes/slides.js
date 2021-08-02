@@ -37,7 +37,6 @@ const { Cluster } = require('puppeteer-cluster');
         generatePresentationRequests(req.body, cluster).then((response) => {
             res.json(response);
         }).catch((reason) => {
-            console.log(reason);
             next(reason);
         });
     });

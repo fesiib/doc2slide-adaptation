@@ -51,7 +51,6 @@ function InputContentDoc(props) {
     }
 
     const submitHandler = (event) => {
-        console.log(shouldUpdate);
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
