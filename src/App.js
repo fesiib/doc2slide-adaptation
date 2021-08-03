@@ -1,21 +1,26 @@
 // import logo from './logo.svg';
 // import './App.css';
 import './index.css';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Container, Col, Row, Button } from 'reactstrap';
+
 import Authorize from './components/Authorize';
 import FileManager from './components/FileManager';
 import ViewPresentation from './components/ViewPresentation';
-import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
-import { extract } from './services/SlidesTemplateServerAPI';
-import { Container, Col, Row } from 'reactstrap';
-import InputContent, { EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
+import InputContent, { COMPILING, EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
 import InputContentDoc from './components/InputContentDoc';
-import { useEffect } from 'react';
+
+import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
+
+import { extract, testPresentation } from './services/SlidesTemplateServerAPI';
+import { processContentDoc } from './services/TextAPI';
 
 function App() {
 	const dispatch = useDispatch();
 
-	const {selected, selectedExt} = useSelector(state => state.presentationFiles);
+	const {selected, selectedExt, files} = useSelector(state => state.presentationFiles);
+	const { title, sections, titleResult, sectionsResult, shouldUpdate } = useSelector(state => state.contentDoc);
 
 	const _extractedFile = (forId, id) => {
 		dispatch(extractedFile({
@@ -54,6 +59,33 @@ function App() {
 			loadingDeactivate(EXTRACTING);
 		}
 	});
+
+
+	const testAll = (event) => {
+        loadingActivate(COMPILING);
+		event.target.active = true;
+		processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdate)
+		.then((response) => {
+			let resources = {
+				...response,
+			};
+			let testSessions = [];
+			for (let presentation of files) {
+				let copies = 4;
+				testSessions.push(testPresentation(presentation.id, copies, resources));
+			}
+			Promise.all(testSessions)
+			.then((response) => {
+				loadingDeactivate(COMPILING);
+				event.target.active = false;
+			});                
+		}).catch((error) => {
+			console.log('Couldn`t Test: ', error);
+			loadingDeactivate(COMPILING);
+			event.target.active = false;
+		});
+    }
+
 	return (
 		<div>
 			<Authorize/>
@@ -61,6 +93,11 @@ function App() {
 			<InputContent className='m-5'/>
 			<InputContentDoc className='m-5'/>
 			<Container>
+				<Button
+						className = "w-25 max-h-50 m-2"
+						onClick = {testAll}
+						color="primary"
+					> Test ALL </Button>
 				<Row>
 					<Col xs="5" className="m-5">
 						<ViewPresentation presentationId={selected}/>

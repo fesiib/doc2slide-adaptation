@@ -1,7 +1,8 @@
 import { createPresentation } from './DriveAPI';
 import { getPresentation, updatePresentation } from './SlidesAPI';
 
-const ADDR = 'http://server.hyungyu.com:7777';
+//const ADDR = 'http://server.hyungyu.com:7777';
+const ADDR = 'http://localhost:7777';
 
 
 export async function uploadPresentation(presentation) {
@@ -104,6 +105,48 @@ export async function generateSlideRequests(presentationId, pageId, insertionInd
     });
 }
 
+export async function testPresentation(presentationId, copies, resources) {
+    return new Promise((resolve, reject) => {
+        getPresentation(presentationId).then((response) => {
+            let presentation = response.result;
+            let titleSuffix = 'test_template_' + presentation.title;
+            let testSessions = [];
+            uploadPresentation(presentation).then((response) => {
+                for (let copy = 1; copy <= copies; copy++) {
+                    let title = copy.toString() + '_' + titleSuffix;
+                    testSessions.push(
+                        new Promise((resolve_inner, reject_inner) => {
+                            createPresentation(title).then((response) => {
+                                let newId = response.presentationId;
+                                if (newId === undefined) {
+                                    reject_inner('Creation failed');
+                                }
+                                clearPresentationRequests(newId).then((response) => {
+                                    let clearRequests = response.requests;
+                                    generatePresentationRequests(presentationId, resources)
+                                    .then((response) => {
+                                        let requests = clearRequests.concat(response.requests);
+                                        let matching = response.matching;
+                                        console.log('Matching:', title, matching);
+                                        updatePresentation(newId, requests).then((response) => {
+                                            resolve_inner({
+                                                response,
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        })
+                    );
+                }
+                Promise.all(testSessions).then((response) => {
+                    resolve(response);
+                })
+            });
+        });
+    })
+}
+
 /**
  * Function that extracts the template and creates slide with the template.
  * 
@@ -118,7 +161,8 @@ export async function extract(presentationId) {
             uploadPresentation(presentation).then((response) => {
                 console.log('Extraction Result: ', response);
                 let requests = response.requests;
-                createPresentation(title, (newId) => {
+                createPresentation(title).then((response) => {
+                    let newId = response.presentationId;
                     if (newId === undefined) {
                         reject('Creation failed');
                     }
