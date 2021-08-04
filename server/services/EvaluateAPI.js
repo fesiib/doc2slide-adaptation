@@ -748,8 +748,6 @@ function getAreaDiff(statistics) {
         //console.log('Bottom', curParagraph, oriParagraph, curAreaDiff);
         areaDiff += curAreaDiff;
     }
-    console.log(areaDiff, originalArea);
-    console.log(statistics.paragraphs, statistics.originalStatistics.paragraphs);
     return {
         areaDiff,
         originalArea
