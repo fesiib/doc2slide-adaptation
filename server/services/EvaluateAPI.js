@@ -379,8 +379,13 @@ function getParagraphTexts(pageElement) {
     for (let i = 0; i < textElements.length; i++) {
         const textElement = textElements[i];
         if (textElement.hasOwnProperty('paragraphMarker')) {
-            paragraphContents.push(text);
-            text = '';
+            if (i > 0) {
+                if (text.endsWith('\n')) {
+                    text = text.slice(0, text.length - 1);
+                }
+                paragraphContents.push(text);
+                text = '';
+            }
         }
         if (textElement.hasOwnProperty('textRun') && textElement.textRun.hasOwnProperty('content')) {
             text += textElement.textRun.content;
@@ -389,8 +394,12 @@ function getParagraphTexts(pageElement) {
             text += textElement.autoText.content;
         }
     }
-    if (textElements.length > 0)
+    if (textElements.length > 0) {
+        if (text.endsWith('\n')) {
+            text = text.slice(0, text.length - 1);
+        }
         paragraphContents.push(text);
+    }
     return paragraphContents;
 }
 
@@ -535,7 +544,7 @@ async function calculateStatistics(pageElement, browserCluster) {
     let statistics = browserCluster.execute( async ({page}) => {
         await page.goto('about:blank');
         await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
-        page.on('console', (msg) => console.log('Puppeteer PAGELOG: ', msg.text()));
+        page.on('console', (msg) => console.log('Puppeteer PAGELOG Generated: ', msg.text()));
     
         return page.evaluate(
             (texts, paragraphStyles, boxStyle) => {
@@ -546,7 +555,7 @@ async function calculateStatistics(pageElement, browserCluster) {
     let originalStatistics = browserCluster.execute( async ({page}) => {
         await page.goto('about:blank');
         await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
-        page.on('console', (msg) => console.log('Puppeteer PAGELOG: ', msg.text()));
+        page.on('console', (msg) => console.log('Puppeteer PAGELOG Original: ', msg));
     
         return page.evaluate(
             (originalTexts, paragraphStyles, boxStyle) => {
@@ -739,6 +748,8 @@ function getAreaDiff(statistics) {
         //console.log('Bottom', curParagraph, oriParagraph, curAreaDiff);
         areaDiff += curAreaDiff;
     }
+    console.log(areaDiff, originalArea);
+    console.log(statistics.paragraphs, statistics.originalStatistics.paragraphs);
     return {
         areaDiff,
         originalArea

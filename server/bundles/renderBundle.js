@@ -169,16 +169,28 @@ async function renderTexts(texts, paragraphStyles, boxStyle) {
         const paragraphStyle = paragraphStyles[i].style;
         const text = texts[i];
         const innerDiv = element.innerDivs[i];
-        if (text === '') {
-            continue;
-        }
-        element.outerDiv.appendChild(innerDiv);
-
+        
         let lineHeight = getAbsLineHeight(paragraphStyle, fontStyle);
         let numWordsPerLine = [];
         let numCharsPerLine = [];
         let numWords = 0;
         let numChars = 0;
+        
+        if (text === '') {
+            paragraphs.push({
+                fontStyle: fontStyle,
+                paragraphStyle: paragraphStyle,
+                contentText: text,
+                lineHeight: lineHeight,
+                charWidth: getAbsCharWidth(paragraphStyle, fontStyle),
+                numWordsPerLine: [],
+                numCharsPerLine: [],
+                numLines: 0,
+                textLength: text.length,    
+            });
+            continue;
+        }
+        element.outerDiv.appendChild(innerDiv);
         
         let inWord = false;
         let startedWithWhiteSpace = false;
