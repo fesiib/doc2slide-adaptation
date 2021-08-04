@@ -424,6 +424,7 @@ class Templates {
         this.title = title;
         this.__templates = [];
         this.__layouts = [];
+        this.__customTemplateIds = [];
     }  
 
     copyInstance(templates) {
@@ -510,8 +511,16 @@ class Templates {
     }
 
     randomDraw() {
-        let id = Math.floor(Math.random() * this.__templates.length);
-        return this.copySingleTemplate(this.__templates[id]);
+        if (this.__customTemplateIds.length > 0) {
+            let preId = Math.floor(Math.random() * this.__customTemplateIds.length);
+            let id = this.__customTemplateIds[preId];
+            return this.copySingleTemplate(this.__templates[id]);   
+        }
+        else if (this.__templates.length > 0) {
+            let id = Math.floor(Math.random() * this.__templates.length);
+            return this.copySingleTemplate(this.__templates[id]);   
+        }
+        throw Error('There is no templates');
     }
 
     refreshIdsPageElement(pageElement) {
@@ -543,6 +552,9 @@ class Templates {
 
         let informationBoxId = random();
 
+        if (isCustom) {
+            this.__customTemplateIds.push(this.__templates.length);
+        }
         this.__templates.push({
             pageId,
             page,

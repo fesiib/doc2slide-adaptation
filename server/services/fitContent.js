@@ -44,6 +44,13 @@ function extractShapeElements(slide) {
                 && Array.isArray(pageElement.shape.text.textElements)
                 && pageElement.shape.text.textElements.length > 0
             ) {
+                if (pageElement.shape.hasOwnProperty('placeholder')
+                    && pageElement.shape.placeholder.hasOwnProperty('type')
+                ) {
+                    if (pageElement.shape.placeholder.type === 'SLIDE_NUMBER') {
+                        continue;
+                    }
+                }
                 let copyPageElement = { ...pageElement };
                 copyPageElement.mapped = false;
                 copyPageElement.mappedContents = [];
@@ -513,17 +520,18 @@ async function tryFitBody(content, start, template, clusterBrowser) {
         }
         if (headerPageElement !== null) {
             let result = fitToShape([{paragraph: content.header, id: id}], headerPageElement, template.isCustom);
-
-            matching = {
-                ...result,
-                ...matching,
-            };
-            headerPageElement.mapped = true;
-            let mappedContent = {
-                text: result[id].text,
-                score: result[id].score,
-            };
-            headerPageElement.mappedContents.push(mappedContent);
+            if (result[id].text.length > 0) {
+                matching = {
+                    ...result,
+                    ...matching,
+                };
+                headerPageElement.mapped = true;
+                let mappedContent = {
+                    text: result[id].text,
+                    score: result[id].score,
+                };
+                headerPageElement.mappedContents.push(mappedContent);
+            }
         }
     }
     // Fit the content
@@ -549,6 +557,9 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                     && pageElement.shape.shapeType === 'TEXT_BOX'
                 ) {
                     let result = fitToShape([{paragraph: bodyContent, id: id}], pageElement, template.isCustom);
+                    if (result[id].text.length === 0) {
+                        continue;
+                    }
                     matching = {
                         ...result,
                         ...matching,
@@ -595,6 +606,8 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     let scores = [];
     let matching = {};
 
+    let pageNum = 0;
+
     for (let section of contents.sections) {
         let done = 0;
         while (done < section.body.length) {
@@ -619,7 +632,8 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
                 template: result.template,
             });
             //console.log('Fitted', done, result.done, result);
-            globalRequests = globalRequests.concat(initializeTemplate(result.template));
+            pageNum++;
+            globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
             globalRequests = globalRequests.concat(result.requests);
             done = result.done;
             matching[result.template.pageId] = result.matching;
@@ -676,7 +690,7 @@ async function fitToSlide_random(content, obj, pageId, insertionIndex, clusterBr
 
     let result = await tryFitBody(content, 0, template, clusterBrowser);
     console.log('Fitted', 0, result.done, result);
-    globalRequests = globalRequests.concat(initializeTemplate(result.template, insertionIndex));
+    globalRequests = globalRequests.concat(initializeTemplate(result.template, insertionIndex + 1));
     globalRequests = globalRequests.concat(result.requests);
     matching[result.template.pageId] = result.matching;
     

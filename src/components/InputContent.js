@@ -98,7 +98,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlide(selected, selectedExt, 0, 'g926baa5c46_0_288', resources)
+                generateSlide(selected, selectedExt, 0, 'g9362f61ffc_0_15', resources)
                     .then((response) => {
                         console.log("Generated Slide Deck: ", response);
                         loadingDeactivate(COMPILING);

@@ -2,13 +2,28 @@ const { getRectangle } = require("./Templates");
 
 const EMU = 1 / 12700;
 
+async function scoreShapeElementsFast(shapeElements) {    
+    let statisticsList = [];
+
+    for (let pageElement of shapeElements) {
+        statisticsList.push(calculateStatistics(pageElement, null));    
+    }
+
+    return {
+        readability: 100,
+        engagement: calculateTextEngagement(statisticsList),
+        grammatical: calculateTextGrammatical(statisticsList),
+        semantic: calculateTextSemantic(statisticsList),
+        importantWords: calculateTextImportantWords(statisticsList),
+        similarity: calculateTextSimilarityFast(statisticsList),
+    };
+}
+
 async function scoreShapeElements(shapeElements, browserCluster) {    
     let statisticsList = [];
 
     for (let pageElement of shapeElements) {
-        if (pageElement.mapped) {
-            statisticsList.push(calculateStatistics(pageElement, browserCluster));    
-        }
+        statisticsList.push(calculateStatistics(pageElement, browserCluster));
     }
 
     statisticsList = await Promise.all(statisticsList);
@@ -98,6 +113,10 @@ function calculateTextSimilarity(statisticsList) {
     }
 
     return Math.round(totalScore * 10000) / 100;
+}
+
+function calculateTextSimilarityFast(statisticsList) {
+    return 100;
 }
 
 function consumeRGBColor(rgbColor) {
@@ -502,7 +521,13 @@ function getParagraphStyles(pageElement) {
             }
             
             textStyle = getDominantTextStyle(textStyle, textElements, i, l, r);
-            paragraph.fontStyle = getFontStyle(textStyle);
+            try {
+                paragraph.fontStyle = getFontStyle(textStyle);
+            }
+            catch(error) {
+                console.log('Error in Font Style extraction with: ', textStyle, error);
+                continue;
+            }
             paragraphStyles.push(paragraph);
         }
     }
@@ -520,20 +545,6 @@ function getParagraphStyles(pageElement) {
 }
 
 async function calculateStatistics(pageElement, browserCluster) {
-    if (!pageElement.mapped) {
-        return {
-            boxStyle: null,
-            paragraphs: [],
-            spaceOccupation: 0,
-            totalLength: 0,
-            originalStatistics: {
-                paragraphs: [],
-                spaceOccupation: 0,
-                totalLength: 0,
-            }
-        }
-    }
-
     let paragraphStyles = getParagraphStyles(pageElement);
     let boxStyle = getBoxStyle(pageElement);
 
@@ -541,30 +552,37 @@ async function calculateStatistics(pageElement, browserCluster) {
     let texts = pageElement.mappedContents.map((val, idx) => val.text);
     let scores = pageElement.mappedContents.map((val, idx) => val.score);
 
-    let statistics = browserCluster.execute( async ({page}) => {
-        await page.goto('about:blank');
-        await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
-        page.on('console', (msg) => console.log('Puppeteer PAGELOG Generated: ', msg.text()));
-    
-        return page.evaluate(
-            (texts, paragraphStyles, boxStyle) => {
-                return window.renderTexts(texts, paragraphStyles, boxStyle);
-            }, texts, paragraphStyles, boxStyle
-        );
-    });
-    let originalStatistics = browserCluster.execute( async ({page}) => {
-        await page.goto('about:blank');
-        await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
-        page.on('console', (msg) => console.log('Puppeteer PAGELOG Original: ', msg));
-    
-        return page.evaluate(
-            (originalTexts, paragraphStyles, boxStyle) => {
-                return window.renderTexts(originalTexts, paragraphStyles, boxStyle);
-            }, originalTexts, paragraphStyles, boxStyle
-        );
-    });
+    let result = null;
 
-    let result = await Promise.all([statistics, originalStatistics]);
+    if (browserCluster === null) {
+        result = [];
+    }
+    else {
+        let statistics = browserCluster.execute( async ({page}) => {
+            await page.goto('about:blank');
+            await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
+            page.on('console', (msg) => console.log('Puppeteer PAGELOG Generated: ', msg.text()));
+        
+            return page.evaluate(
+                (texts, paragraphStyles, boxStyle) => {
+                    return window.renderTexts(texts, paragraphStyles, boxStyle);
+                }, texts, paragraphStyles, boxStyle
+            );
+        });
+        let originalStatistics = browserCluster.execute( async ({page}) => {
+            await page.goto('about:blank');
+            await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
+            page.on('console', (msg) => console.log('Puppeteer PAGELOG Original: ', msg));
+        
+            return page.evaluate(
+                (originalTexts, paragraphStyles, boxStyle) => {
+                    return window.renderTexts(originalTexts, paragraphStyles, boxStyle);
+                }, originalTexts, paragraphStyles, boxStyle
+            );
+        });
+    
+        result = await Promise.all([statistics, originalStatistics]);
+    }
 
     return {
         ...result[0],
@@ -748,6 +766,7 @@ function getAreaDiff(statistics) {
         //console.log('Bottom', curParagraph, oriParagraph, curAreaDiff);
         areaDiff += curAreaDiff;
     }
+    //console.log(areaDiff, originalArea, statistics.paragraphs, statistics.originalStatistics.paragraphs);
     return {
         areaDiff,
         originalArea

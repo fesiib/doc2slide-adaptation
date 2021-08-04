@@ -2,6 +2,7 @@ const { objRecTraverse } = require('./SlidesAPIRqFields');
 const { getDominantTextStyle } = require('./EvaluateAPI');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
+const SLIDE_NUMBER = 'SLIDE_NUMBER';
 
 function addTextBox(shapeId, pageId, text) {
     let requests = [];
@@ -293,7 +294,7 @@ function assignElementProperties(pageObjectId, size, transform) {
     return ret;
 }
 
-function getPageElementRequests(pageId, pageElement, suffix) {
+function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
     let validObjectId = false;
     let requests = [];
     let request = {
@@ -305,7 +306,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             let num_pageElement = 0;
             let childrenObjectIds = [];
             for (let obj of pageElement.elementGroup.children) {
-                let result = getPageElementRequests(pageId, obj, suffix + '_' + (num_pageElement.toString()));
+                let result = getPageElementRequests(pageId, pageNum, obj, suffix + '_' + (num_pageElement.toString()));
                 requests = requests.concat(result.requests);
                 if (result.validObjectId) {
                     childrenObjectIds.push(result.objectId);
@@ -363,7 +364,12 @@ function getPageElementRequests(pageId, pageElement, suffix) {
             let textJSON = {};
             if (pageElement.shape.hasOwnProperty('placeholder')
                 && pageElement.shape.placeholder.hasOwnProperty('type')) {
-                textJSON.placeholderType = pageElement.shape.placeholder.type;
+                if (pageElement.shape.placeholder.type === SLIDE_NUMBER && pageNum > 0) {
+                    textJSON.placeholderType = pageNum.toString();
+                }
+                else {
+                    textJSON.placeholderType = pageElement.shape.placeholder.type;
+                }
             }
             else {
                 textJSON.placeholderType = 'BODY';
@@ -457,7 +463,7 @@ function getPageElementRequests(pageId, pageElement, suffix) {
 
 
 
-function initializePage(pageId, pageTemplate) { 
+function initializePage(pageId, pageTemplate, pageNum) { 
     let requests = [];
     // if (pageTemplate.hasOwnProperty('pageProperties')) {
     //     // let result = objRecTraverse(pageTemplate.pageProperties, '');
@@ -487,7 +493,7 @@ function initializePage(pageId, pageTemplate) {
             if (pageElement.hasOwnProperty('additional')
                 && pageElement.additional.hasOwnProperty('originalType')
             ) { 
-                let result = getPageElementRequests(pageId, pageElement, num_pageElement.toString());
+                let result = getPageElementRequests(pageId, pageNum, pageElement, num_pageElement.toString());
                 requests = requests.concat(result.requests);
             }
             else {
@@ -499,7 +505,7 @@ function initializePage(pageId, pageTemplate) {
     return requests;
 }
 
-function initializeTemplate(template, insertionIndex = -1) {
+function initializeTemplate(template, pageNum = -1) {
     let requests = [];
     let pageId = template.pageId;
     let page = template.page;
@@ -507,10 +513,11 @@ function initializeTemplate(template, insertionIndex = -1) {
     let pageNumStr = template.pageNum.toString();
     let informationBoxId = template.informationBoxId;
 
-    if (insertionIndex < 0) {
+    if (pageNum > 0) {
         requests.push({
             createSlide: {
                 objectId: pageId,
+                insertionIndex: pageNum - 1,
             },
         });
     }
@@ -518,11 +525,10 @@ function initializeTemplate(template, insertionIndex = -1) {
         requests.push({
             createSlide: {
                 objectId: pageId,
-                insertionIndex: insertionIndex,
             },
         });
     }
-        requests = requests.concat(initializePage(pageId, page));
+    requests = requests.concat(initializePage(pageId, page, pageNum));
 
     if (weight === 1) {
         ///layout
@@ -536,8 +542,10 @@ function initializeTemplate(template, insertionIndex = -1) {
 
 function initializePresentation(templates) {
     let requests = [];
+    let pageNum = 0;
     for (let template of templates.getTemplates()) {
-        requests = requests.concat(initializeTemplate(template));
+        pageNum++;
+        requests = requests.concat(initializeTemplate(template, pageNum));
     }
     return requests;
 }
