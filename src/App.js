@@ -13,7 +13,7 @@ import InputContentDoc from './components/InputContentDoc';
 
 import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
 
-import { extract, testPresentation } from './services/SlidesTemplateServerAPI';
+import { extract, testPresentation, justUploadPresentation } from './services/SlidesTemplateServerAPI';
 import { processContentDoc } from './services/TextAPI';
 
 function App() {
@@ -86,6 +86,20 @@ function App() {
 		});
     }
 
+	const uploadAll = (event) => {
+		loadingActivate(EXTRACTING);
+		event.target.active = true;
+		let uploadSessions = [];
+		for (let presentation of files) {
+			uploadSessions.push(justUploadPresentation(presentation.id));
+		}
+		Promise.all(uploadSessions)
+		.then((response) => {
+			loadingDeactivate(EXTRACTING);
+			event.target.active = false;
+		});        
+	}
+
 	return (
 		<div>
 			<Authorize/>
@@ -93,6 +107,11 @@ function App() {
 			<InputContent className='m-5'/>
 			<InputContentDoc className='m-5'/>
 			<Container>
+				<Button
+						className = "w-25 max-h-50 m-2"
+						onClick = {uploadAll}
+						color="primary"
+					> Upload ALL </Button>
 				<Button
 						className = "w-25 max-h-50 m-2"
 						onClick = {testAll}

@@ -177,7 +177,7 @@ function fitToShape(contents, pageElement, isCustom) {
             if (r - l > 0) {
                 lastParagraphLength = r - l;
             }
-            if (isCustom) {
+            if (!isCustom) {
                 lastParagraphLength = Infinity;
             }
 

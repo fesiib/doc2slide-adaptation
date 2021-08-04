@@ -147,6 +147,19 @@ export async function testPresentation(presentationId, copies, resources) {
     })
 }
 
+export async function justUploadPresentation(presentationId) {
+    return new Promise((resolve) => {
+        getPresentation(presentationId).then((response) => {
+            let presentation = response.result;
+            let title = 'TEMPLATE_' + presentation.title;
+            uploadPresentation(presentation).then((response) => {
+                console.log('Extraction Result: ', response);
+                resolve(true);
+            });
+        });
+    });
+}
+
 /**
  * Function that extracts the template and creates slide with the template.
  * 
