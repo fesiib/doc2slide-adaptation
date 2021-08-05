@@ -133,8 +133,8 @@ function App() {
 					color="info"
 				> Test ALL </Button>
 				
-			<InputContent className='m-5'/>
 			<InputContentDoc className='m-5'/>
+			<InputContent className='m-5'/>
 			<Container>
 				<Row>
 					<Col xs="5" className="m-5">
