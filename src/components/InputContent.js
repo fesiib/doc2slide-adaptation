@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Form, FormGroup, Label, Input, Button,
     Spinner,
+    DropdownItem, DropdownMenu, Dropdown, DropdownToggle,
+    Container, Row, Col,
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { addThumbnails, clearThumbnails, extractedFile } from '../reducers/presentationFiles';
@@ -54,7 +57,24 @@ function InputContent(props) {
 
     const { header, body, headerResult, bodyResult, shouldUpdate } = useSelector(state => state.content);
 
-    const { selected, selectedExt } = useSelector(state => state.presentationFiles);
+    const { selected, selectedExt, extractedPresentations } = useSelector(state => state.presentationFiles);
+
+    const [pageIdDropdownOpen, setPageIdDropdownOpen] = useState(false);
+    const [pageIdDropdownValue, setPageIdDropdownValue] = useState(null);
+    const [pageIdDropdownToggle, setPageIdDropdownToggle] = useState('Not Selected');
+
+
+    const [indexDropdownOpen, setIndexDropdownOpen] = useState(false);
+    const [indexDropdownValue, setIndexdDropdownValue] = useState(null);
+    const [indexDropdownToggle, setIndexDropdownToggle] = useState('Not Selected');
+
+    const pageIdToggleDropdown = () => {
+        setPageIdDropdownOpen(prevState => !prevState);
+    }
+
+    const indexToggleDropdown = () => {
+        setIndexDropdownOpen(prevState => !prevState);
+    }
 
     const _changeHeaderContent = (text) => {
         dispatch(changeHeaderContent({
@@ -110,7 +130,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlide(selected, selectedExt, 0, 'p2', resources)
+                generateSlide(selected, selectedExt, 0, pageIdDropdownValue, resources)
                     .then((response) => {
                         console.log("Generated Single Slide: ", response);
                         loadingDeactivate(COMPILING);
@@ -183,6 +203,86 @@ function InputContent(props) {
         return [];
     }
 
+    // const renderIndexDropdownItems = () => {
+    //     if (!extractedPresentations.hasOwnProperty(selected)
+    //         || !extractedPresentations[selected].hasOwnProperty('__templates')
+    //     ) {
+    //         return [(
+    //             <DropdownItem disabled> No Presentation Selected </DropdownItem>
+    //         )];
+    //     }
+    //     let templates = extractedPresentations[selected].__templates;
+    //     let result = [];
+    //     if (Array.isArray(templates)) {
+    //         for (let template of templates) {
+    //             let itemName = '';
+    //             if (template.isCustom) {
+    //                 itemName = 'Page ' + template.pageNum.toString();
+    //             }
+    //             else {
+    //                 itemName = 'Layout ' + template.pageNum.toString();
+    //             }
+    //             result.push(
+    //                 <DropdownItem
+    //                     key={template.originalId}
+    //                     onClick={() => {
+    //                         setPageIdDropdownValue(template.originalId);
+    //                         setPageIdDropdownToggle(itemName);
+    //                     }}
+    //                 > 
+    //                     {itemName} 
+    //                 </DropdownItem>
+    //             );
+    //         }
+    //     }
+    //     else {
+    //         result.push(
+    //             <DropdownItem disabled> No Slides </DropdownItem>
+    //         );
+    //     }
+    //     return result
+    // }
+
+    const renderPageIdDropdownItems = () => {
+        if (!extractedPresentations.hasOwnProperty(selected)
+            || !extractedPresentations[selected].hasOwnProperty('__templates')
+        ) {
+            return [(
+                <DropdownItem disabled> No Presentation Selected </DropdownItem>
+            )];
+        }
+        let templates = extractedPresentations[selected].__templates;
+        let result = [];
+        if (Array.isArray(templates)) {
+            for (let template of templates) {
+                let itemName = '';
+                if (template.isCustom) {
+                    itemName = 'Page ' + template.pageNum.toString();
+                }
+                else {
+                    itemName = 'Layout ' + template.pageNum.toString();
+                }
+                result.push(
+                    <DropdownItem
+                        key={template.originalId}
+                        onClick={() => {
+                            setPageIdDropdownValue(template.originalId);
+                            setPageIdDropdownToggle(itemName);
+                        }}
+                    > 
+                        {itemName} 
+                    </DropdownItem>
+                );
+            }
+        }
+        else {
+            result.push(
+                <DropdownItem disabled> No Page Ids </DropdownItem>
+            );
+        }
+        return result
+    }
+
     return (
         <div className={props.className} >
             <div style={ { display: 'block' } } id='contentForm'>
@@ -196,7 +296,35 @@ function InputContent(props) {
                         />
                     </FormGroup>
                     {renderBodyForm()}
-                    <Button type='submit' color='success'> Compile Single Page </Button>
+                    <Container>
+                        <Row className='align-items-end justify-content-start'>
+                            <Col className='col-2'>
+                                <Button type='submit' color='success'> Compile Single Page </Button>
+                            </Col>
+                            {/* <Col className='col-2'>
+                                <Label for='indexDropdown'> Index </Label>
+                                <Dropdown id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
+                                    <DropdownToggle caret>
+                                        {indexDropdownToggle}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        {renderIndexDropdownItems()}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col> */}
+                            <Col className='col-2'>
+                                <Label for='pageIdDropdown'> Reference Page </Label>
+                                <Dropdown id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
+                                    <DropdownToggle caret>
+                                        {pageIdDropdownToggle}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        {renderPageIdDropdownItems()}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+                        </Row>
+                    </Container>
                 </Form>
                 <div className='m-5'>
                     <Button onClick={submitAllSlidesHandler} color='success'> Compare All Slides </Button>

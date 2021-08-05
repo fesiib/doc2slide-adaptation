@@ -77,6 +77,7 @@ export async function extract(presentationId) {
             let title = 'TEMPLATE_' + presentation.title;
             uploadPresentation(presentation).then((response) => {
                 console.log('Extraction Result: ', response);
+                let templates = response.extractedTemplates;
                 let requests = response.requests;
                 createPresentation(title).then((response) => {
                     let newId = response.presentationId;
@@ -88,6 +89,7 @@ export async function extract(presentationId) {
                         updatePresentation(newId, requests).then(() => {
                             resolve({
                                 presentationId: newId,
+                                templates: templates,
                             });
                         }).catch((reason) => {
                             reject(reason);

@@ -52,7 +52,7 @@ const initialState = {
     filesExt: {},
     selected: null,
     selectedExt: null,
-    templates: {},
+    extractedPresentations: {},
     thumbnails: [],
 };
 
@@ -141,11 +141,11 @@ const presentationFiles = (state = initialState, action) => {
         case EXTRACTED_TEMPLATES: {
             let templates = action.payload.templates;
             let forId = action.payload.forId;
-            let newTemplates = { ...state.templates };
-            newTemplates[forId] = templates;
+            let extractedPresentations = { ...state.extractedPresentations };
+            extractedPresentations[forId] = templates;
             return {
                 ...state,
-                templates: newTemplates,
+                extractedPresentations: extractedPresentations,
             };
         }
         case ADD_THUMBNAILS: {

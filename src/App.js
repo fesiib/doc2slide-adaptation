@@ -12,7 +12,7 @@ import InputContent, { COMPILING, EXTRACTING, loadingActivate, loadingDeactivate
 import InputContentDoc from './components/InputContentDoc';
 import ComparisonTableContainer from './components/ComparisonTableContainer';
 
-import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
+import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates } from './reducers/presentationFiles';
 
 import { extract, testPresentation, justUploadPresentation } from './services/slideAdapter';
 import { processContentDoc } from './services/textSummarization';
@@ -30,6 +30,13 @@ function App() {
 		}));
 	}
 
+	const _extractedTemplates = (forId, templates) => {
+		dispatch(extractedTemplates({
+			forId,
+			templates,
+		}));
+	}
+
 	let _selectedExt = selectedExt;
 	if (selectedExt === CREATION_SIGNAL) {
 		_selectedExt = '';
@@ -37,8 +44,8 @@ function App() {
 		_extractedFile(forId, '');
 		extract(forId).then((result) => {
 			let presentationId = result.presentationId;
-			// let templates = result.templates;
-			// _extractedTemplates(forId, templates);
+			let templates = result.templates;
+			_extractedTemplates(forId, templates);
 			_extractedFile(forId, presentationId);
 			loadingDeactivate(EXTRACTING);
 		}).catch((error) => {
