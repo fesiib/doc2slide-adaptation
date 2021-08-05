@@ -163,7 +163,9 @@ export async function clearSlideRequests(presentationId, pageNum) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let requests = [];
-            if (response.result.hasOwnProperty('slides')) {
+            if (Array.isArray(response.result.slides)
+                && pageNum < response.result.slides.length
+            ) {
                 requests.push({
                     deleteObject: {
                         objectId: response.result.slides[pageNum].objectId,

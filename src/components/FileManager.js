@@ -26,6 +26,7 @@ function FileManager(props) {
              let active = (selected === el.id);
             return (
                 <Button 
+                    key={index.toString()}
                     className = "w-25 max-h-50 m-2"
                     onClick = {(() => _selectFile(el.name, el.id))}
                     color="primary" active={active}

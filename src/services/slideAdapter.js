@@ -109,10 +109,11 @@ export async function generatePresentation(referencePresentationId, presentation
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
+                let pageCnt = Object.keys(matching).length;
                 console.log('Matching:', matching);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({
-                        response,
+                        pageCnt,
                     });
                 }).catch((reason) => {
                     reject(reason);
@@ -161,6 +162,7 @@ export async function generateAllSlides(referencePresentationId, presentationId,
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
                 let matchedList = response.matchedList;
+                console.log(requests);
                 console.log('All Slides Matched:', matchedList, matching);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({

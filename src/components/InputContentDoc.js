@@ -5,7 +5,7 @@ import {
 } from 'reactstrap';
 
 import { changeTitleContent, changeSectionsContent, compileDocContent } from '../reducers/contentDoc';
-import { extractedFile } from '../reducers/presentationFiles';
+import { extractedFile, updatePageCnt } from '../reducers/presentationFiles';
 
 import { generatePresentation } from '../services/slideAdapter';
 import { processContentDoc } from '../services/textSummarization';
@@ -46,6 +46,12 @@ function InputContentDoc(props) {
 		}));
 	}
 
+    const _updatePageCnt = (pageCnt) => {
+		dispatch(updatePageCnt({
+			pageCnt,
+		}));
+	}
+
     const forceUpdateSelected = () => {
         let prev = selectedExt;
         _extractedFile(selected, '');
@@ -64,6 +70,7 @@ function InputContentDoc(props) {
                 generatePresentation(selected, selectedExt, resources)
                     .then((response) => {
                         console.log("Generated Slide Deck: ", response);
+                        _updatePageCnt(response.pageCnt);
                         loadingDeactivate(COMPILING);
                         forceUpdateSelected();
                     }).catch((error) => {

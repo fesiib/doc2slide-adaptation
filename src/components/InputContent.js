@@ -7,7 +7,7 @@ import {
     Container, Row, Col,
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
-import { addThumbnails, clearThumbnails, extractedFile } from '../reducers/presentationFiles';
+import { addThumbnails, clearThumbnails, extractedFile, updatePageCnt } from '../reducers/presentationFiles';
 import { generateAllSlides, generateSlide } from '../services/slideAdapter';
 import { compareAllSlides } from '../services/slideComparator';
 import { processContent } from '../services/textSummarization';
@@ -19,6 +19,8 @@ let loadingState = {
     extracting: false, 
     compiling: false,
 };
+
+const NOT_SELECTED = "Not Selected";
 
 export function loadingActivate(process) {
     if (process === EXTRACTING) {
@@ -60,13 +62,13 @@ function InputContent(props) {
     const { selected, selectedExt, extractedPresentations, extPageCnt, } = useSelector(state => state.presentationFiles);
 
     const [pageIdDropdownOpen, setPageIdDropdownOpen] = useState(false);
-    const [pageIdDropdownValue, setPageIdDropdownValue] = useState(null);
-    const [pageIdDropdownToggle, setPageIdDropdownToggle] = useState('Not Selected');
+    const [pageIdDropdownValue, setPageIdDropdownValue] = useState('');
+    const [pageIdDropdownToggle, setPageIdDropdownToggle] = useState(NOT_SELECTED);
 
 
     const [indexDropdownOpen, setIndexDropdownOpen] = useState(false);
-    const [indexDropdownValue, setIndexDropdownValue] = useState(null);
-    const [indexDropdownToggle, setIndexDropdownToggle] = useState('Not Selected');
+    const [indexDropdownValue, setIndexDropdownValue] = useState(0);
+    const [indexDropdownToggle, setIndexDropdownToggle] = useState(NOT_SELECTED);
 
     const pageIdToggleDropdown = () => {
         setPageIdDropdownOpen(prevState => !prevState);
@@ -103,6 +105,12 @@ function InputContent(props) {
 		}));
 	}
 
+    const _updatePageCnt = (pageCnt) => {
+		dispatch(updatePageCnt({
+			pageCnt,
+		}));
+	}
+
     const _addThumbnails = (title, presentationId, imageLinks) => {
         dispatch(addThumbnails({
             title,
@@ -130,10 +138,13 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlide(selected, selectedExt, 0, pageIdDropdownValue, resources)
+                generateSlide(selected, selectedExt, indexDropdownValue, pageIdDropdownValue, resources)
                     .then((response) => {
                         console.log("Generated Single Slide: ", response);
                         loadingDeactivate(COMPILING);
+                        if (indexDropdownValue > extPageCnt) {
+                            _updatePageCnt(indexDropdownValue);
+                        }
                         forceUpdateSelected();
                     }).catch((error) => {
                         console.log('Couldn`t generate Single Slide: ', error);
@@ -166,6 +177,7 @@ function InputContent(props) {
                             let generated = { ...response.generated };
                             _addThumbnails(original.title, original.presentationId, original.imageLinks);
                             _addThumbnails(generated.title, generated.presentationId, generated.imageLinks);
+                            _updatePageCnt(generated.imageLinks.length);
                             loadingDeactivate(COMPILING);
                             forceUpdateSelected();
                         });
@@ -204,13 +216,17 @@ function InputContent(props) {
     }
 
     const renderIndexDropdownItems = () => {
+        if (indexDropdownValue > extPageCnt + 1) {
+            setIndexDropdownValue(0);
+            setIndexDropdownToggle(NOT_SELECTED);
+        }
         let result = [];
         if (extPageCnt > 0) {
             for (let index = 1; index <= extPageCnt; index++) {
                 let id = index.toString();
                 result.push(
                     <DropdownItem
-                        key={id}
+                        key={'index_' + id}
                         onClick={() => {
                             setIndexDropdownValue(index);
                             setIndexDropdownToggle(id);
@@ -220,6 +236,17 @@ function InputContent(props) {
                     </DropdownItem>
                 );
             }
+            result.push(
+                <DropdownItem
+                    key={'index_last'}
+                    onClick={() => {
+                        setIndexDropdownValue(extPageCnt + 1);
+                        setIndexDropdownToggle('Add Last');
+                    }}
+                > 
+                    Add Last 
+                </DropdownItem>
+            );
         }
         else {
             result.push(
@@ -239,6 +266,7 @@ function InputContent(props) {
         }
         let templates = extractedPresentations[selected].__templates;
         let result = [];
+        let contained = false;
         if (Array.isArray(templates)) {
             for (let template of templates) {
                 let itemName = '';
@@ -247,6 +275,9 @@ function InputContent(props) {
                 }
                 else {
                     itemName = 'Layout ' + template.pageNum.toString();
+                }
+                if (template.originalId === pageIdDropdownValue) {
+                    contained = true;
                 }
                 result.push(
                     <DropdownItem
@@ -266,8 +297,14 @@ function InputContent(props) {
                 <DropdownItem disabled> No Page Ids </DropdownItem>
             );
         }
+        if (!contained && pageIdDropdownValue !== '') {
+            setPageIdDropdownValue('');
+            setPageIdDropdownToggle(NOT_SELECTED);
+        }
         return result
     }
+
+
 
     return (
         <div className={props.className} >
@@ -284,27 +321,31 @@ function InputContent(props) {
                     {renderBodyForm()}
                     <Container>
                         <Row className='align-items-end justify-content-start'>
-                            <Col className='col-2'>
-                                <Button type='submit' color='success'> Compile Single Page </Button>
+                            <Col className='col-2' key='column-1'>
+                                <Button
+                                    type='submit' 
+                                    color='success'
+                                    disabled={indexDropdownValue === 0 || pageIdDropdownValue === ''}
+                                > Compile Single Page </Button>
                             </Col>
-                            <Col className='col-2'>
+                            <Col className='col-2' key='column-2'>
                                 <Label for='indexDropdown'> Index </Label>
                                 <Dropdown id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
-                                    <DropdownToggle caret>
+                                    <DropdownToggle caret key='toggle'>
                                         {indexDropdownToggle}
                                     </DropdownToggle>
-                                    <DropdownMenu>
+                                    <DropdownMenu key='menu'>
                                         {renderIndexDropdownItems()}
                                     </DropdownMenu>
                                 </Dropdown>
                             </Col>
-                            <Col className='col-2'>
+                            <Col className='col-2' key='column-3'>
                                 <Label for='pageIdDropdown'> Reference Page </Label>
                                 <Dropdown id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
-                                    <DropdownToggle caret>
+                                    <DropdownToggle caret key='toggle'>
                                         {pageIdDropdownToggle}
                                     </DropdownToggle>
-                                    <DropdownMenu>
+                                    <DropdownMenu key='menu'>
                                         {renderPageIdDropdownItems()}
                                     </DropdownMenu>
                                 </Dropdown>
