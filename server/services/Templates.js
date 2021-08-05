@@ -599,6 +599,15 @@ class Templates {
         return this.__templates.slice(0);
     }
 
+    getCustomTemplates() {
+        let customTemplates = [];
+        let templates = this.getTemplates();
+        for (let id of this.__customTemplateIds) {
+            customTemplates.push(templates[id]);
+        }
+        return customTemplates;
+    }
+
     __transformElementGroups(pageElements, method = 'extract') {
         let newPageElements = [];
         for (let pageElement of pageElements) {

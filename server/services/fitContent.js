@@ -680,11 +680,7 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     };
 }
 
-async function fitToSlide_random(content, obj, pageId, insertionIndex, clusterBrowser) {
-    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
-    templates.copyInstance(obj);
-
-    let template = templates.getByOriginalId(pageId);
+async function __fitToSlide_random(content, template, insertionIndex, clusterBrowser) {
     let globalRequests = [];
     let matching = {};
 
@@ -732,9 +728,54 @@ async function fitToSlide_random(content, obj, pageId, insertionIndex, clusterBr
     };
 }
 
+async function fitToSlide_random(content, obj, pageId, insertionIndex, clusterBrowser) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+
+    let template = templates.getByOriginalId(pageId);
+    
+    return await __fitToSlide_random(content, template, insertionIndex, clusterBrowser);
+}
+
+async function fitToAllSlides_random(content, obj, clusterBrowser) {
+    console.log('here');
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+    
+    let poolTemplates = templates.getCustomTemplates();
+
+    let requests = [];
+    let matching = {};
+    let matchedList = [];
+
+    let generationSessions = [];
+
+    let insertionIndex = 0;
+    for (let original of poolTemplates) {
+        let template = templates.copySingleTemplate(original);
+        generationSessions.push(__fitToSlide_random(content, template, insertionIndex, clusterBrowser));
+        insertionIndex++;
+    }
+
+    let results = await Promise.all(generationSessions);
+    for (let result of results) {
+        console.log(result);
+        requests = requests.concat(result.requests);
+        matching = { ...matching, ...result.matching };
+        matchedList.push(result.matched);
+    }
+    return {
+        requests,
+        matching,
+        matchedList,
+    };
+}
+
+
 module.exports = {
     fitToAllSlides_simple,
     fitToAllSlides_TextShortening,
     fitToPresentation_random,
-    fitToSlide_random
+    fitToSlide_random,
+    fitToAllSlides_random,
 };

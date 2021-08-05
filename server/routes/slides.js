@@ -1,6 +1,6 @@
 const { response } = require('express');
 var express = require('express');
-const { uploadPresentation, generatePresentationRequests, generateSlideRequests } = require('../services/SlidesAPI');
+const { uploadPresentation, generatePresentationRequests, generateSlideRequests, generateAllSlidesRequests } = require('../services/SlidesAPI');
 var router = express.Router();
 
 /* POST upload Presentation Slides */
@@ -47,6 +47,18 @@ const { Cluster } = require('puppeteer-cluster');
         console.log(req.body);
 
         generateSlideRequests(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            next(reason);
+        });;
+    });
+
+
+    /* POST get requests for single slide */
+    router.post('/generate_all_slides_requests', function(req, res, next) {
+        console.log(req.body);
+
+        generateAllSlidesRequests(req.body, cluster).then((response) => {
             res.json(response);
         }).catch((reason) => {
             next(reason);

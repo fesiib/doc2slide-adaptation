@@ -6,7 +6,7 @@ import {
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { extractedFile } from '../reducers/presentationFiles';
-import { generateSlide } from '../services/SlidesTemplateServerAPI';
+import { generateAllSlides, generateSlide } from '../services/SlidesTemplateServerAPI';
 import { processContent } from '../services/TextAPI';
 
 export const EXTRACTING = 'extracting';
@@ -100,19 +100,44 @@ function InputContent(props) {
                 };
                 generateSlide(selected, selectedExt, 0, 'g9362f61ffc_0_15', resources)
                     .then((response) => {
-                        console.log("Generated Slide Deck: ", response);
+                        console.log("Generated Single Slide: ", response);
                         loadingDeactivate(COMPILING);
                         forceUpdateSelected();
                     }).catch((error) => {
-                        console.log('Couldn`t generate Slide Deck: ', error);
+                        console.log('Couldn`t generate Single Slide: ', error);
                         loadingDeactivate(COMPILING);
                     });
                     _compileContent(resources.header, resources.body);
             }).catch((error) => {
-                console.log('Couldn`t generate Slide Deck: ', error);
+                console.log('Couldn`t generate Single Slide: ', error);
                 loadingDeactivate(COMPILING);
             });
     };
+
+    const compileAllSlides = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        loadingActivate(COMPILING);
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+            .then((response) => {
+                let resources = {
+                    ...response,
+                };
+                generateAllSlides(selected, selectedExt, resources)
+                    .then((response) => {
+                        console.log("Generated All Slides: ", response);
+                        loadingDeactivate(COMPILING);
+                        forceUpdateSelected();
+                    }).catch((error) => {
+                        console.log('Couldn`t generate All Slides: ', error);
+                        loadingDeactivate(COMPILING);
+                    });
+                    _compileContent(resources.header, resources.body);
+            }).catch((error) => {
+                console.log('Couldn`t generate All Slides: ', error);
+                loadingDeactivate(COMPILING);
+            });
+    }
 
     const renderBodyForm = () => {
         if (Array.isArray(body)) {
@@ -150,6 +175,7 @@ function InputContent(props) {
                     </FormGroup>
                     {renderBodyForm()}
                     <Button type='submit' > Compile Single Page </Button>
+                    <Button onClick={compileAllSlides}> Commpile All Slides </Button>
                 </Form>
             </div>
             <div style={ { display: 'none' } } id='loading'>

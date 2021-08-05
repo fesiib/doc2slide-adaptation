@@ -105,6 +105,39 @@ export async function generateSlideRequests(presentationId, pageId, insertionInd
     });
 }
 
+export async function generateAllSlidesRequests(presentationId, resources) {
+    const SERVICE = '/slides/generate_all_slides_requests';
+
+    let data = {
+        presentationId,
+        resources,
+    };
+
+    const URL = ADDR + SERVICE;
+    
+    const request = {
+        method: 'POST',
+        mode: 'cors',
+        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data)
+    };
+
+    return new Promise((resolve, reject) => {
+        fetch(URL, request).then( (response) => response.json())
+            .then((response) => {
+                resolve(response);
+            })
+            .catch((reason) => {
+                reject(reason);
+            });
+    });
+}
+
 export async function testPresentation(presentationId, copies, resources) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
@@ -230,6 +263,32 @@ export async function generateSlide(referencePresentationId, presentationId, pag
                 let matching = response.matching;
                 let matched = response.matched;
                 console.log('Matched:', matched, matching);
+                updatePresentation(presentationId, requests).then((response) => {
+                    resolve({
+                        response,
+                    });
+                }).catch((reason) => {
+                    reject(reason);
+                });
+            }).catch((reason) => {
+                reject(reason);
+            });
+        }).catch((reason) => {
+            reject(reason);
+        });
+    });
+}
+
+export async function generateAllSlides(referencePresentationId, presentationId, resources) {
+    return new Promise((resolve, reject) => {
+        clearPresentationRequests(presentationId).then((response) => {
+            let clearRequests = response.requests;
+            generateAllSlidesRequests(referencePresentationId, resources)
+            .then((response) => {
+                let requests = clearRequests.concat(response.requests);
+                let matching = response.matching;
+                let matchedList = response.matchedList;
+                console.log('All Slides Matched:', matchedList, matching);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({
                         response,
