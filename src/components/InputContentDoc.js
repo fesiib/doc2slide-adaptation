@@ -123,7 +123,7 @@ function InputContentDoc(props) {
                         />
                     </FormGroup>
                     {renderSectionsForm()}
-                    <Button type='submit' color='success' > Compile Slide Deck </Button>
+                    <Button className='m-2' type='submit' color='success' > Compile Slide Deck </Button>
                 </Form>
             </div>
             <div style={ { display: 'none' } } id='loading'>

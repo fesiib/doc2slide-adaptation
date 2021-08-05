@@ -36,8 +36,6 @@ function ComparisonTableContainer(props) {
         const width = window.innerWidth / 3;
         const height = width * (9 / 16);
 
-        console.log(width, height);
-
         let rows = [];
 
         let maxLength = 0;

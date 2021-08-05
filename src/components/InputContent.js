@@ -14,27 +14,32 @@ import { processContent } from '../services/textSummarization';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';
+export const UPLOADING = 'uploading';
 
 let loadingState = {
     extracting: false, 
     compiling: false,
+    uploading: false,
 };
 
 const NOT_SELECTED = "Not Selected";
 
-export function loadingActivate(process) {
+export function loadingActivate(process, loadingDisplay = 'block') {
     if (process === EXTRACTING) {
         loadingState.extracting = true;
     }
     if (process === COMPILING) {
         loadingState.compiling = true;
     }
+    if (process === UPLOADING) {
+        loadingState.uploading = true;
+    }
     let divDocForm = document.getElementById('contentDocForm');
     let divForm = document.getElementById('contentForm');
     let divLoading = document.getElementById('loading');
     divForm.setAttribute('style', 'display: none');
     divDocForm.setAttribute('style', 'display: none');
-    divLoading.setAttribute('style', 'display: block');
+    divLoading.setAttribute('style', 'display: ' + loadingDisplay);
 }
 
 export function loadingDeactivate(process) {
@@ -44,7 +49,10 @@ export function loadingDeactivate(process) {
     if (process === COMPILING) {
         loadingState.compiling = false;
     }
-    if (!loadingState.extracting && !loadingState.compiling) {
+    if (process === UPLOADING) {
+        loadingState.uploading = false;
+    }
+    if (!loadingState.extracting && !loadingState.compiling && !loadingState.uploading) {
         let divDocForm = document.getElementById('contentDocForm');
         let divForm = document.getElementById('contentForm');
         let divLoading = document.getElementById('loading');

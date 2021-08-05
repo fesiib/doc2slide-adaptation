@@ -54,7 +54,7 @@ export const updatePageCnt = (payload) => ({
 });
 
 const initialState = {
-    cnt: 0,
+    cnt: -1,
     files: [],
     filesExt: {},
     selected: null,
@@ -72,9 +72,10 @@ const presentationFiles = (state = initialState, action) => {
                     return {...state};
                 }
             }
+            let curCnt = Math.max(0, state.cnt);
             return {
                 ...state,
-                cnt: state.cnt + 1,
+                cnt: curCnt + 1,
                 files: [...state.files, action.payload],
             }
         }

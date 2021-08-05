@@ -3,25 +3,23 @@
 import './index.css';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Container, Col, Row, Button } from 'reactstrap';
+import { Container, Col, Row, } from 'reactstrap';
 
 import Authorize from './components/Authorize';
 import FileManager from './components/FileManager';
 import ViewPresentation from './components/ViewPresentation';
-import InputContent, { COMPILING, EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
+import InputContent, { EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
 import InputContentDoc from './components/InputContentDoc';
 import ComparisonTableContainer from './components/ComparisonTableContainer';
 
 import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates, updatePageCnt } from './reducers/presentationFiles';
 
-import { extract, testPresentation, justUploadPresentation } from './services/slideAdapter';
-import { processContentDoc } from './services/textSummarization';
+import { extract } from './services/slideAdapter';
 
 function App() {
 	const dispatch = useDispatch();
 
-	const {selected, selectedExt, files} = useSelector(state => state.presentationFiles);
-	const { title, sections, titleResult, sectionsResult, shouldUpdate } = useSelector(state => state.contentDoc);
+	const { selected, selectedExt, } = useSelector(state => state.presentationFiles);
 
 	const _extractedFile = (forId, id) => {
 		dispatch(extractedFile({
@@ -62,77 +60,26 @@ function App() {
 	}
 	
 	useEffect(() => {
-		if (selectedExt === CREATION_SIGNAL
-			|| selectedExt === ERROR_SIGNAL 
-			|| selectedExt === null 
-			|| selectedExt === undefined 
+		if (selectedExt === CREATION_SIGNAL 
 			|| selectedExt === ''
 		) {
 			loadingActivate(EXTRACTING);
+		}
+		else if (selectedExt === ERROR_SIGNAL 
+			|| selectedExt === null 
+			|| selectedExt === undefined
+		) {
+			loadingActivate(EXTRACTING, 'none');
 		}
 		else {
 			loadingDeactivate(EXTRACTING);
 		}
 	});
 
-
-	const testAll = (event) => {
-        loadingActivate(COMPILING);
-		event.target.active = true;
-		processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdate)
-		.then((response) => {
-			let resources = {
-				...response,
-			};
-			let testSessions = [];
-			for (let presentation of files) {
-				let copies = 4;
-				testSessions.push(testPresentation(presentation.id, copies, resources));
-			}
-			Promise.all(testSessions)
-			.then((response) => {
-				loadingDeactivate(COMPILING);
-				event.target.active = false;
-			});                
-		}).catch((error) => {
-			console.log('Couldn`t Test: ', error);
-			loadingDeactivate(COMPILING);
-			event.target.active = false;
-		});
-    }
-
-	const uploadAll = (event) => {
-		loadingActivate(EXTRACTING);
-		event.target.active = true;
-		let uploadSessions = [];
-		for (let presentation of files) {
-			uploadSessions.push(justUploadPresentation(presentation.id));
-		}
-		Promise.all(uploadSessions)
-		.then((response) => {
-			loadingDeactivate(EXTRACTING);
-			event.target.active = false;
-		});        
-	}
 	return (
 		<div>
 			<Authorize/>
 			<FileManager/>
-			<Button
-					className = "w-25 max-h-50 m-2"
-					color="danger"
-				> Refresh </Button>
-			<Button
-					className = "w-25 max-h-50 m-2"
-					onClick = {uploadAll}
-					color="info"
-				> Upload ALL </Button>
-			<Button
-					className = "w-25 max-h-50 m-2"
-					onClick = {testAll}
-					color="info"
-				> Test ALL </Button>
-				
 			<InputContentDoc className='m-5'/>
 			<InputContent className='m-5'/>
 			<Container>

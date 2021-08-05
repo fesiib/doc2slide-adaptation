@@ -22,6 +22,14 @@ export function parsePresentations(callback) {
     });
 }
 
+export async function uploadToFolder(presentationId) {
+    return gapi.client.drive.files.update({
+        fileId: presentationId,
+        addParents: FOLDER_ID,
+        fields: 'id'
+    });
+}
+
 const TEMPLATES_FOLDER_ID = '1Njrblq2ifh7iKWkNwCM5uvhtue_8o5Qj';
 
 export function createPresentation(title) {
