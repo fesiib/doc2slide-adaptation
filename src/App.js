@@ -105,19 +105,19 @@ function App() {
 		<div>
 			<Authorize/>
 			<FileManager/>
+			<Button
+					className = "w-25 max-h-50 m-2"
+					onClick = {uploadAll}
+					color="danger"
+				> Upload ALL </Button>
+			<Button
+					className = "w-25 max-h-50 m-2"
+					onClick = {testAll}
+					color="danger"
+				> Test ALL </Button>
 			<InputContent className='m-5'/>
 			<InputContentDoc className='m-5'/>
 			<Container>
-				<Button
-						className = "w-25 max-h-50 m-2"
-						onClick = {uploadAll}
-						color="primary"
-					> Upload ALL </Button>
-				<Button
-						className = "w-25 max-h-50 m-2"
-						onClick = {testAll}
-						color="primary"
-					> Test ALL </Button>
 				<Row>
 					<Col xs="5" className="m-5">
 						<ViewPresentation presentationId={selected}/>

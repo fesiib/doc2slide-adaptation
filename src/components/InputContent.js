@@ -196,9 +196,11 @@ function InputContent(props) {
                         />
                     </FormGroup>
                     {renderBodyForm()}
-                    <Button type='submit' > Compile Single Page </Button>
-                    <Button onClick={submitAllSlidesHandler}> Compare All Slides </Button>
+                    <Button type='submit' color='success'> Compile Single Page </Button>
                 </Form>
+                <div className='m-5'>
+                    <Button onClick={submitAllSlidesHandler} color='success'> Compare All Slides </Button>
+                </div>
             </div>
             <div style={ { display: 'none' } } id='loading'>
                 <Spinner style={{ width: '10rem', height: '10rem' } } children='' />
