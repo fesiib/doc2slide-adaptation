@@ -680,13 +680,13 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     };
 }
 
-async function __fitToSlide_random(content, template, insertionIndex, clusterBrowser) {
+async function __fitToSlide_random(content, template, pageNum, clusterBrowser) {
     let globalRequests = [];
     let matching = {};
 
     let result = await tryFitBody(content, 0, template, clusterBrowser);
     console.log('Fitted', 0, result.done, result);
-    globalRequests = globalRequests.concat(initializeTemplate(result.template, insertionIndex + 1));
+    globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
     globalRequests = globalRequests.concat(result.requests);
     matching[result.template.pageId] = result.matching;
     
@@ -728,13 +728,13 @@ async function __fitToSlide_random(content, template, insertionIndex, clusterBro
     };
 }
 
-async function fitToSlide_random(content, obj, pageId, insertionIndex, clusterBrowser) {
+async function fitToSlide_random(content, obj, pageId, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
 
     let template = templates.getByOriginalId(pageId);
     
-    return await __fitToSlide_random(content, template, insertionIndex, clusterBrowser);
+    return await __fitToSlide_random(content, template, pageNum, clusterBrowser);
 }
 
 async function fitToAllSlides_random(content, obj, clusterBrowser) {
@@ -750,11 +750,11 @@ async function fitToAllSlides_random(content, obj, clusterBrowser) {
 
     let generationSessions = [];
 
-    let insertionIndex = 0;
+    let pageNum = 0;
     for (let original of poolTemplates) {
         let template = templates.copySingleTemplate(original);
-        generationSessions.push(__fitToSlide_random(content, template, insertionIndex, clusterBrowser));
-        insertionIndex++;
+        pageNum++;
+        generationSessions.push(__fitToSlide_random(content, template, pageNum, clusterBrowser));
     }
 
     let results = await Promise.all(generationSessions);

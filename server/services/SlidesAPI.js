@@ -36,13 +36,13 @@ async function generatePresentationRequests(data, cluster) {
 async function generateSlideRequests(data, cluster) {
     let presentationId = data.presentationId;
     let pageId = data.pageId;
-    let insertionIndex = data.insertionIndex;
+    let pageNum = data.pageNum;
     let resources = data.resources;
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let result = await fitToSlide_random(resources, templates, pageId, insertionIndex, cluster);
+    let result = await fitToSlide_random(resources, templates, pageId, pageNum, cluster);
     return result;
 }
 

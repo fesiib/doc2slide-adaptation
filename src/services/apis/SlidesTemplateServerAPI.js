@@ -69,13 +69,13 @@ export async function generatePresentationRequests(presentationId, resources) {
     });
 }
 
-export async function generateSlideRequests(presentationId, pageId, insertionIndex, resources) {
+export async function generateSlideRequests(presentationId, pageId, pageNum, resources) {
     const SERVICE = '/slides/generate_slide_requests';
 
     let data = {
         presentationId,
         pageId,
-        insertionIndex,
+        pageNum,
         resources,
     };
 

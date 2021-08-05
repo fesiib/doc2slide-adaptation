@@ -46,6 +46,13 @@ export const clearThumbnails = (payload) => ({
     payload,
 });
 
+const UPDATE_PAGE_CNT = "UPDATE_PAGE_CNT";
+
+export const updatePageCnt = (payload) => ({
+    type: UPDATE_PAGE_CNT,
+    payload,
+});
+
 const initialState = {
     cnt: 0,
     files: [],
@@ -54,6 +61,7 @@ const initialState = {
     selectedExt: null,
     extractedPresentations: {},
     thumbnails: [],
+    extPageCnt: 0,
 };
 
 const presentationFiles = (state = initialState, action) => {
@@ -75,6 +83,7 @@ const presentationFiles = (state = initialState, action) => {
             let selected = state.selected;
             let selectedExt = state.selectedExt;
             let thumbnails = state.thumbnails.slice();
+            let extPageCnt = state.extPageCnt;
             while (position < state.files.length && state.files[position].id !== action.payload.id)
                 position++;
             if (position === state.files.length) {
@@ -84,6 +93,7 @@ const presentationFiles = (state = initialState, action) => {
                 selected = null;
                 selectedExt = null;
                 thumbnails = [];
+                extPageCnt = 0;
             } 
             return {
                 ...state,
@@ -92,6 +102,7 @@ const presentationFiles = (state = initialState, action) => {
                 selected: selected,
                 selectedExt: selectedExt,
                 thumbnails: thumbnails,
+                extPageCnt: extPageCnt,
             }
         }
         case SELECT_FILE: {
@@ -115,6 +126,7 @@ const presentationFiles = (state = initialState, action) => {
                 selectedExt: selectedExt,
                 filesExt: filesExt,
                 thumbnails: [],
+                extPageCnt: 0,
             }
         }
         case EXTRACTED_FILE: {
@@ -161,6 +173,12 @@ const presentationFiles = (state = initialState, action) => {
             return {
                 ...state,
                 thumbnails: [],
+            }
+        }
+        case UPDATE_PAGE_CNT: {
+            return {
+                ...state,
+                extPageCnt: action.payload.pageCnt,
             }
         }
         default:

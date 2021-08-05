@@ -57,7 +57,7 @@ function InputContent(props) {
 
     const { header, body, headerResult, bodyResult, shouldUpdate } = useSelector(state => state.content);
 
-    const { selected, selectedExt, extractedPresentations } = useSelector(state => state.presentationFiles);
+    const { selected, selectedExt, extractedPresentations, extPageCnt, } = useSelector(state => state.presentationFiles);
 
     const [pageIdDropdownOpen, setPageIdDropdownOpen] = useState(false);
     const [pageIdDropdownValue, setPageIdDropdownValue] = useState(null);
@@ -65,7 +65,7 @@ function InputContent(props) {
 
 
     const [indexDropdownOpen, setIndexDropdownOpen] = useState(false);
-    const [indexDropdownValue, setIndexdDropdownValue] = useState(null);
+    const [indexDropdownValue, setIndexDropdownValue] = useState(null);
     const [indexDropdownToggle, setIndexDropdownToggle] = useState('Not Selected');
 
     const pageIdToggleDropdown = () => {
@@ -203,45 +203,31 @@ function InputContent(props) {
         return [];
     }
 
-    // const renderIndexDropdownItems = () => {
-    //     if (!extractedPresentations.hasOwnProperty(selected)
-    //         || !extractedPresentations[selected].hasOwnProperty('__templates')
-    //     ) {
-    //         return [(
-    //             <DropdownItem disabled> No Presentation Selected </DropdownItem>
-    //         )];
-    //     }
-    //     let templates = extractedPresentations[selected].__templates;
-    //     let result = [];
-    //     if (Array.isArray(templates)) {
-    //         for (let template of templates) {
-    //             let itemName = '';
-    //             if (template.isCustom) {
-    //                 itemName = 'Page ' + template.pageNum.toString();
-    //             }
-    //             else {
-    //                 itemName = 'Layout ' + template.pageNum.toString();
-    //             }
-    //             result.push(
-    //                 <DropdownItem
-    //                     key={template.originalId}
-    //                     onClick={() => {
-    //                         setPageIdDropdownValue(template.originalId);
-    //                         setPageIdDropdownToggle(itemName);
-    //                     }}
-    //                 > 
-    //                     {itemName} 
-    //                 </DropdownItem>
-    //             );
-    //         }
-    //     }
-    //     else {
-    //         result.push(
-    //             <DropdownItem disabled> No Slides </DropdownItem>
-    //         );
-    //     }
-    //     return result
-    // }
+    const renderIndexDropdownItems = () => {
+        let result = [];
+        if (extPageCnt > 0) {
+            for (let index = 1; index <= extPageCnt; index++) {
+                let id = index.toString();
+                result.push(
+                    <DropdownItem
+                        key={id}
+                        onClick={() => {
+                            setIndexDropdownValue(index);
+                            setIndexDropdownToggle(id);
+                        }}
+                    > 
+                        {id} 
+                    </DropdownItem>
+                );
+            }
+        }
+        else {
+            result.push(
+                <DropdownItem disabled> No Slides </DropdownItem>
+            );
+        }
+        return result
+    }
 
     const renderPageIdDropdownItems = () => {
         if (!extractedPresentations.hasOwnProperty(selected)
@@ -301,7 +287,7 @@ function InputContent(props) {
                             <Col className='col-2'>
                                 <Button type='submit' color='success'> Compile Single Page </Button>
                             </Col>
-                            {/* <Col className='col-2'>
+                            <Col className='col-2'>
                                 <Label for='indexDropdown'> Index </Label>
                                 <Dropdown id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
                                     <DropdownToggle caret>
@@ -311,7 +297,7 @@ function InputContent(props) {
                                         {renderIndexDropdownItems()}
                                     </DropdownMenu>
                                 </Dropdown>
-                            </Col> */}
+                            </Col>
                             <Col className='col-2'>
                                 <Label for='pageIdDropdown'> Reference Page </Label>
                                 <Dropdown id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
