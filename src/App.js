@@ -114,21 +114,25 @@ function App() {
 			event.target.active = false;
 		});        
 	}
-
 	return (
 		<div>
 			<Authorize/>
 			<FileManager/>
 			<Button
 					className = "w-25 max-h-50 m-2"
-					onClick = {uploadAll}
 					color="danger"
+				> Refresh </Button>
+			<Button
+					className = "w-25 max-h-50 m-2"
+					onClick = {uploadAll}
+					color="info"
 				> Upload ALL </Button>
 			<Button
 					className = "w-25 max-h-50 m-2"
 					onClick = {testAll}
-					color="danger"
+					color="info"
 				> Test ALL </Button>
+				
 			<InputContent className='m-5'/>
 			<InputContentDoc className='m-5'/>
 			<Container>
@@ -141,7 +145,7 @@ function App() {
 					</Col>
 				</Row>
 			</Container>
-			<ComparisonTableContainer className='m-5'/>
+			<ComparisonTableContainer className=""/>
 		</div>
 	);
 }

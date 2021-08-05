@@ -172,7 +172,12 @@ function InputContent(props) {
                         console.log("Generated All Slides: ", response);
 
                         /// requestThumbnails and append
-                        compareAllSlides(selected, selectedExt).then((response) => {
+                        compareAllSlides(
+                            selected,
+                            extractedPresentations[selected],
+                            selectedExt
+                        ).then((response) => {
+                            console.log(response);
                             let original = { ...response.original };
                             let generated = { ...response.generated };
                             _addThumbnails(original.title, original.presentationId, original.imageLinks);

@@ -235,3 +235,11 @@
     @apply pr-8;
   }
 }
+
+.mw-95 {
+  min-width: 95% !important;
+}
+
+.mw-98 {
+  min-width: 98% !important;
+}
