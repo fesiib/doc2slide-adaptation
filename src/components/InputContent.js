@@ -330,7 +330,7 @@ function InputContent(props) {
                             </Col>
                             <Col className='col-2' key='column-2'>
                                 <Label for='indexDropdown'> Index </Label>
-                                <Dropdown id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
+                                <Dropdown direction='right' id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
                                     <DropdownToggle caret key='toggle'>
                                         {indexDropdownToggle}
                                     </DropdownToggle>
@@ -341,7 +341,7 @@ function InputContent(props) {
                             </Col>
                             <Col className='col-2' key='column-3'>
                                 <Label for='pageIdDropdown'> Reference Page </Label>
-                                <Dropdown id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
+                                <Dropdown direction='right' id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
                                     <DropdownToggle caret key='toggle'>
                                         {pageIdDropdownToggle}
                                     </DropdownToggle>
