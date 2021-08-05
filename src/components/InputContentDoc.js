@@ -1,13 +1,15 @@
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Form, FormGroup, Label, Input, Button,
-
     Spinner,
 } from 'reactstrap';
+
 import { changeTitleContent, changeSectionsContent, compileDocContent } from '../reducers/contentDoc';
 import { extractedFile } from '../reducers/presentationFiles';
-import { generatePresentation } from '../services/SlidesTemplateServerAPI';
-import { processContentDoc } from '../services/TextAPI';
+
+import { generatePresentation } from '../services/slideAdapter';
+import { processContentDoc } from '../services/textSummarization';
+
 import { COMPILING, loadingActivate, loadingDeactivate } from './InputContent';
 
 function InputContentDoc(props) {

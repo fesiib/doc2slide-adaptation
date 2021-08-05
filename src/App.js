@@ -10,11 +10,12 @@ import FileManager from './components/FileManager';
 import ViewPresentation from './components/ViewPresentation';
 import InputContent, { COMPILING, EXTRACTING, loadingActivate, loadingDeactivate } from './components/InputContent';
 import InputContentDoc from './components/InputContentDoc';
+import ComparisonTableContainer from './components/ComparisonTableContainer';
 
 import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile } from './reducers/presentationFiles';
 
-import { extract, testPresentation, justUploadPresentation } from './services/SlidesTemplateServerAPI';
-import { processContentDoc } from './services/TextAPI';
+import { extract, testPresentation, justUploadPresentation } from './services/slideAdapter';
+import { processContentDoc } from './services/textSummarization';
 
 function App() {
 	const dispatch = useDispatch();
@@ -126,6 +127,7 @@ function App() {
 					</Col>
 				</Row>
 			</Container>
+			<ComparisonTableContainer className='m-5'/>
 		</div>
 	);
 }

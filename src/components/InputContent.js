@@ -1,13 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Form, FormGroup, Label, Input, Button,
-
     Spinner,
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
-import { extractedFile } from '../reducers/presentationFiles';
-import { generateAllSlides, generateSlide } from '../services/SlidesTemplateServerAPI';
-import { processContent } from '../services/TextAPI';
+import { addThumbnails, clearThumbnails, extractedFile } from '../reducers/presentationFiles';
+import { generateAllSlides, generateSlide } from '../services/slideAdapter';
+import { compareAllSlides } from '../services/slideComparator';
+import { processContent } from '../services/textSummarization';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';
@@ -83,13 +83,25 @@ function InputContent(props) {
 		}));
 	}
 
+    const _addThumbnails = (title, presentationId, imageLinks) => {
+        dispatch(addThumbnails({
+            title,
+            presentationId,
+            imageLinks,
+        }));
+    }
+
+    const _clearThumbnails = () => {
+        dispatch(clearThumbnails());
+    }
+
     const forceUpdateSelected = () => {
         let prev = selectedExt;
         _extractedFile(selected, '');
         _extractedFile(selected, prev);
     }
 
-    const submitHandler = (event) => {
+    const submitSingleSlideHandler = (event) => {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
@@ -98,7 +110,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlide(selected, selectedExt, 0, 'g9362f61ffc_0_15', resources)
+                generateSlide(selected, selectedExt, 0, 'p2', resources)
                     .then((response) => {
                         console.log("Generated Single Slide: ", response);
                         loadingDeactivate(COMPILING);
@@ -114,10 +126,11 @@ function InputContent(props) {
             });
     };
 
-    const compileAllSlides = (event) => {
+    const submitAllSlidesHandler = (event) => {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
+        _clearThumbnails();
         processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
             .then((response) => {
                 let resources = {
@@ -126,8 +139,17 @@ function InputContent(props) {
                 generateAllSlides(selected, selectedExt, resources)
                     .then((response) => {
                         console.log("Generated All Slides: ", response);
-                        loadingDeactivate(COMPILING);
-                        forceUpdateSelected();
+
+                        /// requestThumbnails and append
+                        compareAllSlides(selected, selectedExt).then((response) => {
+                            let original = { ...response.original };
+                            let generated = { ...response.generated };
+                            _addThumbnails(original.title, original.presentationId, original.imageLinks);
+                            _addThumbnails(generated.title, generated.presentationId, generated.imageLinks);
+                            loadingDeactivate(COMPILING);
+                            forceUpdateSelected();
+                        });
+
                     }).catch((error) => {
                         console.log('Couldn`t generate All Slides: ', error);
                         loadingDeactivate(COMPILING);
@@ -164,7 +186,7 @@ function InputContent(props) {
     return (
         <div className={props.className} >
             <div style={ { display: 'block' } } id='contentForm'>
-                <Form onSubmit={submitHandler}>
+                <Form onSubmit={submitSingleSlideHandler}>
                     <FormGroup>
                         <Label for="header"> Header </Label>
                         <Input type="textarea" name="header" id="header" value={header} 
@@ -175,7 +197,7 @@ function InputContent(props) {
                     </FormGroup>
                     {renderBodyForm()}
                     <Button type='submit' > Compile Single Page </Button>
-                    <Button onClick={compileAllSlides}> Commpile All Slides </Button>
+                    <Button onClick={submitAllSlidesHandler}> Compare All Slides </Button>
                 </Form>
             </div>
             <div style={ { display: 'none' } } id='loading'>

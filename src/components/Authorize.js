@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { resetApp } from "../reducers";
 import { addFile } from "../reducers/presentationFiles";
-import { parsePresentations } from "../services/DriveAPI";
+import { parsePresentations } from "../services/apis/DriveAPI";
 import {handleClientLoad,
     bodyHTML,
-} from '../services/GoogleAPI';
+} from '../services/apis/GoogleAPI';
 
 function Authorize() {
     const dispatch = useDispatch();

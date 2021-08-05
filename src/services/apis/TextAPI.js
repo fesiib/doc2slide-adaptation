@@ -1,5 +1,3 @@
-import { appendPre } from "./GoogleAPI";
-
 const ADDR = "http://server.hyungyu.com:9382/";
 
 const REQUEST_TYPES = {
@@ -48,7 +46,7 @@ function processResult(response) {
 function sendRequest(text, requestType, retries = 0) {
     return new Promise((resolve, reject) => {
         if (retries > 3) {
-            appendPre("Error: cannot access the server: " + requestType.route);
+            console.log("Error: cannot access the server: " + requestType.route);
             reject([]);
         }
         let requestJSON = JSON.parse(JSON.stringify(REQUEST_PATTERN));
@@ -78,58 +76,11 @@ function sendRequest(text, requestType, retries = 0) {
     });
 }
 
+
 export function textTFIDF(text) {
     return sendRequest(text, REQUEST_TYPES.tfidf);
 }
 
 export function textAbstract(text) {
     return sendRequest(text, REQUEST_TYPES.abstract);   
-}
-
-export async function processContent(request, possibleResponse, shouldUpdate) {
-    if (!shouldUpdate) {
-        return possibleResponse;
-    }
-    let headerText = request.header;
-    let bodyTexts = request.body;
-    let headerPromise = textTFIDF(headerText);
-    let bodyPromises = [];
-    for (let part of bodyTexts) {
-        let text = part.paragraph;
-        bodyPromises.push(
-            new Promise(async (resolve) => {
-                let result = await textTFIDF(text);
-                resolve({
-                    paragraph: result
-                });
-            })
-        );
-    }
-    let header = await headerPromise;
-    let body = await Promise.all(bodyPromises);
-    return {
-        header,
-        body,
-    };
-}
-
-
-export async function processContentDoc(request, possibleResponse, shouldUpdate) {
-    if (!shouldUpdate) {
-        return possibleResponse;
-    }
-    let titleText = request.title;
-    let sectionsTexts = request.sections;
-    let titlePromise = textTFIDF(titleText);
-    let sectionsPromises = [];
-    for (let section of sectionsTexts) {
-        sectionsPromises.push(processContent(section, null, true));
-    }
-    let title = await titlePromise;
-    let sections = await Promise.all(sectionsPromises);
-    console.log(title, sections);
-    return {
-        title,
-        sections,
-    };
 }

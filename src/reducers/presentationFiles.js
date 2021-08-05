@@ -32,6 +32,20 @@ export const extractedTemplates = (payload) => ({
     payload,
 });
 
+const ADD_THUMBNAILS = "ADD_THUMBNAILS";
+const CLEAR_THUMBNAILS = "CLEAR_THUMBNAILS";
+
+export const addThumbnails = (payload) => ({
+    type: ADD_THUMBNAILS,
+    payload,
+});
+
+
+export const clearThumbnails = (payload) => ({
+    type: CLEAR_THUMBNAILS,
+    payload,
+});
+
 const initialState = {
     cnt: 0,
     files: [],
@@ -39,6 +53,7 @@ const initialState = {
     selected: null,
     selectedExt: null,
     templates: {},
+    thumbnails: [],
 };
 
 const presentationFiles = (state = initialState, action) => {
@@ -59,6 +74,7 @@ const presentationFiles = (state = initialState, action) => {
             let position = 0;
             let selected = state.selected;
             let selectedExt = state.selectedExt;
+            let thumbnails = state.thumbnails.slice();
             while (position < state.files.length && state.files[position].id !== action.payload.id)
                 position++;
             if (position === state.files.length) {
@@ -67,6 +83,7 @@ const presentationFiles = (state = initialState, action) => {
             if (selected === action.payload.id) {
                 selected = null;
                 selectedExt = null;
+                thumbnails = [];
             } 
             return {
                 ...state,
@@ -74,6 +91,7 @@ const presentationFiles = (state = initialState, action) => {
                 files: [state.files.slice(0, position), ...state.files.slice(position+1)],
                 selected: selected,
                 selectedExt: selectedExt,
+                thumbnails: thumbnails,
             }
         }
         case SELECT_FILE: {
@@ -96,6 +114,7 @@ const presentationFiles = (state = initialState, action) => {
                 selected: selected,
                 selectedExt: selectedExt,
                 filesExt: filesExt,
+                thumbnails: [],
             }
         }
         case EXTRACTED_FILE: {
@@ -128,6 +147,21 @@ const presentationFiles = (state = initialState, action) => {
                 ...state,
                 templates: newTemplates,
             };
+        }
+        case ADD_THUMBNAILS: {
+            let title = action.payload.title;
+            let presentationId = action.payload.presentationId;
+            let imageLinks = action.payload.imageLinks.slice(0);
+            return {
+                ...state,
+                thumbnails: [...state.thumbnails, {title, presentationId, imageLinks}],
+            }
+        }
+        case CLEAR_THUMBNAILS: {
+            return {
+                ...state,
+                thumbnails: [],
+            }
         }
         default:
                 return state;

@@ -12,3 +12,14 @@ export async function updatePresentation(presentationId, requests) {
         requests,
     });
 }
+
+export async function getPresentationThumbnail(presentationId, pageObjectId) {
+    const thumbnailProperties = {
+        thumbnailSize: 'MEDIUM',
+    };
+    return gapi.client.slides.presentations.pages.getThumbnail({
+        presentationId,
+        pageObjectId,
+        thumbnailProperties,
+    });
+}
