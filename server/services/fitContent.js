@@ -685,7 +685,7 @@ async function __fitToSlide_random(content, template, pageNum, clusterBrowser) {
     let matching = {};
 
     let result = await tryFitBody(content, 0, template, clusterBrowser);
-    console.log('Fitted', 0, result.done, result);
+    //console.log('Fitted', 0, result.done, result);
     globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
     globalRequests = globalRequests.concat(result.requests);
     matching[result.template.pageId] = result.matching;
@@ -738,7 +738,6 @@ async function fitToSlide_random(content, obj, pageId, pageNum, clusterBrowser) 
 }
 
 async function fitToAllSlides_random(content, obj, clusterBrowser) {
-    console.log('here');
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     
@@ -759,7 +758,6 @@ async function fitToAllSlides_random(content, obj, clusterBrowser) {
 
     let results = await Promise.all(generationSessions);
     for (let result of results) {
-        console.log(result);
         requests = requests.concat(result.requests);
         matching = { ...matching, ...result.matching };
         matchedList.push(result.matched);
