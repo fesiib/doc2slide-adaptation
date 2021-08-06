@@ -103,12 +103,12 @@ function initializePageElementShape(pageElement) {
         if (contentId >= pageElement.mappedContents.length) {
             break;
         }
-        let start = text.length;
-        if (contentId > 0)
-            text += '\n';
-        text += pageElement.mappedContents[contentId].text;
-        let end = text.length;
         if (textElement.hasOwnProperty('paragraphMarker')) {
+            let start = text.length;
+            if (contentId > 0)
+                text += '\n';
+            text += pageElement.mappedContents[contentId].text;
+            let end = text.length;
             let bullet = {};
             let style = {};
 

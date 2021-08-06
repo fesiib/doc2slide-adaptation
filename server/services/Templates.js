@@ -418,6 +418,98 @@ function sanitizePageElements(pageElements) {
     return newPageElements;
 }
 
+function calculateAdditional(pageElement, src) {
+    // additional: {
+    //     isReplacable: true, // not line;
+    //     //union start
+    //     originalType: '', // elementGroup, shape, image, video, line, table, sheetsChart, wordArt
+    //     amountText: 0,
+    //     mainColors: {
+    //         colors: [opaqueColorTemplate],
+    //     },
+    //     //union end
+    // }
+    let additional = {
+        isReplacable: true,
+        originalType: '',
+        text: [],
+        contentUrl: [],
+        mappedCntMax: 0,
+        mappedCntMin: 0,
+    }
+    if (src.hasOwnProperty('shape')) {
+        additional.isReplacable = true;
+        additional.originalType = 'shape';
+        if (src.shape.hasOwnProperty('text') && Array.isArray(src.shape.text.textElements)) {
+            additional.text = [];
+            for (let textElement of src.shape.text.textElements) {
+                if (textElement.hasOwnProperty('paragraphMarker')) {
+                    additional.mappedCntMax++;
+                }
+                if (textElement.hasOwnProperty('textRun')
+                    && textElement.textRun.hasOwnProperty('content')
+                ) {
+                    additional.text.push(textElement.textRun.content);
+                }
+                else if (textElement.hasOwnProperty('autoText')
+                    && textElement.autoText.hasOwnProperty('content')
+                ) {
+                    additional.text.push(textElement.autoText.content);
+                }
+            }
+        }
+        
+    }
+    else if (src.hasOwnProperty('image')) {
+        additional.isReplacable = true;
+        additional.originalType = 'image';
+        additional.contentUrl = [src.image.contentUrl];
+        additional.mappedCntMax = 1;
+        additional.mappedCntMin = 1;
+    }
+    else if (src.hasOwnProperty('elementGroup')) {
+        additional.isReplacable = true;
+        additional.originalType = 'elementGroup';
+        if (Array.isArray(pageElement.elementGroup.children)) {
+            additional.text = [];
+            additional.contentUrl = [];
+            for (let ch of pageElement.elementGroup.children) {
+                additional.text = additional.text.concat(ch.additional.text);
+                additional.contentUrl = additional.text.concat(ch.additional.contentUrl);
+            }
+        }
+    }
+    else if (src.hasOwnProperty('video')) {
+        additional.isReplacable = true;
+        additional.originalType = 'video';
+        additional.mappedCntMax = 1;
+        additional.mappedCntMin = 1;
+    }
+    else if (src.hasOwnProperty('line')) {
+        additional.isReplacable = false;
+        additional.originalType = 'line';
+    }
+    else if (src.hasOwnProperty('table')) {
+        additional.isReplacable = false;
+        additional.originalType = 'table';
+    }
+    else if (src.hasOwnProperty('wordArt')) {
+        additional.isReplacable = false;
+        additional.originalType = 'wordArt';
+        additional.text = [src.wordArt.renderedText];
+    }
+    else if (src.hasOwnProperty('sheetsChart')) {
+        additional.isReplacable = true;
+        additional.originalType = 'sheetsChart';
+        additional.contentUrl = [src.sheetsChart.contentUrl];
+        additional.mappedCntMax = 1;
+        additional.mappedCntMin = 1;
+    }
+    pageElement['additional'] = additional;
+    pageElement.objectId = random();
+    return pageElement;
+}
+
 class Templates {
     constructor(title, pageSize) {
         this.pageSize = consumeSize(pageSize);
@@ -629,6 +721,7 @@ class Templates {
                         transform = multiplyTransforms(pageElement.transform, transform);
                         ch.transform = { ...transform };
                     }
+                    ch = calculateAdditional(ch, ch);
                     if (ch.hasOwnProperty('image')) {
                         newPageElements.push(ch);
                     }
@@ -656,7 +749,6 @@ class Templates {
 
 
                 let newPageElement = {
-                    additional: pageElement.additional,
                     size: result.size,
                     transform: result.transform,
                     shape: {
@@ -687,7 +779,7 @@ class Templates {
                         }
                     }
                 }
-                
+                newPageElement = calculateAdditional(newPageElement, newPageElement);
                 newPageElements.push(newPageElement);
             }
         }
@@ -731,4 +823,5 @@ module.exports = {
     Templates,
     consumeSize,
     getRectangle,
+    calculateAdditional,
 };

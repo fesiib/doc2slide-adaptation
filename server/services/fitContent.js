@@ -209,7 +209,7 @@ function fitToShape(contents, pageElement, isCustom) {
 }
 
 async function tryFitBody(content, start, template, clusterBrowser) {
-    let done = -1;
+    let done = start;
     let score = null;
     let matching = {};
     let requests = [];
@@ -221,20 +221,36 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                 similarity: 0,
             },
             template,
-            start,
+            done,
             matching,
             requests,
+            moreInfo: {
+                totalNumMapped: 0,
+                totalNumContent: 0,
+                totalNumSlideElements: 0,    
+            },
         };
     }
 
     let shapeElements = extractShapeElements(slide);
 
+    let totalNumMapped = 0;
+    let totalNumContent = 0;
+    let totalNumSlideElements = shapeElements.length;
+
     // Fit the header
     if (content.hasOwnProperty('header')) {
+        totalNumContent++;
+
         let headerPageElement = null;
         let headerIdx = HEADER_PLACEHOLDER.length;
         let id = 'header';
         for (let pageElement of shapeElements) {
+            if (pageElement.additional.mappedCntMax < 1
+                || pageElement.additional.mappedCntMin > 1
+            ) {
+                continue;
+            }
             if (pageElement.shape.hasOwnProperty('placeholder')
                 && pageElement.shape.placeholder.hasOwnProperty('type')
             ) {
@@ -262,56 +278,65 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                     score: result[id].score,
                 };
                 headerPageElement.mappedContents.push(mappedContent);
+                totalNumMapped++;
             }
         }
     }
     // Fit the content
     if (Array.isArray(content.body)) {
-        for (let i = start; i < content.body.length; i++) {
-            let bodyContent = content.body[i].paragraph;
-            //console.log(bodyContent);
-            let bodyMapped = false;
-            let id = i.toString();
-            for (let pageElement of shapeElements) {
-                if (pageElement.mapped) {
+        totalNumContent += (content.body.length - start);
+
+        for (let pageElement of shapeElements) {
+            if (done >= content.body.length) {
+                break;
+            }
+            if (pageElement.mapped 
+                || pageElement.additional.mappedCntMax < 1
+                || pageElement.additional.mappedCntMin > (content.body.length - done)    
+            ) {
+                continue;
+            }
+
+            if (pageElement.shape.hasOwnProperty('placeholder')
+                && pageElement.shape.placeholder.hasOwnProperty('type')
+            ) {
+                let type = pageElement.shape.placeholder.type;
+                if (NOT_BODY_PLACEHOLDER.includes(type) || HEADER_PLACEHOLDER.includes(type)) {
                     continue;
                 }
-                if (pageElement.shape.hasOwnProperty('placeholder')
-                    && pageElement.shape.placeholder.hasOwnProperty('type')
-                ) {
-                    let type = pageElement.shape.placeholder.type;
-                    if (NOT_BODY_PLACEHOLDER.includes(type) || HEADER_PLACEHOLDER.includes(type)) {
-                        continue;
-                    }
-                }
-                if (pageElement.shape.hasOwnProperty('shapeType')
-                    && pageElement.shape.shapeType === 'TEXT_BOX'
-                ) {
-                    let result = fitToShape([{paragraph: bodyContent, id: id}], pageElement, template.isCustom);
-                    if (result[id].text.length === 0) {
-                        continue;
-                    }
-                    matching = {
-                        ...result,
-                        ...matching,
-                    }
-                    pageElement.mapped = true;
+            }
+
+            let bodyContents = [];
+
+            let l = done;
+            let r = Math.min(pageElement.additional.mappedCntMax + done, content.body.length);
+
+            for (let i = l; i < r; i++) {
+                bodyContents.push({
+                    paragraph: content.body[i].paragraph,
+                    id: i.toString(),
+                });
+            }
+            if (pageElement.shape.hasOwnProperty('shapeType')
+                && pageElement.shape.shapeType === 'TEXT_BOX'
+            ) {
+                let result = fitToShape(bodyContents, pageElement, template.isCustom);
+                matching = {
+                    ...result,
+                    ...matching,
+                };
+                pageElement.mapped = true;
+                done = r;
+                for (let i = l; i < r; i++) {
+                    let id = i.toString();
                     let mappedContent = {
                         text: result[id].text,
                         score: result[id].score,
                     };
                     pageElement.mappedContents.push(mappedContent);
-                    bodyMapped = true;
-                    break;
+                    totalNumMapped++;
                 }
             }
-            if (!bodyMapped) {
-                done = i;
-                break;
-            }
-        }
-        if (done === -1) {
-            done = content.body.length;
         }
     }
     score = await scoreShapeElements(shapeElements, clusterBrowser);
@@ -324,8 +349,14 @@ async function tryFitBody(content, start, template, clusterBrowser) {
         score,
         template,
         done,
+        content,
         matching,
         requests,
+        moreInfo: {
+            totalNumMapped,
+            totalNumContent,
+            totalNumSlideElements,    
+        }
     };
 }
 
@@ -334,9 +365,26 @@ function getSingleTemplateResponse(result, pageNum) {
     let matching = {};
     globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
     globalRequests = globalRequests.concat(result.requests);
+
+    let score = 0.0;
+
+    if (result.score.similarity < 0) {
+        score = (result.score.similarity 
+            + 100 * (result.moreInfo.totalNumMapped 
+                - result.moreInfo.totalNumContent) );
+    }
+    else {
+        let total = result.moreInfo.totalNumContent;
+        if (total > 0) {
+            score = (result.score.similarity * (result.moreInfo.totalNumMapped / total) );
+        }
+        else {
+            score = result.score.similarity;
+        }
+    }
     matching[result.template.pageId] = {
         ...result.matching,
-        score: result.score.similarity,
+        score: score,
         originalId: result.template.originalId,
         pageNum: pageNum,
     };
@@ -365,6 +413,7 @@ function getSingleTemplateResponse(result, pageNum) {
         curScore = Math.round(curScore * 100) / 100;
         informationText += field + ": " + curScore.toString() + ', ';
     }
+    informationText += ' similarity+coverage: ' + (Math.round(score * 100) / 100).toString();
     
     globalRequests.push({
         insertText: {
