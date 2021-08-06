@@ -206,6 +206,13 @@ function InputContent(props) {
             });
     }
 
+    const submitBestSlideHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        loadingActivate(COMPILING);
+        loadingDeactivate(COMPILING);
+    }
+
     const renderBodyForm = () => {
         if (Array.isArray(body)) {
             let result =  body.map((value, idx_0) => {
@@ -339,10 +346,10 @@ function InputContent(props) {
                                     type='submit' 
                                     color='success'
                                     disabled={indexDropdownValue === 0 || pageIdDropdownValue === ''}
-                                > Compile Single Page </Button>
+                                > Compile Single Slide </Button>
                             </Col>
                             <Col className='col-2' key='column-2'>
-                                <Label for='indexDropdown'> Index </Label>
+                                <Label for='indexDropdown'> Slide Index </Label>
                                 <Dropdown direction='right' id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
                                     <DropdownToggle caret key='toggle'>
                                         {indexDropdownToggle}
@@ -353,7 +360,7 @@ function InputContent(props) {
                                 </Dropdown>
                             </Col>
                             <Col className='col-2' key='column-3'>
-                                <Label for='pageIdDropdown'> Reference Page </Label>
+                                <Label for='pageIdDropdown'> Reference Slide </Label>
                                 <Dropdown direction='right' id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
                                     <DropdownToggle caret key='toggle'>
                                         {pageIdDropdownToggle}
@@ -366,9 +373,16 @@ function InputContent(props) {
                         </Row>
                     </Container>
                 </Form>
-                <div className='m-5'>
-                    <Button onClick={submitAllSlidesHandler} color='success'> Compare All Slides </Button>
-                </div>
+                <Container className='pt-5'>
+                        <Row className='align-items-end justify-content-start'>
+                            <Col className='col-2' key='column-1'>
+                                <Button onClick={submitAllSlidesHandler} color='success'> Compare All Slides </Button>
+                            </Col>
+                            <Col className='col-2' key='column-2'>
+                                <Button onClick={submitBestSlideHandler} color='success'> Compile Best Slide </Button>
+                            </Col>
+                        </Row>
+                </Container>
             </div>
             <div style={ { display: 'none' } } id='loading'>
                 <Spinner style={{ width: '10rem', height: '10rem' } } children='' />
