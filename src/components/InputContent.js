@@ -152,6 +152,8 @@ function InputContent(props) {
                         loadingDeactivate(COMPILING);
                         if (indexDropdownValue > extPageCnt) {
                             _updatePageCnt(indexDropdownValue);
+                            setIndexDropdownValue(indexDropdownValue + 1);
+                            setIndexDropdownToggle('Add Last');
                         }
                         forceUpdateSelected();
                     }).catch((error) => {
@@ -221,6 +223,8 @@ function InputContent(props) {
                         loadingDeactivate(COMPILING);
                         if (indexDropdownValue > extPageCnt) {
                             _updatePageCnt(indexDropdownValue);
+                            setIndexDropdownValue(indexDropdownValue + 1);
+                            setIndexDropdownToggle('Add Last');
                         }
                         forceUpdateSelected();
                     }).catch((error) => {
