@@ -6,6 +6,8 @@ import {
     DropdownItem, DropdownMenu, Dropdown, DropdownToggle,
     Container, Row, Col,
 } from 'reactstrap';
+import Toggle from 'react-toggle';
+
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { addThumbnails, clearThumbnails, extractedFile, updatePageCnt } from '../reducers/presentationFiles';
 import { generateAllSlides, generateSlide, generateBestSlide } from '../services/slideAdapter';
@@ -77,6 +79,8 @@ function InputContent(props) {
     const [indexDropdownOpen, setIndexDropdownOpen] = useState(false);
     const [indexDropdownValue, setIndexDropdownValue] = useState(0);
     const [indexDropdownToggle, setIndexDropdownToggle] = useState(NOT_SELECTED);
+
+    const [sortToggle, setSortToggle] = useState(false);
 
     const pageIdToggleDropdown = () => {
         setPageIdDropdownOpen(prevState => !prevState);
@@ -177,15 +181,17 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateAllSlides(selected, selectedExt, resources)
+                generateAllSlides(selected, selectedExt, sortToggle, resources)
                     .then((response) => {
+                        let matching = response.matching;
                         console.log("Generated All Slides: ", response);
 
                         /// requestThumbnails and append
                         compareAllSlides(
                             selected,
-                            extractedPresentations[selected],
-                            selectedExt
+                            selectedExt,
+                            matching,
+                            sortToggle,
                         ).then((response) => {
                             console.log(response);
                             let original = { ...response.original };
@@ -407,12 +413,22 @@ function InputContent(props) {
                     </Container>
                 </Form>
                 <Container className='pt-5'>
-                        <Row className='align-items-end justify-content-start'>
+                        <Row className='align-items-start justify-content-start'>
                             <Col className='col-2' key='column-1'>
                                 <Button 
                                     onClick={submitAllSlidesHandler} 
                                     color='success'
                                 > Compare All Slides </Button>
+                            </Col>
+                            <Col className='col-2' key='column-2'>
+                                <Input
+                                    className='m-1'
+                                    type='checkbox'
+                                    id='sortToggle'
+                                    defaultChecked={sortToggle}
+                                    onChange={() => setSortToggle(!sortToggle)}
+                                />
+                                <Label for='sortToggle'> Sort </Label>
                             </Col>
                         </Row>
                 </Container>

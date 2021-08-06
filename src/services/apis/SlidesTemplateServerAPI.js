@@ -1,7 +1,7 @@
 import { getPresentation } from './SlidesAPI';
 
-const ADDR = 'http://server.hyungyu.com:7777';
-//const ADDR = 'http://localhost:7777';
+//const ADDR = 'http://server.hyungyu.com:7777';
+const ADDR = 'http://localhost:7777';
 
 
 export async function uploadPresentation(presentation) {
@@ -139,11 +139,12 @@ export async function generateBestSlideRequests(presentationId, pageNum, resourc
 }
 
 
-export async function generateAllSlidesRequests(presentationId, resources) {
+export async function generateAllSlidesRequests(presentationId, sort, resources) {
     const SERVICE = '/slides/generate_all_slides_requests';
 
     let data = {
         presentationId,
+        sort,
         resources,
     };
 

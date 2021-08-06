@@ -336,7 +336,9 @@ function getSingleTemplateResponse(result, pageNum) {
     globalRequests = globalRequests.concat(result.requests);
     matching[result.template.pageId] = {
         ...result.matching,
-        similarity: result.score.similarity,
+        score: result.score.similarity,
+        originalId: result.template.originalId,
+        pageNum: pageNum,
     };
     
     globalRequests.push({
@@ -465,7 +467,7 @@ async function fitToBestSlide_similarity(content, obj, pageNum, clusterBrowser) 
     return getSingleTemplateResponse(finalResult, pageNum);
 }
 
-async function fitToAllSlides_random(content, obj, clusterBrowser) {
+async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     
@@ -490,6 +492,29 @@ async function fitToAllSlides_random(content, obj, clusterBrowser) {
         matching = { ...matching, ...result.matching };
         matchedList.push(result.matched);
     }
+
+    if (sort) {
+        let idAndScore = [];
+        for (let key in matching) {
+            idAndScore.push({
+                key,
+                score: matching[key].score,
+            });
+        }
+
+        idAndScore.sort((p1, p2) => (p1.score - p2.score));
+
+        for (let el of idAndScore) {
+            let slideObjectId = el.key;
+            requests.push({
+                updateSlidesPosition: {
+                    slideObjectIds: [slideObjectId],
+                    insertionIndex: 0,
+                }
+            });
+        }
+    }
+
     return {
         requests,
         matching,

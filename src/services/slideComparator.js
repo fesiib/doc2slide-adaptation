@@ -1,43 +1,55 @@
 import { getPresentation, getPresentationThumbnail } from "./apis/SlidesAPI";
 
-export async function compareAllSlides(originalId, originalTemplates, generatedId) {
-    return new Promise((resolve) => {
+export async function compareAllSlides(originalId, generatedId, matching, sort) {
+    return new Promise(async (resolve) => {
         let originalObjectIds = [];
         let generatedObjectIds = [];
+        
+        let matchingList = [];
 
-        for (let id of originalTemplates.__customTemplateIds) {
-            let template = originalTemplates.__templates[id];
-            originalObjectIds.push(template.originalId);
+
+        for (let objectId in matching) {
+            matchingList.push({
+                generatedObjectId: objectId,
+                pageNum: matching[objectId].pageNum,
+                originalObjectId: matching[objectId].originalId,
+                score: matching[objectId].score,
+            });
         }
 
-        getPresentation(generatedId).then(async (response) => {
-            let slides = response.result.slides;
-            for (let slide of slides) {
-                generatedObjectIds.push(slide.objectId);
-            }
-            let originalSessions = [];
-            let generatedSessions = [];
-            for (let id of originalObjectIds) {
-                originalSessions.push(getPresentationThumbnail(originalId, id));
-            }
-            for (let id of generatedObjectIds) {
-                generatedSessions.push(getPresentationThumbnail(generatedId, id));
-            }
-            let originalResponses = await Promise.all(originalSessions);
-            let generatedResponses = await Promise.all(generatedSessions);
-            console.log(originalResponses, generatedResponses);
-            resolve({
-                original: {
-                    title: originalTemplates.title,
-                    presentationId: originalId,
-                    imageLinks: originalResponses.map(value => value.result.contentUrl),
-                },
-                generated: {
-                    title: '(Adapted) ' + originalTemplates.title,
-                    presentationId: generatedId,
-                    imageLinks: generatedResponses.map(value => value.result.contentUrl),
-                },
-            });
+        if (sort) {
+            matchingList.sort((p1, p2) => (p2.score - p1.score));
+        }
+        else {
+            matchingList.sort((p1, p2) => (p1.pageNum - p2.pageNum));    
+        }
+
+        for (let el of matchingList) {
+            generatedObjectIds.push(el.generatedObjectId);
+            originalObjectIds.push(el.originalObjectId);
+        }
+        let originalSessions = [];
+        let generatedSessions = [];
+        for (let id of originalObjectIds) {
+            originalSessions.push(getPresentationThumbnail(originalId, id));
+        }
+        for (let id of generatedObjectIds) {
+            generatedSessions.push(getPresentationThumbnail(generatedId, id));
+        }
+        let originalResponses = await Promise.all(originalSessions);
+        let generatedResponses = await Promise.all(generatedSessions);
+        console.log(originalResponses, generatedResponses);
+        resolve({
+            original: {
+                title: "Original",
+                presentationId: originalId,
+                imageLinks: originalResponses.map(value => value.result.contentUrl),
+            },
+            generated: {
+                title: "Adapted",
+                presentationId: generatedId,
+                imageLinks: generatedResponses.map(value => value.result.contentUrl),
+            },
         });
     });
 }

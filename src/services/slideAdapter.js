@@ -180,20 +180,20 @@ export async function generateBestSlide(referencePresentationId, presentationId,
     });
 }
 
-export async function generateAllSlides(referencePresentationId, presentationId, resources) {
+export async function generateAllSlides(referencePresentationId, presentationId, sort, resources) {
     return new Promise((resolve, reject) => {
         clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
-            generateAllSlidesRequests(referencePresentationId, resources)
+            generateAllSlidesRequests(referencePresentationId, sort, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
                 let matchedList = response.matchedList;
                 console.log(requests);
                 console.log('All Slides Matched:', matchedList, matching);
-                updatePresentation(presentationId, requests).then((response) => {
+                updatePresentation(presentationId, requests).then(() => {
                     resolve({
-                        response,
+                        matching,
                     });
                 }).catch((reason) => {
                     reject(reason);
