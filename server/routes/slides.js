@@ -1,6 +1,6 @@
 const { response } = require('express');
 var express = require('express');
-const { uploadPresentation, generatePresentationRequests, generateSlideRequests, generateAllSlidesRequests } = require('../services/SlidesAPI');
+const { uploadPresentation, generatePresentationRequests, generateSlideRequests, generateBestSlideRequests, generateAllSlidesRequests } = require('../services/SlidesAPI');
 var router = express.Router();
 
 /* POST upload Presentation Slides */
@@ -53,6 +53,17 @@ const { Cluster } = require('puppeteer-cluster');
         });;
     });
 
+    /* POST get requests for best single slide */
+
+    router.post('/generate_best_slide_requests', function(req, res, next) {
+        console.log(req.body);
+
+        generateBestSlideRequests(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            next(reason);
+        });;
+    });
 
     /* POST get requests for single slide */
     router.post('/generate_all_slides_requests', function(req, res, next) {
