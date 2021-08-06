@@ -6,6 +6,7 @@ import {
     generatePresentationRequests,
     generateAllSlidesRequests,
     generateSlideRequests,
+    generateBestSlideRequests,
     uploadPresentation,
 } from './apis/SlidesTemplateServerAPI';
 
@@ -132,6 +133,32 @@ export async function generateSlide(referencePresentationId, presentationId, pag
         clearSlideRequests(presentationId, pageNum).then((response) => {
             let clearRequests = response.requests;
             generateSlideRequests(referencePresentationId, targetPageId, pageNum, resources)
+            .then((response) => {
+                let requests = clearRequests.concat(response.requests);
+                let matching = response.matching;
+                let matched = response.matched;
+                console.log('Matched:', matched, matching);
+                updatePresentation(presentationId, requests).then((response) => {
+                    resolve({
+                        response,
+                    });
+                }).catch((reason) => {
+                    reject(reason);
+                });
+            }).catch((reason) => {
+                reject(reason);
+            });
+        }).catch((reason) => {
+            reject(reason);
+        });
+    });
+}
+
+export async function generateBestSlide(referencePresentationId, presentationId, pageNum, resources) {
+    return new Promise((resolve, reject) => {
+        clearSlideRequests(presentationId, pageNum).then((response) => {
+            let clearRequests = response.requests;
+            generateBestSlideRequests(referencePresentationId, pageNum, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;

@@ -8,7 +8,7 @@ import {
 } from 'reactstrap';
 import { changeBodyContent, changeHeaderContent, compileContent } from '../reducers/content';
 import { addThumbnails, clearThumbnails, extractedFile, updatePageCnt } from '../reducers/presentationFiles';
-import { generateAllSlides, generateSlide } from '../services/slideAdapter';
+import { generateAllSlides, generateSlide, generateBestSlide } from '../services/slideAdapter';
 import { compareAllSlides } from '../services/slideComparator';
 import { processContent } from '../services/textSummarization';
 
@@ -210,7 +210,28 @@ function InputContent(props) {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
-        loadingDeactivate(COMPILING);
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+            .then((response) => {
+                let resources = {
+                    ...response,
+                };
+                generateBestSlide(selected, selectedExt, indexDropdownValue, resources)
+                    .then((response) => {
+                        console.log("Generated Best Slide: ", response);
+                        loadingDeactivate(COMPILING);
+                        if (indexDropdownValue > extPageCnt) {
+                            _updatePageCnt(indexDropdownValue);
+                        }
+                        forceUpdateSelected();
+                    }).catch((error) => {
+                        console.log('Couldn`t generate Best Slide: ', error);
+                        loadingDeactivate(COMPILING);
+                    });
+                    _compileContent(resources.header, resources.body);
+            }).catch((error) => {
+                console.log('Couldn`t generate Best Slide: ', error);
+                loadingDeactivate(COMPILING);
+            });
     }
 
     const renderBodyForm = () => {
@@ -376,7 +397,11 @@ function InputContent(props) {
                 <Container className='pt-5'>
                         <Row className='align-items-end justify-content-start'>
                             <Col className='col-2' key='column-1'>
-                                <Button onClick={submitAllSlidesHandler} color='success'> Compare All Slides </Button>
+                                <Button 
+                                    onClick={submitAllSlidesHandler} 
+                                    color='success'
+                                    disabled={indexDropdownValue === 0}
+                                > Compare All Slides </Button>
                             </Col>
                             <Col className='col-2' key='column-2'>
                                 <Button onClick={submitBestSlideHandler} color='success'> Compile Best Slide </Button>
