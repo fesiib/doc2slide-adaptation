@@ -8,7 +8,12 @@ import {
 
 import App from "./App";
 
+import { useDispatch } from 'react-redux';
+import { resetApp } from './reducers';
+
 function Reset() {
+    const dispatch = useDispatch();
+    dispatch(resetApp());
     return (
         <Alert> Successfully Reset </Alert>
     );

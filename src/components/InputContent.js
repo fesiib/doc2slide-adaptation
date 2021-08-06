@@ -361,7 +361,7 @@ function InputContent(props) {
                     </FormGroup>
                     {renderBodyForm()}
                     <Container>
-                        <Row className='align-items-end justify-content-start'>
+                        <Row className='align-items-end justify-content-start row-cols-3'>
                             <Col className='col-2' key='column-1'>
                                 <Button
                                     type='submit' 
@@ -371,8 +371,8 @@ function InputContent(props) {
                             </Col>
                             <Col className='col-2' key='column-2'>
                                 <Label for='indexDropdown'> Slide Index </Label>
-                                <Dropdown direction='right' id='indexDropdown'isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
-                                    <DropdownToggle caret key='toggle'>
+                                <Dropdown direction='right' id='indexDropdown' isOpen={indexDropdownOpen} toggle={indexToggleDropdown}>
+                                    <DropdownToggle caret key='toggle_index'>
                                         {indexDropdownToggle}
                                     </DropdownToggle>
                                     <DropdownMenu key='menu'>
@@ -383,13 +383,21 @@ function InputContent(props) {
                             <Col className='col-2' key='column-3'>
                                 <Label for='pageIdDropdown'> Reference Slide </Label>
                                 <Dropdown direction='right' id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
-                                    <DropdownToggle caret key='toggle'>
+                                    <DropdownToggle caret key='toggle_pageId'>
                                         {pageIdDropdownToggle}
                                     </DropdownToggle>
                                     <DropdownMenu key='menu'>
                                         {renderPageIdDropdownItems()}
                                     </DropdownMenu>
                                 </Dropdown>
+                            </Col>
+
+                            <Col className='col-2' key='column-4'>
+                                <Button 
+                                    onClick={submitBestSlideHandler}
+                                    color='success'
+                                    disabled={indexDropdownValue === 0}
+                                > Compile Best Slide </Button>
                             </Col>
                         </Row>
                     </Container>
@@ -400,11 +408,7 @@ function InputContent(props) {
                                 <Button 
                                     onClick={submitAllSlidesHandler} 
                                     color='success'
-                                    disabled={indexDropdownValue === 0}
                                 > Compare All Slides </Button>
-                            </Col>
-                            <Col className='col-2' key='column-2'>
-                                <Button onClick={submitBestSlideHandler} color='success'> Compile Best Slide </Button>
                             </Col>
                         </Row>
                 </Container>

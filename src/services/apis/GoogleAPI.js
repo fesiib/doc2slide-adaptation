@@ -14,22 +14,18 @@ const DISCOVERY_DOCS = [
 const SCOPES = "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file";
 
 /**
- * Append a pre element to the body containing the given message
- * as its text node. Used to display the results of the API call.
- *
- * @param {string} message Text to be placed in pre element.
- */
-export function appendPre(message) {
-    let pre = document.getElementById('content');
-    let textContent = document.createTextNode(message + '\n');
-    pre.appendChild(textContent);
-}
-
-/**
  *  On load, called to load the auth2 library and API client library.
  */
 export function handleClientLoad(callbackStatusChange) {
     gapi.load('client:auth2', () => initClient(callbackStatusChange));
+}
+
+export function gapiSignIn() {
+    gapi.auth2.getAuthInstance().signIn();
+}
+
+export function gapiSignOut() {
+    gapi.auth2.getAuthInstance().signOut();
 }
 
 /**
@@ -37,6 +33,7 @@ export function handleClientLoad(callbackStatusChange) {
  *  listeners.
  */
 function initClient(callbackStatusChange) {
+    console.log("DOoing init");
     gapi.client.init({
         apiKey: API_KEY,
         clientId: CLIENT_ID,
@@ -44,60 +41,9 @@ function initClient(callbackStatusChange) {
         scope: SCOPES
     }).then(function () {
         // Listen for sign-in state changes.
-        gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
         gapi.auth2.getAuthInstance().isSignedIn.listen(callbackStatusChange);
-
-        // Handle the initial sign-in state.
-        updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+        callbackStatusChange(gapi.auth2.getAuthInstance().isSignedIn.get());
     }, function(error) {
-        appendPre(JSON.stringify(error, null, 2));
+        console.log(JSON.stringify(error, null, 2));
     });
-}
-
-/**
- *  Called when the signed in status changes, to update the UI
- *  appropriately. After a sign-in, the API is called.
- */
-function updateSigninStatus(isSignedIn) {
-    const authorizeButton = document.getElementById('authorize_button');
-    const signoutButton = document.getElementById('signout_button');
-    if (authorizeButton === undefined || signoutButton === undefined) {
-        return;
-    }
-    if (isSignedIn) {
-        authorizeButton.style.display = 'none';
-        signoutButton.style.display = 'block';
-    } else {
-        authorizeButton.style.display = 'block';
-        signoutButton.style.display = 'none';
-    }
-}
-
-/**
- *  Sign in the user upon button click.
- */
-function handleAuthClick(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    gapi.auth2.getAuthInstance().signIn();
-}
-
-/**
- *  Sign out the user upon button click.
- */
-function handleSignoutClick(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    gapi.auth2.getAuthInstance().signOut();
-}
-
-export function bodyHTML() {
-    return (
-        <div>
-            <button id="authorize_button" onClick={handleAuthClick} style={{display: 'none'}} >Authorize</button>
-            <button id="signout_button" onClick={handleSignoutClick} style={{display: 'none'}} >Sign Out</button>
-            
-            <pre id="content" style={{whiteSpace: "pre-wrap"}}></pre>
-        </div>
-    );
 }
