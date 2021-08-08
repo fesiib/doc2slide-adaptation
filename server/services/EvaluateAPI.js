@@ -19,6 +19,10 @@ async function scoreShapeElementsFast(shapeElements) {
     };
 }
 
+async function scoreImageElements(imageElements, browserCluster) {
+    return {};
+}
+
 async function scoreShapeElements(shapeElements, browserCluster) {    
     let statisticsList = [];
 
@@ -775,4 +779,5 @@ function getAreaDiff(statistics) {
 module.exports = {
     scoreShapeElements,
     getDominantTextStyle,
+    scoreImageElements,
 };

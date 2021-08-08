@@ -22,12 +22,12 @@ export async function processContent(request, possibleResponse, shouldUpdate) {
                 resolve(result);
             })
         );
-        // bodyImagePromises.push(
-        //     new Promise(async (resolve) => {
-        //         let result = await imageAll(text);
-        //         resolve(result);
-        //     })
-        // );
+        bodyImagePromises.push(
+            new Promise(async (resolve) => {
+                let result = await imageAll(text);
+                resolve(result);
+            })
+        );
     }
 
     let headerText = await headerTextPromise;

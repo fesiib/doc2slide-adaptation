@@ -76,7 +76,7 @@ function initializePageElementShape(pageElement) {
     if (!pageElement.hasOwnProperty('mapped')) {
         return requests;
     }
-    if (!pageElement.mapped) {
+    if (pageElement.mapped.length === 0) {
         requests.unshift({
             deleteText: {
                 objectId: pageElement.objectId,
@@ -193,6 +193,31 @@ function initializePageElementShape(pageElement) {
             objectId: pageElement.objectId,
             text: 'TEXT_BOX',
             insertionIndex: 0,
+        }
+    });
+    return requests;
+}
+
+function initializePageElementImage(pageElement) {
+    let requests = [];
+
+    if (!pageElement.hasOwnProperty('mapped')) {
+        return requests;
+    }
+    if (pageElement.mapped.length === 0) {
+        // maybe makes sense to delete the placeholder
+        return requests;
+    }
+
+    if (pageElement.mapped.length > 1) {
+        throw Error("More than 1 text is mapped to image");
+    }
+
+    requests.push({
+        replaceImage: {
+            imageObjectId: pageElement.objectId,
+            imageReplaceMethod: 'CENTER_INSIDE',
+            url: pageElement.mappedContents[0].url,
         }
     });
     return requests;
@@ -556,5 +581,6 @@ module.exports = {
     initializeTemplate,
     getFirstText,
     initializeShapeText,
-    initializePageElementShape
+    initializePageElementShape,
+    initializePageElementImage,
 }
