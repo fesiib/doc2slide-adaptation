@@ -26,10 +26,12 @@ function processResult(response) {
         shortenings: [],
         singleWord: {},
         phrases: [],
+        id: '',
     };
     let shortenings = response.result.shortenings;
     results.singleWord = response.result.singleWord;
     results.phrases = response.result.phrases;
+    results.id = response.result.id;
     //let importantSegments = response.result.importantSegments;
     //let originalText = response.request.content.text;
     for (let tuple of shortenings) {

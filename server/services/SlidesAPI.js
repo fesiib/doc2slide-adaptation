@@ -1,6 +1,6 @@
 const { extractTemplates } = require('./extractSlide');
 const { initializePresentation } = require('./initializeSlide');
-const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_similarity, fitToAllSlides_random } = require('./fitContent');
+const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitToAllSlides_random } = require('./fitContent');
 
 let templatesLibrary = {};
 
@@ -54,7 +54,7 @@ async function generateBestSlideRequests(data, cluster) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let result = await fitToBestSlide_similarity(resources, templates, pageNum, cluster);
+    let result = await fitToBestSlide_total(resources, templates, pageNum, cluster);
     return result;
 }
 

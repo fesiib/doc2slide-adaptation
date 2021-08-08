@@ -115,7 +115,8 @@ function fitToShape(contents, pageElement, isCustom) {
     let lastEndIndex = 0;
     let lastParagraphLength = Infinity;
 
-    let matching = {
+    let pageElementInfo = {
+        rectangle: pageElement.rectangle,
     };
 
     while (textElementId < textElements.length) {
@@ -192,10 +193,8 @@ function fitToShape(contents, pageElement, isCustom) {
             lastEndIndex = r;
             let result = fitToParagraphMarker(content.paragraph, lastParagraphLength);
 
-            matching[content.id] = {
+            pageElementInfo[content.paragraph.id] = {
                 ...result,
-                rectangle: pageElement.rectangle,
-                objectId: pageElement.objectId,
                 textElementId,
             };
             textElementId++;
@@ -205,6 +204,8 @@ function fitToShape(contents, pageElement, isCustom) {
             continue;
         }
     }
+    let matching = {};
+    matching[pageElement.objectId] = pageElementInfo;
     return matching;
 }
 
@@ -217,6 +218,7 @@ async function tryFitBody(content, start, template, clusterBrowser) {
     let slide = template.page;
     if (!Array.isArray(slide.pageElements)) {
         return {
+            totalScore: 0,
             score: {
                 similarity: 0,
             },
@@ -244,7 +246,7 @@ async function tryFitBody(content, start, template, clusterBrowser) {
 
         let headerPageElement = null;
         let headerIdx = HEADER_PLACEHOLDER.length;
-        let id = 'header';
+        let id = content.header.id;
         for (let pageElement of shapeElements) {
             if (pageElement.additional.mappedCntMax < 1
                 || pageElement.additional.mappedCntMin > 1
@@ -266,10 +268,12 @@ async function tryFitBody(content, start, template, clusterBrowser) {
             }
         }
         if (headerPageElement !== null) {
-            let result = fitToShape([{paragraph: content.header, id: id}], headerPageElement, template.isCustom);
+            let currentMatching = fitToShape([{paragraph : { ...content.header} }], headerPageElement, template.isCustom);
+            let result = currentMatching[headerPageElement.objectId];
+            console.log(currentMatching, result, id);
             if (result[id].text.length > 0) {
                 matching = {
-                    ...result,
+                    ...currentMatching,
                     ...matching,
                 };
                 headerPageElement.mapped = true;
@@ -313,22 +317,22 @@ async function tryFitBody(content, start, template, clusterBrowser) {
 
             for (let i = l; i < r; i++) {
                 bodyContents.push({
-                    paragraph: content.body[i].paragraph,
-                    id: i.toString(),
+                    ...content.body[i],
                 });
             }
             if (pageElement.shape.hasOwnProperty('shapeType')
                 && pageElement.shape.shapeType === 'TEXT_BOX'
             ) {
-                let result = fitToShape(bodyContents, pageElement, template.isCustom);
+                let currentMatching = fitToShape(bodyContents, pageElement, template.isCustom);
                 matching = {
-                    ...result,
+                    ...currentMatching,
                     ...matching,
                 };
+                let result = currentMatching[pageElement.objectId];
                 pageElement.mapped = true;
                 done = r;
                 for (let i = l; i < r; i++) {
-                    let id = i.toString();
+                    let id = content.body[i].paragraph.id;
                     let mappedContent = {
                         text: result[id].text,
                         score: result[id].score,
@@ -345,7 +349,7 @@ async function tryFitBody(content, start, template, clusterBrowser) {
         requests = requests.concat(initializePageElementShape(pageElement));
     }
 
-    return {
+    let result = {
         score,
         template,
         done,
@@ -358,6 +362,28 @@ async function tryFitBody(content, start, template, clusterBrowser) {
             totalNumSlideElements,    
         }
     };
+
+    let totalScore = 0.0;
+
+    if (result.score.similarity < 0) {
+        totalScore = (result.score.similarity 
+            + 100 * (result.moreInfo.totalNumMapped 
+                - result.moreInfo.totalNumContent) );
+    }
+    else {
+        let total = result.moreInfo.totalNumContent;
+        if (total > 0) {
+            totalScore = (result.score.similarity * (result.moreInfo.totalNumMapped / total) );
+        }
+        else {
+            totalScore = result.score.similarity;
+        }
+    }
+
+    return {
+        totalScore,
+        ...result,
+    };
 }
 
 function getSingleTemplateResponse(result, pageNum) {
@@ -366,25 +392,10 @@ function getSingleTemplateResponse(result, pageNum) {
     globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
     globalRequests = globalRequests.concat(result.requests);
 
-    let score = 0.0;
-
-    if (result.score.similarity < 0) {
-        score = (result.score.similarity 
-            + 100 * (result.moreInfo.totalNumMapped 
-                - result.moreInfo.totalNumContent) );
-    }
-    else {
-        let total = result.moreInfo.totalNumContent;
-        if (total > 0) {
-            score = (result.score.similarity * (result.moreInfo.totalNumMapped / total) );
-        }
-        else {
-            score = result.score.similarity;
-        }
-    }
+    
     matching[result.template.pageId] = {
         ...result.matching,
-        score: score,
+        totalScore: result.totalScore,
         originalId: result.template.originalId,
         pageNum: pageNum,
     };
@@ -413,7 +424,7 @@ function getSingleTemplateResponse(result, pageNum) {
         curScore = Math.round(curScore * 100) / 100;
         informationText += field + ": " + curScore.toString() + ', ';
     }
-    informationText += ' similarity+coverage: ' + (Math.round(score * 100) / 100).toString();
+    informationText += ' similarity+coverage: ' + (Math.round(result.totalScore * 100) / 100).toString();
     
     globalRequests.push({
         insertText: {
@@ -450,10 +461,10 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
                 if (current.done === done) {
                     continue;
                 }
-                if (result === null || result.score.similarity < current.score.similarity) {
+                if (result === null || result.totalScore < current.totalScore) {
                     result = current;
                 }
-                if (result.score.similarity >= 90.0) {
+                if (result.totalScore >= 90.0) {
                     break;
                 }
                 iterations++;
@@ -492,7 +503,7 @@ async function fitToSlide_random(content, obj, pageId, pageNum, clusterBrowser) 
     return await fitToTemplate(content, template, pageNum, clusterBrowser);
 }
 
-async function fitToBestSlide_similarity(content, obj, pageNum, clusterBrowser) {
+async function fitToBestSlide_total(content, obj, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
 
@@ -509,7 +520,7 @@ async function fitToBestSlide_similarity(content, obj, pageNum, clusterBrowser) 
     let finalResult = null;
 
     for (let result of results) {
-        if (finalResult === null || result.score.similarity > finalResult.score.similarity) {
+        if (finalResult === null || result.totalScore > finalResult.totalScore) {
             finalResult = result;
         }
     }
@@ -547,7 +558,7 @@ async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
         for (let key in matching) {
             idAndScore.push({
                 key,
-                score: matching[key].score,
+                score: matching[key].totalScore,
             });
         }
 
@@ -575,6 +586,6 @@ async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
 module.exports = {
     fitToPresentation_random,
     fitToSlide_random,
-    fitToBestSlide_similarity,
+    fitToBestSlide_total,
     fitToAllSlides_random,
 };

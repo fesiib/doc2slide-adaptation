@@ -13,7 +13,7 @@ export async function compareAllSlides(originalId, generatedId, matching, sort) 
                 generatedObjectId: objectId,
                 pageNum: matching[objectId].pageNum,
                 originalObjectId: matching[objectId].originalId,
-                score: matching[objectId].score,
+                score: matching[objectId].totalScore,
             });
         }
 

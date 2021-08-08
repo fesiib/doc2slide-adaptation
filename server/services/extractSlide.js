@@ -1,7 +1,12 @@
-const { v4 : random} = require('uuid');
+const { v4 : uuidv4} = require('uuid');
 
 const { REQ_FIELDS } = require('./SlidesAPIRqFields');
 const { Templates, calculateAdditional } =  require('./Templates');
+
+function random() {
+    let id = uuidv4();
+    return id.replace(/-/g, '');
+}
 
 function updateObjectId(src) {
     if (typeof src !== 'object' || src === null) {
