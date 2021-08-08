@@ -28,7 +28,7 @@ function sendRequest(requestJSON, requestType, retries = 0) {
             }
         })
         .then((response) => {
-            resolve(response);
+            resolve(response.data);
         })
             .catch((error) => {
                 console.log("retrying because of: " + error);

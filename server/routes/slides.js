@@ -47,6 +47,7 @@ router.post('/get_images', function(req, res, next) {
 router.post('/get_queries', function(req, res, next) {
     console.log(req.body);
     getQueries(req.body).then((response) => {
+        console.log(response)
         res.json(response);
     }).catch((reason) => {
         next(reason);
