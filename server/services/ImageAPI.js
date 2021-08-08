@@ -27,14 +27,13 @@ function sendRequest(requestJSON, requestType, retries = 0) {
                 'Content-Type': 'application/json',
             }
         })
-        .then( (response) => response.json())
-            .then((response) => {
-                resolve(response);
-            })
-                .catch((error) => {
-                    console.log("retrying because of: " + error);
-                    resolve(sendRequest(requestJSON, requestType, retries + 1));
-                });
+        .then((response) => {
+            resolve(response);
+        })
+            .catch((error) => {
+                console.log("retrying because of: " + error);
+                resolve(sendRequest(requestJSON, requestType, retries + 1));
+            });
     });
 }
 

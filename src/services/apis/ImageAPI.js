@@ -1,4 +1,4 @@
-const ADDR = "http://localhost:7777/slides/";
+const ADDR = "http://server.hyungyu.com:7777/slides/";
 
 const REQUEST_TYPES = {
     images: {
