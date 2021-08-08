@@ -38,11 +38,9 @@ function sendRequest(requestJSON, requestType, retries = 0) {
 }
 
 async function getQueries(data) {
-    let text = data.text;
     return new Promise((resolve, reject) => {
-        let requestJSON = {text};
-        sendRequest(requestJSON, REQUEST_TYPES.queries).then((response) => {
-            resolve(response.surfaceWords);
+        sendRequest(data, REQUEST_TYPES.queries).then((response) => {
+            resolve(response);
         }).catch((error) => {
             reject(error);
         });
@@ -50,14 +48,8 @@ async function getQueries(data) {
 }
 
 async function getImages(data) {
-    let queries = data.queries;
-    let imageType = data.imageType;
     return new Promise((resolve, reject) => {
-        let requestJSON = {
-            query: queries.join(' OR '),
-            imageType: imageType,
-        };
-        sendRequest(requestJSON, REQUEST_TYPES.images).then((response) => {
+        sendRequest(data, REQUEST_TYPES.images).then((response) => {
             resolve(response);
         }).catch((error) => {
             reject(error);
