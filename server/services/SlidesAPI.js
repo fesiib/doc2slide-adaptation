@@ -4,6 +4,15 @@ const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitTo
 
 let templatesLibrary = {};
 
+async function getAvailablePresentations(data) {
+    return new Promise(resolve => {
+        resolve({
+            size: Object.keys(templatesLibrary).length,
+            presentationIds: Object.keys(templatesLibrary),
+        });
+    });
+}
+
 async function uploadPresentation(data) {
     return new Promise((resolve, reject) => {
         let presentation = data.presentation;
@@ -76,4 +85,5 @@ module.exports = {
     generateSlideRequests,
     generateBestSlideRequests,
     generateAllSlidesRequests,
+    getAvailablePresentations,
 };

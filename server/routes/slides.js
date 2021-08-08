@@ -1,6 +1,11 @@
 const { response } = require('express');
 var express = require('express');
-const { uploadPresentation, generatePresentationRequests, generateSlideRequests, generateBestSlideRequests, generateAllSlidesRequests } = require('../services/SlidesAPI');
+const { getAvailablePresentations, 
+    uploadPresentation,
+    generatePresentationRequests,
+    generateSlideRequests,
+    generateBestSlideRequests,
+    generateAllSlidesRequests } = require('../services/SlidesAPI');
 var router = express.Router();
 
 /* POST upload Presentation Slides */
@@ -8,6 +13,17 @@ var router = express.Router();
 router.post('/upload_presentation', function(req, res, next) {
     console.log(req.body);
     uploadPresentation(req.body).then((response) => {
+        res.json(response);
+    }).catch((reason) => {
+        next(reason);
+    });;
+});
+
+/* POST get available presentations */
+router.post('/get_available_presentations', function(req, res, next) {
+    console.log(req.body);
+
+    getAvailablePresentations(req.body).then((response) => {
         res.json(response);
     }).catch((reason) => {
         next(reason);
@@ -75,6 +91,9 @@ const { Cluster } = require('puppeteer-cluster');
             next(reason);
         });;
     });
+
+
+
 })();
 
 module.exports = router;
