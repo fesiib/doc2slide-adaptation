@@ -6,6 +6,11 @@ const { getAvailablePresentations,
     generateSlideRequests,
     generateBestSlideRequests,
     generateAllSlidesRequests } = require('../services/SlidesAPI');
+
+const {
+    getImages,
+    getQueries,
+} = require('../services/ImageAPI');
 var router = express.Router();
 
 /* POST upload Presentation Slides */
@@ -28,6 +33,24 @@ router.post('/get_available_presentations', function(req, res, next) {
     }).catch((reason) => {
         next(reason);
     });;
+});
+
+router.post('/get_images', function(req, res, next) {
+    console.log(req.body);
+    getImages(req.body).then((response) => {
+        res.json(response);
+    }).catch((reason) => {
+        next(reason);
+    });
+});
+
+router.post('/get_queries', function(req, res, next) {
+    console.log(req.body);
+    getQueries(req.body).then((response) => {
+        res.json(response);
+    }).catch((reason) => {
+        next(reason);
+    });
 });
 
 

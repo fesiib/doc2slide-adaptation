@@ -8,7 +8,7 @@ import { changeTitleContent, changeSectionsContent, compileDocContent } from '..
 import { extractedFile, updatePageCnt } from '../reducers/presentationFiles';
 
 import { generatePresentation } from '../services/slideAdapter';
-import { processContentDoc } from '../services/textSummarization';
+import { processContentDoc } from '../services/contentProcessing';
 
 import { COMPILING, loadingActivate, loadingDeactivate } from './InputContent';
 

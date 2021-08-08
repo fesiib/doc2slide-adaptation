@@ -12,7 +12,7 @@ import { changeBodyContent, changeHeaderContent, compileContent } from '../reduc
 import { addThumbnails, clearThumbnails, extractedFile, updatePageCnt } from '../reducers/presentationFiles';
 import { generateAllSlides, generateSlide, generateBestSlide } from '../services/slideAdapter';
 import { compareAllSlides } from '../services/slideComparator';
-import { processContent } from '../services/textSummarization';
+import { processContent } from '../services/contentProcessing';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';

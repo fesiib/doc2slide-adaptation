@@ -8,7 +8,7 @@ import { UPLOADING, COMPILING, EXTRACTING, loadingActivate, loadingDeactivate } 
 import { addFile, selectFile } from '../reducers/presentationFiles';
 
 import { testPresentation, justUploadPresentation } from '../services/slideAdapter';
-import { processContentDoc } from '../services/textSummarization';
+import { processContentDoc } from '../services/contentProcessing';
 import { uploadToFolder } from '../services/apis/DriveAPI';
 import { parsePresentations } from "../services/apis/DriveAPI";
 import { resetApp } from "../reducers";
