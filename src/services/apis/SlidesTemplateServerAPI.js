@@ -200,11 +200,11 @@ export async function clearSlideRequests(presentationId, pageNum) {
         getPresentation(presentationId).then((response) => {
             let requests = [];
             if (Array.isArray(response.result.slides)
-                && pageNum < response.result.slides.length
+                && pageNum <= response.result.slides.length
             ) {
                 requests.push({
                     deleteObject: {
-                        objectId: response.result.slides[pageNum].objectId,
+                        objectId: response.result.slides[pageNum - 1].objectId,
                     }
                 });  
             }

@@ -8,12 +8,12 @@ export async function compareAllSlides(originalId, generatedId, matching, sort) 
         let matchingList = [];
 
 
-        for (let objectId in matching) {
+        for (let slide of matching) {
             matchingList.push({
-                generatedObjectId: objectId,
-                pageNum: matching[objectId].pageNum,
-                originalObjectId: matching[objectId].originalId,
-                score: matching[objectId].totalScore,
+                generatedObjectId: slide.objectId,
+                pageNum: slide.pageNum,
+                originalObjectId: slide.originalId,
+                score: slide.totalScore,
             });
         }
 

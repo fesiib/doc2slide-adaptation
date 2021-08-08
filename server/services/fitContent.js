@@ -117,6 +117,7 @@ function fitToShape(contents, pageElement, isCustom) {
 
     let pageElementInfo = {
         rectangle: pageElement.rectangle,
+        contents: [],
     };
 
     while (textElementId < textElements.length) {
@@ -193,10 +194,11 @@ function fitToShape(contents, pageElement, isCustom) {
             lastEndIndex = r;
             let result = fitToParagraphMarker(content.paragraph, lastParagraphLength);
 
-            pageElementInfo[content.paragraph.id] = {
+            pageElementInfo.contents.push({
                 ...result,
                 textElementId,
-            };
+                contentId: content.paragraph.id,
+            });
             textElementId++;
         }
         else if (content.hasOwnProperty('bullet')) {
@@ -270,16 +272,15 @@ async function tryFitBody(content, start, template, clusterBrowser) {
         if (headerPageElement !== null) {
             let currentMatching = fitToShape([{paragraph : { ...content.header} }], headerPageElement, template.isCustom);
             let result = currentMatching[headerPageElement.objectId];
-            console.log(currentMatching, result, id);
-            if (result[id].text.length > 0) {
+            if (result.contents[0].text.length > 0) {
                 matching = {
                     ...currentMatching,
                     ...matching,
                 };
                 headerPageElement.mapped = true;
                 let mappedContent = {
-                    text: result[id].text,
-                    score: result[id].score,
+                    text: result.contents[0].text,
+                    score: result.contents[0].score,
                 };
                 headerPageElement.mappedContents.push(mappedContent);
                 totalNumMapped++;
@@ -331,11 +332,10 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                 let result = currentMatching[pageElement.objectId];
                 pageElement.mapped = true;
                 done = r;
-                for (let i = l; i < r; i++) {
-                    let id = content.body[i].paragraph.id;
+                for (let resultContent of result.contents) {
                     let mappedContent = {
-                        text: result[id].text,
-                        score: result[id].score,
+                        text: resultContent.text,
+                        score: resultContent.score,
                     };
                     pageElement.mappedContents.push(mappedContent);
                     totalNumMapped++;
@@ -388,16 +388,16 @@ async function tryFitBody(content, start, template, clusterBrowser) {
 
 function getSingleTemplateResponse(result, pageNum) {
     let globalRequests = [];
-    let matching = {};
     globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
     globalRequests = globalRequests.concat(result.requests);
 
     
-    matching[result.template.pageId] = {
-        ...result.matching,
+    let matching = {
+        pageElements: { ...result.matching },
         totalScore: result.totalScore,
         originalId: result.template.originalId,
         pageNum: pageNum,
+        objectId: result.template.pageId,
     };
     
     globalRequests.push({
@@ -444,7 +444,7 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     templates.copyInstance(obj);
     
     let requests = [];
-    let matching = {};
+    let matching = [];
     let matchedList = [];
 
     let results = [];
@@ -477,7 +477,7 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
 
     for (let result of results) {
         requests = requests.concat(result.requests);
-        matching = { ...matching, ...result.matching };
+        matching.push({ ...result.matching });
         matchedList.push(result.matched);
     }
 
@@ -534,45 +534,30 @@ async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
     let poolTemplates = templates.getCustomTemplates();
 
     let requests = [];
-    let matching = {};
+    let matching = [];
     let matchedList = [];
 
-    let generationSessions = [];
+    let fitBodySessions = [];
 
-    let pageNum = 0;
     for (let original of poolTemplates) {
         let template = templates.copySingleTemplate(original);
-        pageNum++;
-        generationSessions.push(fitToTemplate(content, template, pageNum, clusterBrowser));
+        fitBodySessions.push(tryFitBody(content, 0, template, clusterBrowser));
     }
 
-    let results = await Promise.all(generationSessions);
-    for (let result of results) {
-        requests = requests.concat(result.requests);
-        matching = { ...matching, ...result.matching };
-        matchedList.push(result.matched);
-    }
+    let results = await Promise.all(fitBodySessions);
 
     if (sort) {
-        let idAndScore = [];
-        for (let key in matching) {
-            idAndScore.push({
-                key,
-                score: matching[key].totalScore,
-            });
-        }
+        results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
+    }
+    
+    let pageNum = 0;
+    for (let result of results) {
+        pageNum++;
+        let response = getSingleTemplateResponse(result, pageNum);
 
-        idAndScore.sort((p1, p2) => (p1.score - p2.score));
-
-        for (let el of idAndScore) {
-            let slideObjectId = el.key;
-            requests.push({
-                updateSlidesPosition: {
-                    slideObjectIds: [slideObjectId],
-                    insertionIndex: 0,
-                }
-            });
-        }
+        requests = requests.concat(response.requests);
+        matching.push({ ...response.matching });
+        matchedList.push(response.matched);
     }
 
     return {
