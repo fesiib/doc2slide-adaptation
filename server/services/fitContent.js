@@ -59,6 +59,15 @@ function extractShapeElements(slide) {
             }
         }
     }
+    const area = (rectangle) => {
+        let width = rectangle.finishX - rectangle.startX;
+        let height = rectangle.finishY - rectangle.startY;
+        let area = width * height;
+        return area;
+    }
+    shapeElements.sort((p1, p2) => {
+        return area(p2.rectangle) - area(p1.rectangle);
+    });
     return shapeElements;
 }
 
@@ -445,13 +454,14 @@ async function tryFitBody(content, start, template, clusterBrowser) {
     };
 }
 
-function getSingleTemplateResponse(result, pageNum) {
+function getSingleTemplateResponse(result, pageNum, pageSize) {
     let globalRequests = [];
     globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
     globalRequests = globalRequests.concat(result.requests);
 
     
     let matching = {
+        pageSize: pageSize,
         pageElements: { ...result.matching },
         totalScore: result.totalScore,
         originalId: result.template.originalId,
@@ -502,6 +512,8 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     
+    let pageSize = templates.getPageSizeInPX();
+
     let requests = [];
     let matching = [];
     let matchedList = [];
@@ -530,7 +542,7 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
             }
             pageNum++;
             done = result.done;
-            results.push(getSingleTemplateResponse(result, pageNum));
+            results.push(getSingleTemplateResponse(result, pageNum, pageSize));
         }
     }
 
@@ -547,24 +559,24 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     };
 }
 
-async function fitToTemplate(content, template, pageNum, clusterBrowser) {
-    let result = await tryFitBody(content, 0, template, clusterBrowser);
-    //console.log('Fitted', 0, result.done, result);
-    return getSingleTemplateResponse(result, pageNum);
-}
-
 async function fitToSlide_random(content, obj, pageId, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
 
+    let pageSize = templates.getPageSizeInPX();
+
     let template = templates.getByOriginalId(pageId);
-    
-    return await fitToTemplate(content, template, pageNum, clusterBrowser);
+
+    let result = await tryFitBody(content, 0, template, clusterBrowser);
+    //console.log('Fitted', 0, result.done, result);
+    return getSingleTemplateResponse(result, pageNum, pageSize);
 }
 
 async function fitToBestSlide_total(content, obj, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
+
+    let pageSize = templates.getPageSizeInPX();
 
     let poolTemplates = templates.getTemplates();
 
@@ -583,13 +595,15 @@ async function fitToBestSlide_total(content, obj, pageNum, clusterBrowser) {
             finalResult = result;
         }
     }
-    return getSingleTemplateResponse(finalResult, pageNum);
+    return getSingleTemplateResponse(finalResult, pageNum, pageSize);
 }
 
 async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     
+    let pageSize = templates.getPageSizeInPX();
+
     let poolTemplates = templates.getCustomTemplates();
 
     let requests = [];
@@ -612,7 +626,7 @@ async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
     let pageNum = 0;
     for (let result of results) {
         pageNum++;
-        let response = getSingleTemplateResponse(result, pageNum);
+        let response = getSingleTemplateResponse(result, pageNum, pageSize);
 
         requests = requests.concat(response.requests);
         matching.push({ ...response.matching });

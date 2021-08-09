@@ -17,23 +17,25 @@ function sendRequest(requestJSON, requestType, retries = 0) {
     return new Promise((resolve, reject) => {
         if (retries > 0) {
             console.log("Error: cannot access the server: " + requestType.route);
-            reject([]);
+            reject(null);
         }
-        axios({
-            method: 'post',
-            url: requestType.server_addr + requestType.route,
-            data: requestJSON,
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then((response) => {
-            resolve(response.data);
-        })
-            .catch((error) => {
-                console.log("retrying because of: " + error);
-                resolve(sendRequest(requestJSON, requestType, retries + 1));
-            });
+        else {
+            axios({
+                method: 'post',
+                url: requestType.server_addr + requestType.route,
+                data: requestJSON,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then((response) => {
+                resolve(response.data);
+            })
+                .catch((error) => {
+                    console.log("retrying because of: " + error);
+                    resolve(sendRequest(requestJSON, requestType, retries + 1));
+                });
+        }
     });
 }
 

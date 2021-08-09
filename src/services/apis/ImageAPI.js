@@ -17,27 +17,29 @@ function sendRequest(requestJSON, requestType, retries = 0) {
             console.log("Error: cannot access the server: " + requestType.route);
             reject([]);
         }
-        const request = new Request(
-            requestType.server_addr + requestType.route,
-            {
-                method: 'POST',
-                body: JSON.stringify(requestJSON),
-                headers: {
-                    'Content-Type': 'application/json',
+        else {
+            const request = new Request(
+                requestType.server_addr + requestType.route,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(requestJSON),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
                 }
-            }
-        );
-        fetch(
-            request,
-        )
-            .then( (response) => response.json())
-                .then((response) => {
-                    resolve(response);
-                })
-                    .catch((error) => {
-                        console.log("retrying because of: " + error);
-                        resolve(sendRequest(requestJSON, requestType, retries + 1));
-                    });
+            );
+            fetch(
+                request,
+            )
+                .then( (response) => response.json())
+                    .then((response) => {
+                        resolve(response);
+                    })
+                        .catch((error) => {
+                            console.log("retrying because of: " + error);
+                            resolve(sendRequest(requestJSON, requestType, retries + 1));
+                        });
+        }
     });
 }
 
@@ -55,15 +57,20 @@ async function getQueries(text) {
 
 async function getImages(queries, imageType) {
     return new Promise((resolve, reject) => {
-        let requestJSON = {
-            query: queries.join(' OR '),
-            imageType: imageType,
-        };
-        sendRequest(requestJSON, REQUEST_TYPES.images).then((response) => {
-            resolve(response);
-        }).catch((error) => {
-            reject(error);
-        });
+        if (queries.length === 0) {
+            resolve([]);
+        }
+        else {
+            let requestJSON = {
+                query: queries.join(' OR '),
+                imageType: imageType,
+            };
+            sendRequest(requestJSON, REQUEST_TYPES.images).then((response) => {
+                resolve(response);
+            }).catch((error) => {
+                reject(error);
+            });
+        }
     });
 }
 

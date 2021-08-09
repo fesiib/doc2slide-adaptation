@@ -6,6 +6,8 @@ const PT = 12700;
 
 const EMU = 1;
 
+const PX = 4 / 3 * PT;
+
 const SMALL_ELEMENT_AREA_PERCENTAGE = 3;
 
 const DEFAULT_SIZE = {
@@ -530,6 +532,14 @@ class Templates {
         this.__customTemplateIds = [];
     }  
 
+    getPageSizeInPX() {
+        let obj = {
+            width: this.pageSize.width / PX,
+            height: this.pageSize.height / PX,
+        };
+        return obj;
+    }
+
     copyInstance(templates) {
         Object.assign(this, templates);
     }
@@ -564,7 +574,14 @@ class Templates {
                 ...rectangle,
                 type: getPageElementType(pageElement),
             });
-            pageElement.rectangle = { ...rectangle, unit: 'EMU' };
+
+
+            pageElement.rectangle = { 
+                startX: rectangle.startX / PX,
+                startY:rectangle.startY / PX,
+                finishX: rectangle.finishX / PX,
+                finishY: rectangle.finishY / PX,
+                unit: 'PX' };
         }
         return layout;
     }
