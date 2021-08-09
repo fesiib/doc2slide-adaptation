@@ -144,9 +144,9 @@ function getPageElementType(element) {
     if (element.hasOwnProperty('image')) {
         return 'image';
     }
-    if (element.hasOwnProperty('line')) {
-        return 'line';
-    }
+    // if (element.hasOwnProperty('line')) {
+    //     return 'line';
+    // }
     if (element.hasOwnProperty('elementGroup')) {
         return 'elementGroup';
     }
@@ -155,194 +155,193 @@ function getPageElementType(element) {
 }
 
 function toLines(layout) {
-    return [];
-    // let lines = [];
+    let lines = [];
 
-    // let horPts = [];
-    // let verPts = [];
+    let horPts = [];
+    let verPts = [];
     
-    // for (let e of layout.pageElements) {
-    //     horPts.push({
-    //         pt: e.startX,
-    //         type: 0,
-    //     });
-    //     horPts.push({
-    //         pt: e.finishX,
-    //         type: 1,
-    //     });
-    //     verPts.push({
-    //         pt: e.startY,
-    //         type: 0,
-    //     });
-    //     verPts.push({
-    //         pt: e.finishY,
-    //         type: 1,
-    //     });
-    // }
+    for (let e of layout.pageElements) {
+        horPts.push({
+            pt: e.startX,
+            type: 0,
+        });
+        horPts.push({
+            pt: e.finishX,
+            type: 1,
+        });
+        verPts.push({
+            pt: e.startY,
+            type: 0,
+        });
+        verPts.push({
+            pt: e.finishY,
+            type: 1,
+        });
+    }
 
-    // const comparator = (p1, p2) => {
-    //     if (p1.pt < p2.pt) {
-    //         return -1;
-    //     }
-    //     if (p1.pt > p2.pt) {
-    //         return 1;
-    //     }
-    //     if (p1.type > p2.type) {
-    //         return -1;
-    //     }
-    //     if (p1.type < p2.type) {
-    //         return 1;
-    //     }
-    //     return 0;
-    // };
+    const comparator = (p1, p2) => {
+        if (p1.pt < p2.pt) {
+            return -1;
+        }
+        if (p1.pt > p2.pt) {
+            return 1;
+        }
+        if (p1.type > p2.type) {
+            return -1;
+        }
+        if (p1.type < p2.type) {
+            return 1;
+        }
+        return 0;
+    };
 
-    // horPts.sort(comparator);
-    // verPts.sort(comparator);
+    horPts.sort(comparator);
+    verPts.sort(comparator);
 
-    // let open = 0;
-    // for (let e of horPts) {
-    //     // if (e.type === 1) {
-    //     //     open -= 1;
-    //     // }
-    //     // else {
-    //     //     open += 1;
-    //     // }
-    //     // if (open === 0) {
-    //     //     continue;
-    //     // }
-    //     let color = {
-    //         rgbColor: {
-    //             red: 1,
-    //             green: 0,
-    //             blue: 0,
-    //         },
-    //     };
+    let open = 0;
+    for (let e of horPts) {
+        // if (e.type === 1) {
+        //     open -= 1;
+        // }
+        // else {
+        //     open += 1;
+        // }
+        // if (open === 0) {
+        //     continue;
+        // }
+        let color = {
+            rgbColor: {
+                red: 1,
+                green: 0,
+                blue: 0,
+            },
+        };
 
-    //     if (e.type === 1) {
-    //         color = {
-    //             rgbColor: {
-    //                 red: 0,
-    //                 green: 0,
-    //                 blue: 1,
-    //             },
-    //         }
-    //     }
+        if (e.type === 1) {
+            color = {
+                rgbColor: {
+                    red: 0,
+                    green: 0,
+                    blue: 1,
+                },
+            }
+        }
 
-    //     lines.push({
-    //         size: {
-    //             height: {
-    //                 magnitude: 7 * INCH,
-    //                 unit: 'EMU',
-    //             },
-    //             width: {
-    //                 magnitude: 0,
-    //                 unit: 'EMU',
-    //             },
-    //         },
-    //         transform: {
-    //             scaleX: 1,
-    //             scaleY: 1,
-    //             shearX: 0,
-    //             shearY: 0,
-    //             translateX: e.pt,
-    //             translateY: 0,
-    //             unit: 'EMU',
-    //         },
-    //         line: {
-    //             lineProperties: {
-    //                 lineFill: {
-    //                     solidFill: {
-    //                         color: color,
-    //                         alpha: 1,
-    //                     }
-    //                 },
-    //                 weight: {
-    //                     magnitude: PT,
-    //                     unit: 'EMU'
-    //                 },
-    //                 dashStyle: 'SOLID',
-    //             },
-    //             lineType: 'STRAIGHT_LINE',
-    //             lineCategory: 'STRAIGHT'
-    //         },
-    //         additional: {
-    //             originalType: 'line',
-    //         }
-    //     });
-    // }
+        lines.push({
+            size: {
+                height: {
+                    magnitude: 7 * INCH,
+                    unit: 'EMU',
+                },
+                width: {
+                    magnitude: 0,
+                    unit: 'EMU',
+                },
+            },
+            transform: {
+                scaleX: 1,
+                scaleY: 1,
+                shearX: 0,
+                shearY: 0,
+                translateX: e.pt,
+                translateY: 0,
+                unit: 'EMU',
+            },
+            line: {
+                lineProperties: {
+                    lineFill: {
+                        solidFill: {
+                            color: color,
+                            alpha: 1,
+                        }
+                    },
+                    weight: {
+                        magnitude: PT,
+                        unit: 'EMU'
+                    },
+                    dashStyle: 'SOLID',
+                },
+                lineType: 'STRAIGHT_LINE',
+                lineCategory: 'STRAIGHT'
+            },
+            additional: {
+                originalType: 'line',
+            }
+        });
+    }
 
-    // open = 0;
-    // for (let e of verPts) {
-    //     // if (e.type === 1) {
-    //     //     open -= 1;
-    //     // }
-    //     // else {
-    //     //     open += 1;
-    //     // }
-    //     // if (open === 0) {
-    //     //     continue;
-    //     // }
-    //     let color = {
-    //         rgbColor: {
-    //             red: 1,
-    //             green: 0,
-    //             blue: 0,
-    //         },
-    //     };
+    open = 0;
+    for (let e of verPts) {
+        // if (e.type === 1) {
+        //     open -= 1;
+        // }
+        // else {
+        //     open += 1;
+        // }
+        // if (open === 0) {
+        //     continue;
+        // }
+        let color = {
+            rgbColor: {
+                red: 1,
+                green: 0,
+                blue: 0,
+            },
+        };
 
-    //     if (e.type === 1) {
-    //         color = {
-    //             rgbColor: {
-    //                 red: 0,
-    //                 green: 0,
-    //                 blue: 1,
-    //             },
-    //         }
-    //     }
+        if (e.type === 1) {
+            color = {
+                rgbColor: {
+                    red: 0,
+                    green: 0,
+                    blue: 1,
+                },
+            }
+        }
 
-    //     lines.push({
-    //         size: {
-    //             height: {
-    //                 magnitude: 0,
-    //                 unit: 'EMU',
-    //             },
-    //             width: {
-    //                 magnitude: 11 * INCH,
-    //                 unit: 'EMU',
-    //             },
-    //         },
-    //         transform: {
-    //             scaleX: 1,
-    //             scaleY: 1,
-    //             shearX: 0,
-    //             shearY: 0,
-    //             translateX: 0,
-    //             translateY: e.pt,
-    //             unit: 'EMU',
-    //         },
-    //         line: {
-    //             lineProperties: {
-    //                 lineFill: {
-    //                     solidFill: {
-    //                         color: color,
-    //                         alpha: 1,
-    //                     }
-    //                 },
-    //                 weight: {
-    //                     magnitude: PT,
-    //                     unit: 'EMU'
-    //                 },
-    //                 dashStyle: 'SOLID',
-    //             },
-    //             lineType: 'STRAIGHT_LINE',
-    //             lineCategory: 'STRAIGHT'
-    //         },
-    //         additional: {
-    //             originalType: 'line',
-    //         }
-    //     });
-    // }
-    // return lines;
+        lines.push({
+            size: {
+                height: {
+                    magnitude: 0,
+                    unit: 'EMU',
+                },
+                width: {
+                    magnitude: 11 * INCH,
+                    unit: 'EMU',
+                },
+            },
+            transform: {
+                scaleX: 1,
+                scaleY: 1,
+                shearX: 0,
+                shearY: 0,
+                translateX: 0,
+                translateY: e.pt,
+                unit: 'EMU',
+            },
+            line: {
+                lineProperties: {
+                    lineFill: {
+                        solidFill: {
+                            color: color,
+                            alpha: 1,
+                        }
+                    },
+                    weight: {
+                        magnitude: PT,
+                        unit: 'EMU'
+                    },
+                    dashStyle: 'SOLID',
+                },
+                lineType: 'STRAIGHT_LINE',
+                lineCategory: 'STRAIGHT'
+            },
+            additional: {
+                originalType: 'line',
+            }
+        });
+    }
+    return lines;
 }
 
 function isSmall(rectangle, pageSize) {
@@ -408,17 +407,23 @@ function sanitizePageElements(pageElements) {
             if (pageElement.size.width.magnitude === 0 || pageElement.size.height.magnitude === 0) {
                 continue;
             }
-        }
-        else {
-            if (!pageElement.hasOwnProperty('size'))
-                continue;
-            if (!pageElement.size.hasOwnProperty('width') && !pageElement.size.hasOwnProperty('height')) {
-                continue;
-            }
-            if (!correctDimension(pageElement.size.width) && !correctDimension(pageElement.size.height)) {
+            if (pageElement.hasOwnProperty('additional')
+                && pageElement.additional.text.length === 0
+                && pageElement.additional.contentUrl.length === 0 
+            ) {
                 continue;
             }
         }
+        // else {
+        //     if (!pageElement.hasOwnProperty('size'))
+        //         continue;
+        //     if (!pageElement.size.hasOwnProperty('width') && !pageElement.size.hasOwnProperty('height')) {
+        //         continue;
+        //     }
+        //     if (!correctDimension(pageElement.size.width) && !correctDimension(pageElement.size.height)) {
+        //         continue;
+        //     }
+        // }
         newPageElements.push(pageElement);
     }
     return newPageElements;
@@ -596,6 +601,7 @@ class Templates {
     }
 
     __getComplexity(page) {
+        //return page.pageElements.length / 10;
         return 0;
     }
 
@@ -646,7 +652,7 @@ class Templates {
  
     __add(layout, pageId, originalId, pageNum, page, weight, isCustom) {
 
-        page.pageElements = page.pageElements.concat(toLines(layout));
+        //page.pageElements = page.pageElements.concat(toLines(layout));
 
         let informationBoxId = random();
 
@@ -668,12 +674,6 @@ class Templates {
     }
 
     addCustom(pageId, originalId, pageNum, page) {
-        if (Array.isArray(page.pageElements)) {
-            page.pageElements = sanitizePageElements(page.pageElements);
-        }
-        else {
-            console.log('no page elements', page);
-        }
         page = this.sanitizePage(page);
 
         if (this.__getComplexity(page) <= 0.5) {
@@ -683,12 +683,8 @@ class Templates {
     }
 
     addDefault(pageId, originalId, pageNum, page) {
-        if (Array.isArray(page.pageElements)) {
-            page.pageElements = sanitizePageElements(page.pageElements);
-        }
-        else {
-            console.log('no page elements', page);
-        }
+        page = this.sanitizePage(page);
+
         let layout = this.__getLayout(page);
         this.__add(layout, pageId, originalId, pageNum, page, 1, false);
     }
@@ -817,9 +813,9 @@ class Templates {
     }
 
     sanitizePage(page) {
-
         page.pageElements = this.__transformElementGroups(page.pageElements);
-        page = this.__deleteSmallElements(page);
+        page.pageElements = sanitizePageElements(page.pageElements);
+        //page = this.__deleteSmallElements(page);
         page = this.__mergeIntersectingElements(page);
         return page;
     }

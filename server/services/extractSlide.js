@@ -194,21 +194,21 @@ function objRec(dst, src, prefix, dict) {
         //         },
         //     };
         // }
-        else if (type === 'link') {
-            dst['hasLink'] = !isEmpty(src[type]);
-        }
-        else if (type === 'startConnection') {
-            if (dst['hasConnection'] === undefined) {
-                dst['hasConnection'] = false;
-            }
-            dst['hasConnection'] |= !isEmpty(src[type]);
-        }
-        else if (type === 'endConnection') {
-            if (dst['hasConnection'] === undefined) {
-                dst['hasConnection'] = false;
-            }
-            dst['hasConnection'] |= !isEmpty(src[type]);
-        }
+        // else if (type === 'link') {
+        //     dst['hasLink'] = !isEmpty(src[type]);
+        // }
+        // else if (type === 'startConnection') {
+        //     if (dst['hasConnection'] === undefined) {
+        //         dst['hasConnection'] = false;
+        //     }
+        //     dst['hasConnection'] |= !isEmpty(src[type]);
+        // }
+        // else if (type === 'endConnection') {
+        //     if (dst['hasConnection'] === undefined) {
+        //         dst['hasConnection'] = false;
+        //     }
+        //     dst['hasConnection'] |= !isEmpty(src[type]);
+        // }
     }
     return dst;
 }
