@@ -83,6 +83,15 @@ function extractImageElements(slide) {
             }
         }
     }
+    const area = (rectangle) => {
+        let width = rectangle.finishX - rectangle.startX;
+        let height = rectangle.finishY - rectangle.startY;
+        let area = width * height;
+        return area;
+    }
+    imageElements.sort((p1, p2) => {
+        return area(p2.rectangle) - area(p1.rectangle);
+    });
     return imageElements;
 }
 
