@@ -339,6 +339,12 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                 }
                 if (bodyContent.hasOwnProperty('paragraph')) {
                     let currentLength = content.body[i].paragraph.singleWord.text.length;
+                    if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+                        if (!Array.isArray(bodyContent.paragraph.images)) {
+                            pageElementIdx++;
+                            continue;
+                        }
+                    }
                     while (targetLengthIdx < targetLengths.length
                         && targetLengths[targetLengthIdx] <= currentLength
                         && template.isCustom
