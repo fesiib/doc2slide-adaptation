@@ -349,10 +349,11 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                         if (!bodyContent.paragraph.hasOwnProperty('singleWord')
                             || typeof bodyContent.paragraph.singleWord.text !== 'string'
                             || !bodyContent.paragraph.singleWord.hasOwnProperty('score')
-                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('similarity')
+                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('importantWords')
                             || !bodyContent.paragraph.singleWord.score.hasOwnProperty('grammatical')
                             || !bodyContent.paragraph.singleWord.score.hasOwnProperty('semantic')
                         ) {
+                            pageElementIdx++;
                             continue;
                         }
                     }
