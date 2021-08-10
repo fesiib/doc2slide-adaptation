@@ -1,5 +1,51 @@
 const { v4 : uuidv4} = require('uuid');
 
+const HEADER_PLACEHOLDER = [
+    'CENTERED_TITLE',
+    'TITLE',
+    'HEADER',
+    'SUBTITLE',
+];
+
+const BODY_PLACEHOLDER = [
+    'BODY',
+    'FOOTER',
+    'OBJECT',
+];
+
+const NOT_BODY_PLACEHOLDER = [
+    'NONE', // 	Default value, signifies it is not a placeholder.
+    //'BODY', // 	Body text.
+    //'CHART', // 	Chart or graph.
+    //'CLIP_ART', // 	Clip art image.
+    'CENTERED_TITLE', // 	Title centered.
+    //'DIAGRAM', // 	Diagram.
+    'DATE_AND_TIME', // 	Date and time.
+    //'FOOTER', // 	Footer text.
+    //'HEADER', // 	Header text.
+    //'MEDIA', // 	Multimedia.
+    //'OBJECT', // 	Any content type.
+    //'PICTURE', // 	Picture.
+    'SLIDE_NUMBER', // 	Number of a slide.
+    //'SUBTITLE', // 	Subtitle.
+    //'TABLE', // 	Table.
+    'TITLE', // 	Slide title.
+    //'SLIDE_IMAGE', // 	Slide image. 
+];
+
+const IMAGE_PLACEHOLDER = [
+    'CHART', // 	Chart or graph.
+    'CLIP_ART', // 	Clip art image.
+    'DIAGRAM', // 	Diagram.
+    'MEDIA', // 	Multimedia.
+    'OBJECT', // 	Any content type.
+    'PICTURE', // 	Picture.
+    'TABLE', // 	Table.
+    'SLIDE_IMAGE', // 	Slide image. 
+];
+
+const MAX_WORD_LENGTH = Number.MAX_SAFE_INTEGER;
+
 const INCH = 914400;
 
 const PT = 12700;
@@ -200,7 +246,6 @@ function toLines(layout) {
     horPts.sort(comparator);
     verPts.sort(comparator);
 
-    let open = 0;
     for (let e of horPts) {
         // if (e.type === 1) {
         //     open -= 1;
@@ -447,17 +492,29 @@ function calculateAdditional(pageElement, src) {
         originalType: '',
         text: [],
         contentUrl: [],
-        mappedCntMax: 0,
-        mappedCntMin: 0,
+        canbeMapped: [],
+        canbeMappedMin: 0,
     }
     if (src.hasOwnProperty('shape')) {
         additional.isReplacable = true;
         additional.originalType = 'shape';
-        if (src.shape.hasOwnProperty('text') && Array.isArray(src.shape.text.textElements)) {
+        if (src.shape.hasOwnProperty('placeholder')
+            && src.shape.placeholder.hasOwnProperty('type')
+            && IMAGE_PLACEHOLDER.includes(src.shape.placeholder.type)
+        ) {
+            additional.canbeMapped.push(MAX_WORD_LENGTH);
+        }
+        else if (src.shape.hasOwnProperty('text') && Array.isArray(src.shape.text.textElements)) {
             additional.text = [];
             for (let textElement of src.shape.text.textElements) {
                 if (textElement.hasOwnProperty('paragraphMarker')) {
-                    additional.mappedCntMax++;
+                    let l = 0;
+                    if (textElement.hasOwnProperty('startIndex'))
+                        l = textElement.startIndex;
+                    let r = l;
+                    if (textElement.hasOwnProperty('endIndex'))
+                        r = textElement.endIndex;
+                    additional.canbeMapped.push(r - l);
                 }
                 if (textElement.hasOwnProperty('textRun')
                     && textElement.textRun.hasOwnProperty('content')
@@ -477,8 +534,7 @@ function calculateAdditional(pageElement, src) {
         additional.isReplacable = true;
         additional.originalType = 'image';
         additional.contentUrl = [src.image.contentUrl];
-        additional.mappedCntMax = 1;
-        additional.mappedCntMin = 1;
+        additional.canbeMapped.push(MAX_WORD_LENGTH);
     }
     else if (src.hasOwnProperty('elementGroup')) {
         additional.isReplacable = true;
@@ -495,8 +551,7 @@ function calculateAdditional(pageElement, src) {
     else if (src.hasOwnProperty('video')) {
         additional.isReplacable = true;
         additional.originalType = 'video';
-        additional.mappedCntMax = 1;
-        additional.mappedCntMin = 1;
+        additional.canbeMapped.push(MAX_WORD_LENGTH);
     }
     else if (src.hasOwnProperty('line')) {
         additional.isReplacable = false;
@@ -515,8 +570,7 @@ function calculateAdditional(pageElement, src) {
         additional.isReplacable = true;
         additional.originalType = 'sheetsChart';
         additional.contentUrl = [src.sheetsChart.contentUrl];
-        additional.mappedCntMax = 1;
-        additional.mappedCntMin = 1;
+        additional.canbeMapped.push(MAX_WORD_LENGTH);
     }
     pageElement['additional'] = additional;
     pageElement.objectId = random();
@@ -843,4 +897,10 @@ module.exports = {
     consumeSize,
     getRectangle,
     calculateAdditional,
+
+    HEADER_PLACEHOLDER,
+    NOT_BODY_PLACEHOLDER,
+    BODY_PLACEHOLDER,
+    IMAGE_PLACEHOLDER,
+    MAX_WORD_LENGTH,
 };

@@ -3,6 +3,9 @@ const { v4 : uuidv4} = require('uuid');
 const { REQ_FIELDS } = require('./SlidesAPIRqFields');
 const { Templates, calculateAdditional } =  require('./Templates');
 
+const RGB = ['red', 'blue', 'green'];
+const TRANSFORM_VALS = ['scaleX', 'scaleY', 'shearX', 'shearY', 'translateX', 'translateY'];
+
 function random() {
     let id = uuidv4();
     return id.replace(/-/g, '');
@@ -119,6 +122,36 @@ function objRec(dst, src, prefix, dict) {
         }
         let field = prefix + "." + type;
         if (REQ_FIELDS.includes(field)) {
+            if (TRANSFORM_VALS.includes(type) || type === 'magnitude') {
+                continue;
+            }
+            if (RGB.includes(type)) {
+                for (let color of RGB) {
+                    dst[color] = 0;
+                    if (src.hasOwnProperty(color)) {
+                        dst[color] = src[color];
+                    }
+                }
+                continue;
+            }
+            if (type === 'unit') {
+                dst[type] = src[type];
+                if (prefix.endsWith('transform')) {
+                    for (let entity of TRANSFORM_VALS) {
+                        dst[entity] = 0;
+                        if (src.hasOwnProperty(entity)) {
+                            dst[entity] = src[entity];
+                        }
+                    }
+                }
+                else {
+                    dst.magnitude = 0;
+                    if (src.hasOwnProperty('magnitude')) {
+                        dst.magnitude = src.magnitude;
+                    }
+                }
+                continue;
+            }
             if (dst[type] === undefined)
                 dst[type] = {};
             if (type === 'children') {

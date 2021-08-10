@@ -1,4 +1,4 @@
-const { getRectangle } = require("./Templates");
+const { getRectangle, IMAGE_PLACEHOLDER } = require("./Templates");
 
 const EMU = 1 / 12700;
 
@@ -19,15 +19,16 @@ async function scoreShapeElementsFast(shapeElements) {
     };
 }
 
-async function scoreImageElements(imageElements, browserCluster) {
-    return {};
-}
-
-async function scoreShapeElements(shapeElements, browserCluster) {    
+async function scoreElements(elements, browserCluster) {    
     let statisticsList = [];
 
-    for (let pageElement of shapeElements) {
-        statisticsList.push(calculateStatistics(pageElement, browserCluster));
+    for (let pageElement of elements) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+            continue;
+        }
+        else {
+            statisticsList.push(calculateStatistics(pageElement, browserCluster));
+        }
     }
 
     statisticsList = await Promise.all(statisticsList);
@@ -163,7 +164,7 @@ function consumeOptionalColor(optionalColor) {
     return null;
 }
 
-function consumeFontSize(fontSize) {
+function consumeFontSize(fontSize, def) {
     if (typeof fontSize === 'object') {
         if (fontSize.hasOwnProperty('unit')) {
             if (fontSize.hasOwnProperty('magnitude')) {
@@ -174,12 +175,12 @@ function consumeFontSize(fontSize) {
                     return fontSize.magnitude * EMU;
                 }
                 else {
-                    return null;
+                    return def;
                 }
             }
         }
     }
-    return null;
+    return def;
 }
 
 
@@ -197,26 +198,26 @@ function getParagraphStyle(paragraphStyle, bulletStyle) {
     }
 
     let paddingLeft = 0;
-    if (consumeFontSize(paragraphStyle.indentStart)) {
-        let magnitude = consumeFontSize(paragraphStyle.indentStart);
+    if (consumeFontSize(paragraphStyle.indentStart, 0)) {
+        let magnitude = consumeFontSize(paragraphStyle.indentStart, 0);
         paddingLeft += magnitude;
     }
 
     let paddingRight = 0;
-    if (consumeFontSize(paragraphStyle.indentEnd)) {
-        let magnitude = consumeFontSize(paragraphStyle.indentEnd);
+    if (consumeFontSize(paragraphStyle.indentEnd, 0)) {
+        let magnitude = consumeFontSize(paragraphStyle.indentEnd, 0);
         paddingRight += magnitude;
     }
 
     let paddingBottom = 0;
-    if (consumeFontSize(paragraphStyle.spaceBelow)) {
-        let magnitude = consumeFontSize(paragraphStyle.spaceBelow);
+    if (consumeFontSize(paragraphStyle.spaceBelow, 0)) {
+        let magnitude = consumeFontSize(paragraphStyle.spaceBelow, 0);
         paddingBottom += magnitude;
     }
 
     let paddingTop = 0;
-    if (consumeFontSize(paragraphStyle.spaceAbove)) {
-        let magnitude = consumeFontSize(paragraphStyle.spaceAbove);
+    if (consumeFontSize(paragraphStyle.spaceAbove, 0)) {
+        let magnitude = consumeFontSize(paragraphStyle.spaceAbove, 0);
         paddingTop += magnitude;
     }
 
@@ -242,8 +243,8 @@ function getParagraphStyle(paragraphStyle, bulletStyle) {
     }
 
     let textIndent = 0;
-    if (consumeFontSize(paragraphStyle.indentFirstLine)) {
-        let magnitude = consumeFontSize(paragraphStyle.indentFirstLine);
+    if (consumeFontSize(paragraphStyle.indentFirstLine, 0)) {
+        let magnitude = consumeFontSize(paragraphStyle.indentFirstLine, 0);
         textIndent = (magnitude - paddingLeft);
     }
 
@@ -294,8 +295,8 @@ function getFontStyle(textStyle) {
     else {
         throw Error('no color');
     }
-    if (consumeFontSize(textStyle.fontSize) !== null) {
-        let magnitude = consumeFontSize(textStyle.fontSize);
+    if (consumeFontSize(textStyle.fontSize, fontSize) !== null) {
+        let magnitude = consumeFontSize(textStyle.fontSize, fontSize);
         fontSize = magnitude;
     }
     else {
@@ -777,7 +778,6 @@ function getAreaDiff(statistics) {
     };
 }
 module.exports = {
-    scoreShapeElements,
+    scoreElements,
     getDominantTextStyle,
-    scoreImageElements,
 };

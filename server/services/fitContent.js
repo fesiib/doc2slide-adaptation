@@ -1,97 +1,49 @@
-const { scoreShapeElements, scoreImageElements, getDominantTextStyle } = require('./EvaluateAPI');
+const { scoreElements, getDominantTextStyle } = require('./EvaluateAPI');
 const { initializeTemplate, initializePageElementShape, initializePageElementImage } = require('./initializeSlide');
-const { Templates } = require('./Templates');
-
-const HEADER_PLACEHOLDER = [
-    'CENTERED_TITLE',
-    'TITLE',
-    'HEADER',
-    'SUBTITLE',
-];
-
-const BODY_PLACEHOLDER = [
-    'BODY',
-    'FOOTER',
-    'OBJECT',
-];
-
-const NOT_BODY_PLACEHOLDER = [
-    'NONE', // 	Default value, signifies it is not a placeholder.
-    //'BODY', // 	Body text.
-    //'CHART', // 	Chart or graph.
-    //'CLIP_ART', // 	Clip art image.
-    //'CENTERED_TITLE', // 	Title centered.
-    //'DIAGRAM', // 	Diagram.
-    //'DATE_AND_TIME', // 	Date and time.
-    //'FOOTER', // 	Footer text.
-    //'HEADER', // 	Header text.
-    //'MEDIA', // 	Multimedia.
-    //'OBJECT', // 	Any content type.
-    //'PICTURE', // 	Picture.
-    'SLIDE_NUMBER', // 	Number of a slide.
-    //'SUBTITLE', // 	Subtitle.
-    //'TABLE', // 	Table.
-    //'TITLE', // 	Slide title.
-    //'SLIDE_IMAGE', // 	Slide image. 
-];
+const { Templates, HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, NOT_BODY_PLACEHOLDER, MAX_WORD_LENGTH } = require('./Templates');
 
 function extractShapeElements(slide) {
     let shapeElements = [];
     for (let pageElement of slide.pageElements) {
-        if (pageElement.hasOwnProperty('additional')) {
-            if (pageElement.hasOwnProperty('shape')
-                && pageElement.shape.hasOwnProperty('text')
-                && Array.isArray(pageElement.shape.text.textElements)
-                && pageElement.shape.text.textElements.length > 0
+        if (pageElement.hasOwnProperty('additional')
+            && pageElement.hasOwnProperty('shape')
+        ) {
+            let copyPageElement = { ...pageElement };
+            copyPageElement.type = 'BODY';
+            if (copyPageElement.shape.hasOwnProperty('placeholder')
+                && copyPageElement.shape.placeholder.hasOwnProperty('type')
             ) {
-                if (pageElement.shape.hasOwnProperty('placeholder')
-                    && pageElement.shape.placeholder.hasOwnProperty('type')
+                let type = copyPageElement.shape.placeholder.type;
+                if (NOT_BODY_PLACEHOLDER.includes(type) 
+                    && !HEADER_PLACEHOLDER.includes(type)
+                    && !IMAGE_PLACEHOLDER.includes(type)
                 ) {
-                    if (pageElement.shape.placeholder.type === 'SLIDE_NUMBER') {
-                        continue;
-                    }
+                    continue;
                 }
-                let copyPageElement = { ...pageElement };
-                copyPageElement.mapped = [];
-                copyPageElement.mappedContents = [];
-                copyPageElement.isHeader = false;
-                shapeElements.push(copyPageElement);
+                copyPageElement.type = type;
             }
+            copyPageElement.mapped = [];
+            copyPageElement.mappedContents = [];
+            copyPageElement.isHeader = false;
+            shapeElements.push(copyPageElement);
         }
     }
-    const area = (rectangle) => {
-        let width = rectangle.finishX - rectangle.startX;
-        let height = rectangle.finishY - rectangle.startY;
-        let area = width * height;
-        return area;
-    }
-    shapeElements.sort((p1, p2) => {
-        return area(p2.rectangle) - area(p1.rectangle);
-    });
     return shapeElements;
 }
 
 function extractImageElements(slide) {
     let imageElements = [];
     for (let pageElement of slide.pageElements) {
-        if (pageElement.hasOwnProperty('additional')) {
-            if (pageElement.hasOwnProperty('image')) {
-                let copyPageElement = { ...pageElement };
-                copyPageElement.mapped = [];
-                copyPageElement.mappedContents = [];
-                imageElements.push(copyPageElement);
-            }
+        if (pageElement.hasOwnProperty('additional')
+            && pageElement.hasOwnProperty('image')
+        ) {
+            let copyPageElement = { ...pageElement };
+            copyPageElement.mapped = [];
+            copyPageElement.mappedContents = [];
+            copyPageElement.type = 'PICTURE';
+            imageElements.push(copyPageElement);
         }
     }
-    const area = (rectangle) => {
-        let width = rectangle.finishX - rectangle.startX;
-        let height = rectangle.finishY - rectangle.startY;
-        let area = width * height;
-        return area;
-    }
-    imageElements.sort((p1, p2) => {
-        return area(p2.rectangle) - area(p1.rectangle);
-    });
     return imageElements;
 }
 
@@ -125,14 +77,18 @@ function fitToParagraphMarker(entity, paragraphLength) {
     };
 }
 
-function fitToImage(contents, pageElement) {
+function fitToImage(pageElement) {
+    console.log(pageElement);
     let pageElementInfo = {
         rectangle: pageElement.rectangle,
         contents: [],
     };
 
-    for (let content of contents) {
+    for (let content of pageElement.mapped) {
         if (content.hasOwnProperty('paragraph')) {
+            if (content.paragraph.id === null) {
+                continue;
+            }
             let result = {
                 ...content.paragraph.images[0],
                 score: {
@@ -143,6 +99,7 @@ function fitToImage(contents, pageElement) {
                 ...result,
                 contentId: content.paragraph.id,
             });
+            break;
         }
     }
 
@@ -151,42 +108,79 @@ function fitToImage(contents, pageElement) {
     return matching;
 }
 
-function fitToShape(contents, pageElement, isCustom) {
+function fitToShape_precise(pageElement) {
     let textElements = pageElement.shape.text.textElements;
-    let textElementId = 0;
+    let textElementIdx = 0;
+
+    let pageElementInfo = {
+        rectangle: pageElement.rectangle,
+        contents: [],
+    };
+    for (let contentIdx = 0; contentIdx < pageElement.mapped.length; contentIdx++) {
+        let content = pageElement.mapped[contentIdx];
+        let paragraphLength = pageElement.additional.canbeMapped[contentIdx];
+        while (textElementIdx < textElements.length
+            && !textElements[textElementIdx].hasOwnProperty('paragraphMarker')    
+        ) {
+            textElementIdx++;
+        }
+        if (content.hasOwnProperty('paragraph')) {
+            if (textElementIdx >= textElements.length
+            ) {
+                throw new Error('Mapped more paragraphs than needed', contents, textElements);
+            }
+            let result = fitToParagraphMarker(content.paragraph, paragraphLength);
+            pageElementInfo.contents.push({
+                ...result,
+                textElementIdx: textElementIdx,
+                contentId: content.paragraph.id,
+            });    
+            textElementIdx++;
+        }
+    }
+    let matching = {};
+    matching[pageElement.objectId] = pageElementInfo;
+    return matching;
+}
+
+function fitToShape(pageElement) {
+    let contents = pageElement.mapped;
+
+    let textElements = pageElement.shape.text.textElements;
+    let textElementIdx = 0;
 
     let lastParagraphMarker = null;
     let lastTextStyle = null;
     let lastEndIndex = 0;
-    let lastParagraphLength = Infinity;
+    let lastParagraphLength = MAX_WORD_LENGTH;
 
     let pageElementInfo = {
         rectangle: pageElement.rectangle,
         contents: [],
     };
 
-    while (textElementId < textElements.length) {
-        if (textElements[textElementId].hasOwnProperty('paragraphMarker')) {
-            paragraphMarker = textElements[textElementId].paragraphMarker;
+    while (textElementIdx < textElements.length) {
+        if (textElements[textElementIdx].hasOwnProperty('paragraphMarker')) {
+            paragraphMarker = textElements[textElementIdx].paragraphMarker;
             lastParagraphMarker = { ...paragraphMarker };
-            let l = textElements[textElementId].startIndex;
-            let r = textElements[textElementId].endIndex;
+            let l = textElements[textElementIdx].startIndex;
+            let r = textElements[textElementIdx].endIndex;
 
             if (l === undefined)
                 l = 0;
             if (r === undefined) {
                 r = l;
             }
-            lastTextStyle = getDominantTextStyle({}, textElements, textElementId, l, r);
+            lastTextStyle = getDominantTextStyle({}, textElements, textElementIdx, l, r);
             lastEndIndex = r;
 
             if (!paragraphMarker.hasOwnProperty('bullet')) {
-                lastParagraphLength = textElements[textElementId].endIndex;
+                lastParagraphLength = r;
                 break;
             }
             delete lastParagraphMarker.bullet;
         }
-        textElementId++;
+        textElementIdx++;
     }
     
     if (lastParagraphMarker === null) {
@@ -194,16 +188,16 @@ function fitToShape(contents, pageElement, isCustom) {
     }
 
     for (let content of contents) {
-        while (textElementId < textElements.length
-            && !textElements[textElementId].hasOwnProperty('paragraphMarker')    
+        while (textElementIdx < textElements.length
+            && !textElements[textElementIdx].hasOwnProperty('paragraphMarker')    
         ) {
-            textElementId++;
+            textElementIdx++;
         }
         if (content.hasOwnProperty('paragraph')) {
-            if (textElementId >= textElements.length
-                || textElements[textElementId].paragraphMarker.hasOwnProperty('bullet')
+            if (textElementIdx >= textElements.length
+                || textElements[textElementIdx].paragraphMarker.hasOwnProperty('bullet')
             ) {
-                textElements.splice(textElementId, 0, 
+                textElements.splice(textElementIdx, 0, 
                     {
                         startIndex:  lastEndIndex,
                         endIndex: lastEndIndex,
@@ -219,32 +213,29 @@ function fitToShape(contents, pageElement, isCustom) {
                     }
                 );
             }
-            lastParagraphMarker = textElements[textElementId].paragraphMarker;
-            let l = textElements[textElementId].startIndex;
-            let r = textElements[textElementId].endIndex;
+            lastParagraphMarker = textElements[textElementIdx].paragraphMarker;
+            let l = textElements[textElementIdx].startIndex;
+            let r = textElements[textElementIdx].endIndex;
             if (l === undefined) {
                 l = 0;
             }
             if (r === undefined) {
                 r = l;
             }
-            if (r - l > 0) {
+            if (r - l > 0 && lastParagraphLength < MAX_WORD_LENGTH) {
                 lastParagraphLength = r - l;
             }
-            if (!isCustom) {
-                lastParagraphLength = Infinity;
-            }
 
-            lastTextStyle = getDominantTextStyle({}, textElements, textElementId, l, r);
+            lastTextStyle = getDominantTextStyle({}, textElements, textElementIdx, l, r);
             lastEndIndex = r;
-            let result = fitToParagraphMarker(content.paragraph, lastParagraphLength);
 
+            let result = fitToParagraphMarker(content.paragraph, lastParagraphLength);
             pageElementInfo.contents.push({
                 ...result,
-                textElementId,
+                textElementIdx: textElementIdx,
                 contentId: content.paragraph.id,
-            });
-            textElementId++;
+            });    
+            textElementIdx++;
         }
         else if (content.hasOwnProperty('bullet')) {
             // TODO: implement Bullets
@@ -258,7 +249,6 @@ function fitToShape(contents, pageElement, isCustom) {
 
 async function tryFitBody(content, start, template, clusterBrowser) {
     let done = start;
-    let score = null;
     let matching = {};
     let requests = [];
 
@@ -284,35 +274,42 @@ async function tryFitBody(content, start, template, clusterBrowser) {
     let shapeElements = extractShapeElements(slide);
     let imageElements = extractImageElements(slide);
 
+    let elements = shapeElements.concat(imageElements);
+
+    const area = (rectangle) => {
+        let width = rectangle.finishX - rectangle.startX;
+        let height = rectangle.finishY - rectangle.startY;
+        let area = width * height;
+        return area;
+    }
+    
+    elements.sort((p1, p2) => {
+        return area(p2.rectangle) - area(p1.rectangle);
+    });
+
     let totalNumMapped = 0;
     let totalNumContent = 0;
-    let totalNumSlideElements = shapeElements.length;
+    let totalNumSlideElements = elements.length;
 
     // Fit the header
     if (content.hasOwnProperty('header')) {
         totalNumContent++;
-
         let headerPageElement = null;
         let headerIdx = HEADER_PLACEHOLDER.length;
-        let id = content.header.id;
-        for (let pageElement of shapeElements) {
-            if (pageElement.additional.mappedCntMax < 1
-                || pageElement.additional.mappedCntMin > 1
+        for (let pageElement of elements) {
+            if (pageElement.additional.canbeMapped.length < 1
+                || pageElement.additional.canbeMappedMin > 1
             ) {
                 continue;
             }
-            if (pageElement.shape.hasOwnProperty('placeholder')
-                && pageElement.shape.placeholder.hasOwnProperty('type')
-            ) {
-                let type = pageElement.shape.placeholder.type;
-                if (HEADER_PLACEHOLDER.includes(type)) {
-                    let curIdx = HEADER_PLACEHOLDER.findIndex((el) => el === type);
-                    if (headerIdx <= curIdx) {
-                        continue;
-                    }
-                    headerPageElement = pageElement;
-                    headerIdx = curIdx;
+            
+            if (HEADER_PLACEHOLDER.includes(pageElement.type)) {
+                let curIdx = HEADER_PLACEHOLDER.findIndex((el) => el === pageElement.type);
+                if (headerIdx <= curIdx) {
+                    continue;
                 }
+                headerPageElement = pageElement;
+                headerIdx = curIdx;
             }
         }
         if (headerPageElement !== null) {
@@ -321,53 +318,60 @@ async function tryFitBody(content, start, template, clusterBrowser) {
             totalNumMapped++;
         }
     }
-    // Fit the content
+
     if (Array.isArray(content.body)) {
         totalNumContent += (content.body.length - start);
+
+        let pageElementIdx = 0;
         for (let i = start; i < content.body.length; i++) {
             let didMapped = false;
-            for (let pageElement of imageElements) {  
-                if (pageElement.additional.mappedCntMax < pageElement.mapped.length + 1    
+            let bodyContent = content.body[i];
+            while (pageElementIdx < elements.length) {
+                let pageElement = elements[pageElementIdx];
+                let targetLengths = pageElement.additional.canbeMapped;
+                let targetLengthIdx = pageElement.mapped.length;
+                if (targetLengths.length <= targetLengthIdx
+                    || pageElement.additional.canbeMappedMin > (content.body.length - i)
                     || pageElement.isHeader || didMapped
                 ) {
+                    pageElementIdx++;
                     continue;
                 }
-
-                if (content.body[i].hasOwnProperty('paragraph')) {
-                    if (!Array.isArray(content.body[i].paragraph.images)
-                        || content.body[i].paragraph.images === 0
+                if (bodyContent.hasOwnProperty('paragraph')) {
+                    let currentLength = content.body[i].paragraph.singleWord.text.length;
+                    while (targetLengthIdx < targetLengths.length
+                        && targetLengths[targetLengthIdx] <= currentLength
+                        && template.isCustom
                     ) {
+                        pageElement.mapped.push({
+                            paragraph: {
+                                id: null,
+                                images: [],
+                                phrases: [],
+                                shortenings: [],
+                                singleWord: {
+                                    text: '',
+                                    score: {
+                                        grammatical: 1,
+                                        importantWords: 1,
+                                        semantic: 1,
+                                    },
+                                }
+                            },
+                        });
+                        targetLengthIdx++;
+                    }
+                    if (targetLengthIdx >= targetLengths.length) {
+                        pageElementIdx++;
                         continue;
                     }
-                }
-                else if (content.body[i].hasOwnProperty('bullet')) {
-                    //TODO
-                    continue;
-                }
-                pageElement.mapped.push({ ...content.body[i] });
-                didMapped = true;
-                break;
-            }
-            for (let pageElement of shapeElements) {
-                if (pageElement.additional.mappedCntMax < pageElement.mapped.length + 1
-                    || pageElement.isHeader || didMapped
-                ) {
-                    continue;
-                }
-    
-                if (pageElement.shape.hasOwnProperty('placeholder')
-                    && pageElement.shape.placeholder.hasOwnProperty('type')
-                ) {
-                    let type = pageElement.shape.placeholder.type;
-                    if (NOT_BODY_PLACEHOLDER.includes(type)) {
-                        continue;
-                    }
-                }
-                if (pageElement.shape.hasOwnProperty('shapeType')
-                    && pageElement.shape.shapeType === 'TEXT_BOX'
-                ) {
-                    pageElement.mapped.push({ ...content.body[i] });
+                    pageElement.mapped.push({ ...bodyContent });
                     didMapped = true;
+                    break;
+                }
+                else if (bodyContent.hasOwnProperty('bullet')) {
+                    didMapped = true;
+                    //TODO
                     break;
                 }
             }
@@ -381,53 +385,63 @@ async function tryFitBody(content, start, template, clusterBrowser) {
         }
     }
 
-    for (let pageElement of imageElements) {
-        let currentMatching = fitToImage(pageElement.mapped, pageElement);
+    for (let pageElement of elements) {
+        let currentMatching = {};
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+            currentMatching = fitToImage(pageElement);
+        }
+        else if (template.isCustom) {
+            currentMatching = fitToShape_precise(pageElement);
+        }
+        else {
+            currentMatching = fitToShape(pageElement);
+        }
+
+        let currentContents = currentMatching[pageElement.objectId].contents;
+
+        for (let currentContent of currentContents) {
+            let mappedContent = {
+                text: currentContent.text,
+                score: currentContent.score,
+                textElementIdx: currentContent.textElementIdx,
+                url: currentContent.url,
+            };
+            pageElement.mappedContents.push(mappedContent);
+        }
+
+        while (pageElement.mappedContents.length > 0) {
+            let n = pageElement.mappedContents.length;
+            if (pageElement.mappedContents[n - 1].text === '') {
+                pageElement.mappedContents.pop();
+            }
+            else {
+                break;
+            }
+        }
+
+        currentMatching[pageElement.objectId].contents = currentContents.filter((val) => {
+            return val.contentId !== null;
+        });
+
         matching = {
             ...currentMatching,
             ...matching,
         };
-        let result = currentMatching[pageElement.objectId];
-        for (let resultContent of result.contents) {
-            let mappedContent = {
-                url: resultContent.url,
-                score: resultContent.score,
-            };
-            pageElement.mappedContents.push(mappedContent);
-        }
     }
 
-    for (let pageElement of shapeElements) {
-        let currentMatching = fitToShape(pageElement.mapped, pageElement, template.isCustom);
-        matching = {
-            ...currentMatching,
-            ...matching,
-        };
-        let result = currentMatching[pageElement.objectId];
-        for (let resultContent of result.contents) {
-            let mappedContent = {
-                text: resultContent.text,
-                score: resultContent.score,
-            };
-            pageElement.mappedContents.push(mappedContent);
-        }
-    }
-
-    scoreShape = await scoreShapeElements(shapeElements, clusterBrowser);
-    scoreImage = await scoreImageElements(imageElements, clusterBrowser);
+    let score = await scoreElements(elements, clusterBrowser);
     
-    for (let pageElement of imageElements) {
-        requests = requests.concat(initializePageElementImage(pageElement));
-    }
-    for (let pageElement of shapeElements) {
-        requests = requests.concat(initializePageElementShape(pageElement));
+    for (let pageElement of elements) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+            requests = requests.concat(initializePageElementImage(pageElement));
+        }
+        else {
+            requests = requests.concat(initializePageElementShape(pageElement));
+        }
     }
 
     let result = {
-        score: {
-            ...scoreShape,
-            ...scoreImage,
-        },
+        score: score,
         template,
         done,
         content,

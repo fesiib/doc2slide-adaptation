@@ -1,8 +1,13 @@
 const { objRecTraverse } = require('./SlidesAPIRqFields');
 const { getDominantTextStyle } = require('./EvaluateAPI');
+const { IMAGE_PLACEHOLDER } = require('./Templates');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 const SLIDE_NUMBER = 'SLIDE_NUMBER';
+
+function isNumeric(ch) {
+    return ch.length === 1 && ch.match(/[0-9]/g);
+}
 
 function addTextBox(shapeId, pageId, text) {
     let requests = [];
@@ -33,6 +38,13 @@ function addTextBox(shapeId, pageId, text) {
         }
     });
     return requests;
+}
+
+function getBulletPreset(glyph) {
+    // if (isNumeric(glyph[0])) {
+    //     return "NUMBERED_DIGIT_ALPHA_ROMAN";
+    // }
+    return "BULLET_DISC_CIRCLE_SQUARE";
 }
 
 function getFirstParagraphMarker(shapeText) {
@@ -73,10 +85,10 @@ function getFirstText(shapeText) {
 function initializePageElementShape(pageElement) {
     let requests = [];
 
-    if (!pageElement.hasOwnProperty('mapped')) {
+    if (!pageElement.hasOwnProperty('mappedContents')) {
         return requests;
     }
-    if (pageElement.mapped.length === 0) {
+    if (pageElement.mappedContents.length === 0) {
         requests.unshift({
             deleteText: {
                 objectId: pageElement.objectId,
@@ -94,85 +106,100 @@ function initializePageElementShape(pageElement) {
         });
         return requests;
     }
-    
-    let contentId = 0;
     let text = '';
     let textElements = pageElement.shape.text.textElements;
-    for (let i = 0; i < textElements.length; i++) {
-        let textElement = textElements[i];
-        if (contentId >= pageElement.mappedContents.length) {
-            break;
+    for (let contentIdx = 0; contentIdx < pageElement.mappedContents.length; contentIdx++) {
+        let mappedContent = pageElement.mappedContents[contentIdx];
+        let textElement = textElements[mappedContent.textElementIdx];
+        if (!textElement.hasOwnProperty('paragraphMarker')) {
+            throw new Error('mapping is wrong', pageElement.mappedContents, textElements);
         }
-        if (textElement.hasOwnProperty('paragraphMarker')) {
-            let start = text.length;
-            if (contentId > 0)
-                text += '\n';
-            text += pageElement.mappedContents[contentId].text;
-            let end = text.length;
-            let bullet = {};
-            let style = {};
-
-            let listId = null;
-            let nestingLevel = 0;
-            if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
-                bullet = { ...textElement.paragraphMarker.bullet };
-                if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
-                    listId = textElement.paragraphMarker.bullet.listId;
-                }
-                if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
-                    nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
-                }
-            }
-            if (textElement.paragraphMarker.hasOwnProperty('style')) {
-                style = { ...textElement.paragraphMarker.style };
-            }
-            let l = 0;
-            let r = 0;
-            if (textElement.hasOwnProperty('startIndex'))
-                l = textElement.startIndex;
-            if (textElement.hasOwnProperty('endIndex')) {
-                r = textElement.endIndex;
-            }
-            let textStyle = {};
-            if (listId !== null) {
-                textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
-                if (typeof textStyle !== 'object') {
-                    textStyle = {};
-                }
-            }
-            
-            textStyle = getDominantTextStyle(textStyle, textElements, i, l, r);
-
-
-            let result = objRecTraverse(style, '')
-            requests.push({
-                updateParagraphStyle: {
-                    objectId: pageElement.objectId,
-                    style: result.dst,
-                    textRange: {
-                        startIndex: start,
-                        endIndex: end,
-                        type: 'FIXED_RANGE',
-                    },
-                    fields: result.fields.join(),
-                }
-            });
-
-            result = objRecTraverse(textStyle, '')
-            requests.push({
-                updateTextStyle: {
-                    objectId: pageElement.objectId,
-                    style: result.dst,
-                    textRange: {
-                        startIndex: start,
-                        endIndex: end,
-                        type: 'FIXED_RANGE',
-                    },
-                    fields: result.fields.join(),
-                }
-            });
-            contentId++;
+        if (contentIdx > 0) {
+            text += '\n';
         }
+        let start = text.length;
+        text += mappedContent.text;
+        let end = text.length;
+        if (start >= end) {
+            continue;
+        }
+        let style = {};
+
+        let listId = null;
+        let nestingLevel = 0;
+        let glyph = '';
+        if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
+            bullet = { ...textElement.paragraphMarker.bullet };
+            if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
+                listId = textElement.paragraphMarker.bullet.listId;
+            }
+            if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
+                nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
+            }
+            if (textElement.paragraphMarker.bullet.hasOwnProperty('glyph')) {
+                glyph = textElement.paragraphMarker.bullet.glyph
+            }
+        }
+        if (textElement.paragraphMarker.hasOwnProperty('style')) {
+            style = { ...textElement.paragraphMarker.style };
+        }
+        let l = 0;
+        let r = 0;
+        if (textElement.hasOwnProperty('startIndex'))
+            l = textElement.startIndex;
+        if (textElement.hasOwnProperty('endIndex')) {
+            r = textElement.endIndex;
+        }
+        let textStyle = {};
+        if (listId !== null) {
+            textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
+            if (typeof textStyle !== 'object') {
+                textStyle = {};
+            }
+            if (glyph != '') {
+                requests.push({
+                    createParagraphBullets: {
+                        objectId: pageElement.objectId,
+                        textRange: {
+                            startIndex: start,
+                            endIndex: end,
+                            type: "FIXED_RANGE",
+                        },
+                        bulletPreset: getBulletPreset(glyph),
+                    },
+                });
+            }
+        }
+        
+        textStyle = getDominantTextStyle(textStyle, textElements, mappedContent.textElementIdx, l, r);
+
+        let result = objRecTraverse(style, '')
+        requests.push({
+            updateParagraphStyle: {
+                objectId: pageElement.objectId,
+                style: result.dst,
+                textRange: {
+                    startIndex: start,
+                    endIndex: end,
+                    type: 'FIXED_RANGE',
+                },
+                fields: result.fields.join(),
+            }
+        });
+
+        result = objRecTraverse(textStyle, '')
+        requests.push({
+            updateTextStyle: {
+                objectId: pageElement.objectId,
+                style: result.dst,
+                textRange: {
+                    startIndex: start,
+                    endIndex: end,
+                    type: 'FIXED_RANGE',
+                },
+                fields: result.fields.join(),
+            }
+        });
     }
     requests.unshift({
         insertText: {
@@ -201,18 +228,17 @@ function initializePageElementShape(pageElement) {
 function initializePageElementImage(pageElement) {
     let requests = [];
 
-    if (!pageElement.hasOwnProperty('mapped')) {
+    if (!pageElement.hasOwnProperty('mappedContents')) {
         return requests;
     }
-    if (pageElement.mapped.length === 0) {
+    if (pageElement.mappedContents.length === 0) {
         // maybe makes sense to delete the placeholder
         return requests;
     }
 
-    if (pageElement.mapped.length > 1) {
+    if (pageElement.mappedContents.length > 1) {
         throw Error("More than 1 text is mapped to image");
     }
-
     requests.push({
         replaceImage: {
             imageObjectId: pageElement.objectId,
@@ -372,57 +398,75 @@ function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
         }
     }
     else if (pageElement.hasOwnProperty('shape')) {
-        request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
-        if (pageElement.shape.hasOwnProperty('shapeType')) {
-            request.shapeType = pageElement.shapeType;
+        let type = 'BODY';
+        if (pageElement.shape.hasOwnProperty('placeholder')
+            && pageElement.shape.placeholder.hasOwnProperty('type')
+        ) {
+            type = pageElement.shape.placeholder.type;
         }
-        if (request.shapeType === undefined) {
-            request.shapeType = 'RECTANGLE';
+        if (type === SLIDE_NUMBER && pageNum > 0) {
+            type = pageNum.toString();
         }
-        requests.push({
-            createShape: request
-        });
-        validObjectId = true;
 
-        if (pageElement.additional.text.length > 0) {
-            /// TEXT FORMAT: TEXT_BOX_{NUMBER}
-            let textJSON = {};
-            if (pageElement.shape.hasOwnProperty('placeholder')
-                && pageElement.shape.placeholder.hasOwnProperty('type')) {
-                if (pageElement.shape.placeholder.type === SLIDE_NUMBER && pageNum > 0) {
-                    textJSON.placeholderType = pageNum.toString();
-                }
-                else {
-                    textJSON.placeholderType = pageElement.shape.placeholder.type;
+        if (IMAGE_PLACEHOLDER.includes(type)) {
+            request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
+            request['url'] = PLACEHOLDER_IMAGE_URL;
+            requests.push({
+                createImage: request
+            });
+            validObjectId = true;
+            if (pageElement.shape.hasOwnProperty('shapeProperties')
+                && pageElement.shape.shapeProperties.hasOwnProperty('outline')
+            ) {
+                let imageProperties = {
+                    outline: { ...pageElement.shape.shapeProperties.outline },
+                };
+                let result = objRecTraverse(imageProperties, '');
+                if (result.fields.length > 0) {
+                    requests.push({
+                        updateImageProperties: {
+                            objectId: pageElement.objectId,
+                            imageProperties: result.dst,
+                            fields: result.fields.join(),
+                        }
+                    });
                 }
             }
-            else {
-                textJSON.placeholderType = 'BODY';
-            }
-
-            requests = requests.concat(initializeShapeText(pageElement, textJSON.placeholderType));
         }
-        if (pageElement.shape.hasOwnProperty('shapeProperties')) {
-            let result = objRecTraverse(pageElement.shape.shapeProperties);
-            if (result.fields.length > 0) {
-                requests.push({
-                    updateShapeProperties: {
-                        objectId: pageElement.objectId,
-                        shapeProperties: result.dst,
-                        fields: result.fields.join(),
-                    }
-                });
+        else {
+            request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
+        
+            if (pageElement.shape.hasOwnProperty('shapeType')) {
+                request.shapeType = pageElement.shapeType;
+            }
+            if (request.shapeType === undefined) {
+                request.shapeType = 'RECTANGLE';
+            }
+            
+            requests.push({
+                createShape: request
+            });
+            validObjectId = true;
+            
+            if (pageElement.additional.text.length > 0) {
+                requests = requests.concat(initializeShapeText(pageElement, type));
+            }
+            if (pageElement.shape.hasOwnProperty('shapeProperties')) {
+                let result = objRecTraverse(pageElement.shape.shapeProperties);
+                if (result.fields.length > 0) {
+                    requests.push({
+                        updateShapeProperties: {
+                            objectId: pageElement.objectId,
+                            shapeProperties: result.dst,
+                            fields: result.fields.join(),
+                        }
+                    });
+                }
             }
         }
     }
     else if (pageElement.hasOwnProperty('image')) {
         request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
-        // if (pageElement.additional.contentUrl.length > 0) {
-        //     request['url'] = pageElement.additional.contentUrl[0];
-        // }
-        // else {
-        //     request['url'] = PLACEHOLDER_IMAGE_URL;
-        // }
         request['url'] = PLACEHOLDER_IMAGE_URL;
         requests.push({
             createImage: request
@@ -441,41 +485,41 @@ function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
             }
         }
     }
-    else if (pageElement.hasOwnProperty('line')) {
-        if (pageElement.line.hasOwnProperty('lineProperties'))
-        {
-            if (pageElement.line.lineProperties['hasLink'] === 1
-            || pageElement.line.lineProperties['hasConnection'] === 1) {
-                return {
-                    requests: [],
-                    objectId: pageElement.objectId,
-                    validObjectId: false,
-                }
-            }
-        }
+    // else if (pageElement.hasOwnProperty('line')) {
+    //     if (pageElement.line.hasOwnProperty('lineProperties'))
+    //     {
+    //         if (pageElement.line.lineProperties['hasLink'] === 1
+    //         || pageElement.line.lineProperties['hasConnection'] === 1) {
+    //             return {
+    //                 requests: [],
+    //                 objectId: pageElement.objectId,
+    //                 validObjectId: false,
+    //             }
+    //         }
+    //     }
         
-        request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
+    //     request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
         
-        if (pageElement.line.hasOwnProperty('lineCategory')) {
-            request['category'] = pageElement.line.lineCategory;
-        }
-        requests.push({
-            createLine: request
-        });
-        validObjectId = true;
-        if (pageElement.line.hasOwnProperty('lineProperties')) {
-            let result = objRecTraverse(pageElement.line.lineProperties, '');
-            if (result.fields.length > 0) {
-                requests.push({
-                    updateLineProperties: {
-                        objectId: pageElement.objectId,
-                        lineProperties: result.dst,
-                        fields: result.fields.join(),
-                    }
-                });
-            }
-        }
-    }
+    //     if (pageElement.line.hasOwnProperty('lineCategory')) {
+    //         request['category'] = pageElement.line.lineCategory;
+    //     }
+    //     requests.push({
+    //         createLine: request
+    //     });
+    //     validObjectId = true;
+    //     if (pageElement.line.hasOwnProperty('lineProperties')) {
+    //         let result = objRecTraverse(pageElement.line.lineProperties, '');
+    //         if (result.fields.length > 0) {
+    //             requests.push({
+    //                 updateLineProperties: {
+    //                     objectId: pageElement.objectId,
+    //                     lineProperties: result.dst,
+    //                     fields: result.fields.join(),
+    //                 }
+    //             });
+    //         }
+    //     }
+    // }
     else {
         console.log('no such type:', pageElement);
     }
