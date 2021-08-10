@@ -345,6 +345,17 @@ async function tryFitBody(content, start, template, clusterBrowser) {
                             continue;
                         }
                     }
+                    else {
+                        if (!bodyContent.paragraph.hasOwnProperty('singleWord')
+                            || typeof bodyContent.paragraph.singleWord.text !== 'string'
+                            || !bodyContent.paragraph.singleWord.hasOwnProperty('score')
+                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('similarity')
+                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('grammatical')
+                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('semantic')
+                        ) {
+                            continue;
+                        }
+                    }
                     while (targetLengthIdx < targetLengths.length
                         && targetLengths[targetLengthIdx] <= currentLength
                         && template.isCustom
