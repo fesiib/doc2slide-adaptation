@@ -477,9 +477,9 @@ async function tryFitBody(content, start, template, clusterBrowser) {
     };
 }
 
-function getSingleTemplateResponse(result, pageNum, pageSize) {
+function getSingleTemplateResponse(result, targetPageId, pageNum, pageSize) {
     let globalRequests = [];
-    globalRequests = globalRequests.concat(initializeTemplate(result.template, pageNum));
+    globalRequests = globalRequests.concat(initializeTemplate(result.template, targetPageId, pageNum));
     globalRequests = globalRequests.concat(result.requests);
 
     
@@ -489,7 +489,7 @@ function getSingleTemplateResponse(result, pageNum, pageSize) {
         totalScore: result.totalScore,
         originalId: result.template.originalId,
         pageNum: pageNum,
-        objectId: result.template.pageId,
+        objectId: targetPageId === null ? result.template.pageId : targetPageId,
     };
     
     globalRequests.push({
@@ -565,7 +565,7 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
             }
             pageNum++;
             done = result.done;
-            results.push(getSingleTemplateResponse(result, pageNum, pageSize));
+            results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
         }
     }
 
@@ -582,20 +582,20 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     };
 }
 
-async function fitToSlide_random(content, obj, pageId, pageNum, clusterBrowser) {
+async function fitToSlide_random(content, obj, targetPageId, sourcePageId, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
 
     let pageSize = templates.getPageSizeInPX();
 
-    let template = templates.getByOriginalId(pageId);
+    let template = templates.getByOriginalId(sourcePageId);
 
     let result = await tryFitBody(content, 0, template, clusterBrowser);
     //console.log('Fitted', 0, result.done, result);
-    return getSingleTemplateResponse(result, pageNum, pageSize);
+    return getSingleTemplateResponse(result, targetPageId, pageNum, pageSize);
 }
 
-async function fitToBestSlide_total(content, obj, pageNum, clusterBrowser) {
+async function fitToBestSlide_total(content, obj, targetPageId, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
 
@@ -618,7 +618,7 @@ async function fitToBestSlide_total(content, obj, pageNum, clusterBrowser) {
             finalResult = result;
         }
     }
-    return getSingleTemplateResponse(finalResult, pageNum, pageSize);
+    return getSingleTemplateResponse(finalResult, targetPageId, pageNum, pageSize);
 }
 
 async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
@@ -649,7 +649,7 @@ async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
     let pageNum = 0;
     for (let result of results) {
         pageNum++;
-        let response = getSingleTemplateResponse(result, pageNum, pageSize);
+        let response = getSingleTemplateResponse(result, null, pageNum, pageSize);
 
         requests = requests.concat(response.requests);
         matching.push({ ...response.matching });

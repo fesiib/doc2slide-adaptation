@@ -74,7 +74,8 @@ export async function generateSlideRequests(presentationId, pageId, pageNum, res
 
     let data = {
         presentationId,
-        pageId,
+        sourcePageId: pageId,
+        targetPageId: null,
         pageNum,
         resources,
     };
@@ -110,6 +111,7 @@ export async function generateBestSlideRequests(presentationId, pageNum, resourc
     let data = {
         presentationId,
         pageNum,
+        targetPageId: null,
         resources,
     };
 

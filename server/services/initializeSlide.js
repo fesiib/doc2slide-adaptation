@@ -574,7 +574,7 @@ function initializePage(pageId, pageTemplate, pageNum) {
     return requests;
 }
 
-function initializeTemplate(template, pageNum = -1) {
+function initializeTemplate(template, targetPageId, pageNum = -1) {
     let requests = [];
     let pageId = template.pageId;
     let page = template.page;
@@ -582,29 +582,32 @@ function initializeTemplate(template, pageNum = -1) {
     let pageNumStr = template.pageNum.toString();
     let informationBoxId = template.informationBoxId;
 
-    if (pageNum > 0) {
-        requests.push({
-            createSlide: {
-                objectId: pageId,
-                insertionIndex: pageNum - 1,
-            },
-        });
+    if (targetPageId === null) {
+        targetPageId = pageId;
+        if (pageNum > 0) {
+            requests.push({
+                createSlide: {
+                    objectId: targetPageId,
+                    insertionIndex: pageNum - 1,
+                },
+            });
+        }
+        else {
+            requests.push({
+                createSlide: {
+                    objectId: targetPageId,
+                },
+            });
+        }
     }
-    else {
-        requests.push({
-            createSlide: {
-                objectId: pageId,
-            },
-        });
-    }
-    requests = requests.concat(initializePage(pageId, page, pageNum));
+    requests = requests.concat(initializePage(targetPageId, page, pageNum));
 
     if (weight === 1) {
         ///layout
-        requests = requests.concat(addTextBox(informationBoxId, pageId, "Layout: " + pageNumStr));
+        requests = requests.concat(addTextBox(informationBoxId, targetPageId, "Layout: " + pageNumStr));
     }
     else {
-        requests = requests.concat(addTextBox(informationBoxId, pageId, "Page: " + pageNumStr));    
+        requests = requests.concat(addTextBox(informationBoxId, targetPageId, "Page: " + pageNumStr));    
     }
     return requests;
 }
@@ -614,7 +617,7 @@ function initializePresentation(templates) {
     let pageNum = 0;
     for (let template of templates.getTemplates()) {
         pageNum++;
-        requests = requests.concat(initializeTemplate(template, pageNum));
+        requests = requests.concat(initializeTemplate(template, null, pageNum));
     }
     return requests;
 }
