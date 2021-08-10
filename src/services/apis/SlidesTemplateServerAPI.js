@@ -69,13 +69,13 @@ export async function generatePresentationRequests(presentationId, resources) {
     });
 }
 
-export async function generateSlideRequests(presentationId, pageId, pageNum, resources) {
+export async function generateSlideRequests(presentationId, targetPageId, sourcePageId, pageNum, resources) {
     const SERVICE = '/slides/generate_slide_requests';
 
     let data = {
         presentationId,
-        sourcePageId: pageId,
-        targetPageId: null,
+        sourcePageId,
+        targetPageId,
         pageNum,
         resources,
     };
@@ -105,13 +105,13 @@ export async function generateSlideRequests(presentationId, pageId, pageNum, res
     });
 }
 
-export async function generateBestSlideRequests(presentationId, pageNum, resources) {
+export async function generateBestSlideRequests(presentationId, targetPageId, pageNum, resources) {
     const SERVICE = '/slides/generate_best_slide_requests';
 
     let data = {
         presentationId,
+        targetPageId,
         pageNum,
-        targetPageId: null,
         resources,
     };
 
@@ -204,14 +204,17 @@ export async function clearSlideRequests(presentationId, pageNum) {
             if (Array.isArray(response.result.slides)
                 && pageNum <= response.result.slides.length
             ) {
-                requests.push({
-                    deleteObject: {
-                        objectId: response.result.slides[pageNum - 1].objectId,
-                    }
-                });  
+                for (let pageElement of response.result.slides[pageNum - 1].pageElements) {
+                    requests.push({
+                        deleteObject: {
+                            objectId: pageElement.objectId,
+                        }
+                    });  
+                }
             }
             resolve({
                 requests,
+                targetPageId: response.result.slides[pageNum - 1].objectId,
             });
         }).catch((reason) => {
             reject(reason);

@@ -150,7 +150,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlide(selected, selectedExt, indexDropdownValue, pageIdDropdownValue, resources)
+                generateSlide(selected, selectedExt, pageIdDropdownValue, indexDropdownValue, resources)
                     .then((response) => {
                         console.log("Generated Single Slide: ", response);
                         loadingDeactivate(COMPILING);

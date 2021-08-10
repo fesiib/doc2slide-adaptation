@@ -128,11 +128,12 @@ export async function generatePresentation(referencePresentationId, presentation
     });
 }
 
-export async function generateSlide(referencePresentationId, presentationId, pageNum, targetPageId, resources) {
+export async function generateSlide(referencePresentationId, presentationId, sourcePageId, pageNum, resources) {
     return new Promise((resolve, reject) => {
         clearSlideRequests(presentationId, pageNum).then((response) => {
             let clearRequests = response.requests;
-            generateSlideRequests(referencePresentationId, targetPageId, pageNum, resources)
+            let targetPageId = response.targetPageId;
+            generateSlideRequests(referencePresentationId, targetPageId, sourcePageId, pageNum, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
@@ -158,7 +159,8 @@ export async function generateBestSlide(referencePresentationId, presentationId,
     return new Promise((resolve, reject) => {
         clearSlideRequests(presentationId, pageNum).then((response) => {
             let clearRequests = response.requests;
-            generateBestSlideRequests(referencePresentationId, pageNum, resources)
+            let targetPageId = response.targetPageId;
+            generateBestSlideRequests(referencePresentationId, targetPageId, pageNum, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
