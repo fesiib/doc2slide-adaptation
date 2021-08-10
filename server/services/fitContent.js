@@ -437,9 +437,9 @@ async function tryFitBody(content, start, template, clusterBrowser) {
             }
         }
 
-        currentMatching[pageElement.objectId].contents = currentContents.filter((val) => {
-            return val.contentId !== null;
-        });
+        // currentMatching[pageElement.objectId].contents = currentContents.filter((val) => {
+        //     return val.contentId !== null;
+        // });
 
         matching = {
             ...currentMatching,
