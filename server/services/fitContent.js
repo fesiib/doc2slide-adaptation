@@ -78,7 +78,6 @@ function fitToParagraphMarker(entity, paragraphLength) {
 }
 
 function fitToImage(pageElement) {
-    console.log(pageElement);
     let pageElementInfo = {
         rectangle: pageElement.rectangle,
         contents: [],
