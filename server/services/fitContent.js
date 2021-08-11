@@ -673,21 +673,19 @@ async function fitToPresentation_greedy(contents, obj, clusterBrowser) {
                 }
                 let template = templates.copySingleTemplate(originalTemplate);
                 let current = await tryFitBody(section, done, template, clusterBrowser);
-                if (current.done === done) {
+                if (current.done <= done) {
                     continue;
                 }
                 if (result === null || result.totalScore < current.totalScore) {
                     result = current;
                 }
             }
-            if (result === null) {
-                // put default
-                //result = await tryFitBody(section, done, originalTemplates[0], clusterBrowser);
+            if (result !== null) {
+                pageNum++;
+                done = result.done;
+                results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
                 break;
             }
-            pageNum++;
-            done = result.done;
-            results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
         }
         if (done < section.body.length) {
             console.log("Could not fit\n");
