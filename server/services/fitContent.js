@@ -606,6 +606,12 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
                 done = result.done;
                 results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));    
             }
+            else {
+                break;
+            }
+        }
+        if (done < section.body.length) {
+            console.log("Could not fit\n");
         }
     }
 
@@ -680,6 +686,8 @@ async function fitToPresentation_greedy(contents, obj, clusterBrowser) {
                 pageNum++;
                 done = result.done;
                 results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
+            }
+            else {
                 break;
             }
         }
