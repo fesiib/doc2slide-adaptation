@@ -7,8 +7,8 @@ import { UPLOADING, COMPILING, EXTRACTING, loadingActivate, loadingDeactivate } 
 
 import { addFile, selectFile } from '../reducers/presentationFiles';
 
-import { testPresentation, justUploadPresentation } from '../services/slideAdapter';
-import { processContentDoc } from '../services/contentProcessing';
+import { testPresentation, justUploadPresentation, comparePresentation } from '../services/slideAdapter';
+import { processContentDoc, processContent } from '../services/contentProcessing';
 import { uploadToFolder } from '../services/apis/DriveAPI';
 import { parsePresentations } from "../services/apis/DriveAPI";
 import { resetApp } from "../reducers";
@@ -21,7 +21,8 @@ function FileManager(props) {
     const {cnt, files, selected} = useSelector(state => state.presentationFiles);
 
 
-	const { title, sections, titleResult, sectionsResult, shouldUpdate } = useSelector(state => state.contentDoc);
+	const { title, sections, titleResult, sectionsResult, shouldUpdateDoc } = useSelector(state => state.contentDoc);
+    const { header, body, headerResult, bodyResult, shouldUpdate } = useSelector(state => state.content);
 	const [ uploadValue, setUploadValue ] = useState('');
 
     const _selectFile = (name, id) => {
@@ -71,7 +72,7 @@ function FileManager(props) {
     const testAll = (event) => {
         loadingActivate(COMPILING);
 		event.target.active = true;
-		processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdate)
+		processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdateDoc)
 		.then((response) => {
 			let resources = {
 				...response,
@@ -88,6 +89,30 @@ function FileManager(props) {
 			});                
 		}).catch((error) => {
 			console.log('Couldn`t Test: ', error);
+			loadingDeactivate(COMPILING);
+			event.target.active = false;
+		});
+    }
+
+    const compareAll = (event) => {
+        loadingActivate(COMPILING);
+		event.target.active = true;
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+		.then((response) => {
+			let resources = {
+				...response,
+			};
+			let testSessions = [];
+			for (let presentation of files) {
+				testSessions.push(comparePresentation(presentation.id, false, resources));
+			}
+			Promise.all(testSessions)
+			.then((response) => {
+				loadingDeactivate(COMPILING);
+				event.target.active = false;
+			});                
+		}).catch((error) => {
+			console.log('Couldn`t Compare: ', error);
 			loadingDeactivate(COMPILING);
 			event.target.active = false;
 		});
@@ -151,6 +176,11 @@ function FileManager(props) {
                         onClick = {testAll}
                         color="info"
                     > Test ALL </Button>
+                <Button
+                        className = "w-25 max-h-50 m-2"
+                        onClick = {compareAll}
+                        color="info"
+                    > Compare ALL </Button>
                 <Container className="row m-5">
                     <Label for='uploadElement'> Google Share Link: </Label>
                     <Input 

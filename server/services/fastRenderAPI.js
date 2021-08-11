@@ -3,7 +3,7 @@ function getAbsLineHeight(paragraphStyle, fontStyle) {
 }
 
 function getAbsCharWidth(paragraphStyle, fontStyle) {
-    return fontStyle.fontSize * 0.6;
+    return fontStyle.fontSize * 0.55;
 }
 
 function fastRenderTexts(texts, paragraphStyles, boxStyle) {
@@ -38,7 +38,7 @@ function fastRenderTexts(texts, paragraphStyles, boxStyle) {
 
         numWordsPerLine.push(text.split(' ').length);
         numCharsPerLine.push(text.length);
-        
+
         spaceOccupation += lineHeight * charWidth * text.length;
         totalLength += text.length;
 

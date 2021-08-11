@@ -543,7 +543,7 @@ async function calculateStatistics(pageElement, browserCluster) {
         result = [];
         result.push(fastRenderTexts(texts, paragraphStyles, boxStyle));
         result.push(fastRenderTexts(originalTexts, paragraphStyles, boxStyle));
-        console.log('stats', result[0], result[1]);
+        //console.log('stats', result[0], result[1]);
     }
     else {
         let statistics = browserCluster.execute( async ({page}) => {
@@ -754,10 +754,8 @@ function getAreaDiff(statistics) {
 
             curAreaDiff += Math.abs(original - cur);
         }
-        //console.log('Bottom', curParagraph, oriParagraph, curAreaDiff);
         areaDiff += curAreaDiff;
     }
-    //console.log(areaDiff, originalArea, statistics.paragraphs, statistics.originalStatistics.paragraphs);
     return {
         areaDiff,
         originalArea

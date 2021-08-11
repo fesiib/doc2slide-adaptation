@@ -36,6 +36,10 @@ async function generatePresentationRequests(data, cluster) {
     let resources = data.resources;
     let fast = true;
 
+    if (data.hasOwnProperty('fast')) {
+        fast = data.fast;
+    }
+    
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
@@ -55,6 +59,10 @@ async function generateSlideRequests(data, cluster) {
     let resources = data.resources;
     let fast = true;
 
+    if (data.hasOwnProperty('fast')) {
+        fast = data.fast;
+    }
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
@@ -73,6 +81,10 @@ async function generateBestSlideRequests(data, cluster) {
     let resources = data.resources;
     let fast = true;
 
+    if (data.hasOwnProperty('fast')) {
+        fast = data.fast;
+    }
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
@@ -89,6 +101,10 @@ async function generateAllSlidesRequests(data, cluster) {
     let sort = data.sort;
     let resources = data.resources;
     let fast = true;
+
+    if (data.hasOwnProperty('fast')) {
+        fast = data.fast;
+    }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);

@@ -52,6 +52,39 @@ export async function testPresentation(presentationId, copies, resources) {
     })
 }
 
+export async function comparePresentation(presentationId, sort, resources) {
+    return new Promise((resolve, reject) => {
+        getPresentation(presentationId).then((response) => {
+            let presentation = response.result;
+            let titleSuffix = 'compare_template_' + presentation.title;
+            uploadPresentation(presentation).then((response) => {
+                let title = titleSuffix;
+                createPresentation(title).then((response) => {
+                    let newId = response.presentationId;
+                    if (newId === undefined) {
+                        reject('Creation failed');
+                    }
+                    clearPresentationRequests(newId).then((response) => {
+                        let clearRequests = response.requests;
+                        generateAllSlidesRequests(presentationId, sort, resources)
+                        .then((response) => {
+                            let requests = clearRequests.concat(response.requests);
+                            let matching = response.matching;
+                            let matchedList = response.matchedList;
+                            console.log('Matching:', title, matchedList, matching);
+                            updatePresentation(newId, requests).then((response) => {
+                                resolve({
+                                    response,
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
+
 export async function justUploadPresentation(presentationId) {
     return new Promise((resolve) => {
         getPresentation(presentationId).then((response) => {

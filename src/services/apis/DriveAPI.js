@@ -1,6 +1,13 @@
 import { gapi } from 'gapi-script';
 
-const FOLDER_ID = '1-CAXsYgbb2lgdQuMN7EHrZdVgzsn6yhD';
+const FOLDER_ID_OLD = '1-CAXsYgbb2lgdQuMN7EHrZdVgzsn6yhD';
+const FOLDER_ID = '1TFuEo0NgjO0B5wMHNRtvDKS9VZJ918dQ';
+
+
+const TEMPLATES_FOLDER_ID_OLD = '1Njrblq2ifh7iKWkNwCM5uvhtue_8o5Qj';
+const TEMPLATES_FOLDER_ID = '1d7YiMhhCQk-q2AIl5KfUkk1lZbx1H5Ft';
+
+
 const FILE_TYPE = 'application/vnd.google-apps.presentation';
 
 export function parsePresentations(callback) {
@@ -29,8 +36,6 @@ export async function uploadToFolder(presentationId) {
         fields: 'id'
     });
 }
-
-const TEMPLATES_FOLDER_ID = '1Njrblq2ifh7iKWkNwCM5uvhtue_8o5Qj';
 
 export function createPresentation(title) {
     return new Promise((resolve, reject) => {
