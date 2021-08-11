@@ -721,7 +721,7 @@ class Templates {
         return template;
     }
  
-    __add(layout, pageId, originalId, pageNum, page, weight, isCustom) {
+    __add(layout, pageId, originalId, pageNum, page, weight, isTitlePage, isCustom) {
 
         //page.pageElements = page.pageElements.concat(toLines(layout));
 
@@ -737,6 +737,7 @@ class Templates {
             weight,
             originalId,
             isCustom,
+            isTitlePage,
             informationBoxId,
         });
         this.__layouts.push({
@@ -744,20 +745,20 @@ class Templates {
         });
     }
 
-    addCustom(pageId, originalId, pageNum, page) {
+    addCustom(pageId, originalId, pageNum, page, isTitlePage = false) {
         page = this.sanitizePage(page);
 
         if (this.__getComplexity(page) <= 0.5) {
             let layout = this.__getLayout(page);
-            this.__add(layout, pageId, originalId, pageNum, page, 2, true);
+            this.__add(layout, pageId, originalId, pageNum, page, 2, isTitlePage, true);
         }
     }
 
-    addDefault(pageId, originalId, pageNum, page) {
+    addDefault(pageId, originalId, pageNum, page, isTitlePage = false) {
         page = this.sanitizePage(page);
 
         let layout = this.__getLayout(page);
-        this.__add(layout, pageId, originalId, pageNum, page, 1, false);
+        this.__add(layout, pageId, originalId, pageNum, page, 1, isTitlePage, false);
     }
 
     getTemplates() {

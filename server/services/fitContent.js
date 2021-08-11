@@ -561,6 +561,30 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     let results = [];
     let pageNum = 0;
 
+    if (contents.hasOwnProperty('title')) {
+        let titleSection = {
+            header: { ...contents.title },
+            body: [],
+        };
+        let result = null;
+        let originalTemplates = templates.getCustomTemplates();
+        for (let originalTemplate of originalTemplates) {
+            if (!originalTemplate.isTitlePage) {
+                continue
+            }
+            let template = templates.copySingleTemplate(originalTemplate);
+            let current = await tryFitBody(titleSection, 0, template, clusterBrowser);
+            if (result === null || result.totalScore < current.totalScore) {
+                result = current;
+            }
+        }
+        if (result !== null) {
+            pageNum++;
+            results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
+        }
+    }
+
+
     for (let section of contents.sections) {
         let done = 0;
         while (done < section.body.length) {
@@ -568,6 +592,9 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
             let result = null;
             while (iterations < 3) {     
                 let template = templates.randomDraw();
+                if (template.isTitlePage) {
+                    continue
+                }
                 let current = await tryFitBody(section, done, template, clusterBrowser);
                 if (current.done === done) {
                     continue;
@@ -614,11 +641,36 @@ async function fitToPresentation_greedy(contents, obj, clusterBrowser) {
 
     let originalTemplates = templates.getCustomTemplates();
 
+    if (contents.hasOwnProperty('title')) {
+        let titleSection = {
+            header: { ...contents.title },
+            body: [],
+        };
+        let result = null;
+        for (let originalTemplate of originalTemplates) {
+            if (!originalTemplate.isTitlePage) {
+                continue
+            }
+            let template = templates.copySingleTemplate(originalTemplate);
+            let current = await tryFitBody(titleSection, 0, template, clusterBrowser);
+            if (result === null || result.totalScore < current.totalScore) {
+                result = current;
+            }
+        }
+        if (result !== null) {
+            pageNum++;
+            results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
+        }
+    }
+
     for (let section of contents.sections) {
         let done = 0;
         while (done < section.body.length) {
             let result = null;
             for (let originalTemplate of originalTemplates) {
+                if (originalTemplate.isTitlePage) {
+                    continue;
+                }
                 let template = templates.copySingleTemplate(originalTemplate);
                 let current = await tryFitBody(section, done, template, clusterBrowser);
                 if (current.done === done) {

@@ -35,7 +35,7 @@ async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
     let fast = true;
-    let method = 'greedy';
+    let method = 'random';
 
     if (data.hasOwnProperty('fast')) {
         fast = data.fast;

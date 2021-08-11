@@ -291,18 +291,18 @@ function extractTemplates(source) {
     for (let index = 0; index < source.layouts.length; index++) {
         layout = source.layouts[index];
         let page = extractPage(dict, layout);
-        templates.addDefault(random(), layout.objectId, index + 1, page);
+        templates.addDefault(random(), layout.objectId, index + 1, page, (index === 0));
     }
 
     //Extract the Template From `source`
     let titlePage = extractPage(dict, source.slides[0]);
     
-    templates.addCustom(random(), source.slides[0].objectId, 1, titlePage);
+    templates.addCustom(random(), source.slides[0].objectId, 1, titlePage, true);
     
     for (let index = 1; index < source.slides.length; index++) {
         let originalPage = source.slides[index];
         let extractedPage = extractPage(dict, originalPage);
-        templates.addCustom(random(), originalPage.objectId, index + 1, extractedPage);
+        templates.addCustom(random(), originalPage.objectId, index + 1, extractedPage, false);
     }
 
     //console.log(templates);
