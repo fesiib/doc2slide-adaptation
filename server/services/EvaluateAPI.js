@@ -1,23 +1,7 @@
+const { fastRenderTexts } = require("./fastRenderAPI");
 const { getRectangle, IMAGE_PLACEHOLDER } = require("./Templates");
 
 const EMU = 1 / 12700;
-
-async function scoreShapeElementsFast(shapeElements) {    
-    let statisticsList = [];
-
-    for (let pageElement of shapeElements) {
-        statisticsList.push(calculateStatistics(pageElement, null));    
-    }
-
-    return {
-        readability: 100,
-        engagement: calculateTextEngagement(statisticsList),
-        grammatical: calculateTextGrammatical(statisticsList),
-        semantic: calculateTextSemantic(statisticsList),
-        importantWords: calculateTextImportantWords(statisticsList),
-        similarity: calculateTextSimilarityFast(statisticsList),
-    };
-}
 
 async function scoreElements(elements, browserCluster) {    
     let statisticsList = [];
@@ -118,10 +102,6 @@ function calculateTextSimilarity(statisticsList) {
     }
 
     return Math.round(totalScore * 10000) / 100;
-}
-
-function calculateTextSimilarityFast(statisticsList) {
-    return 100;
 }
 
 function consumeRGBColor(rgbColor) {
@@ -561,6 +541,9 @@ async function calculateStatistics(pageElement, browserCluster) {
 
     if (browserCluster === null) {
         result = [];
+        result.push(fastRenderTexts(texts, paragraphStyles, boxStyle));
+        result.push(fastRenderTexts(originalTexts, paragraphStyles, boxStyle));
+        console.log('stats', result[0], result[1]);
     }
     else {
         let statistics = browserCluster.execute( async ({page}) => {
@@ -585,10 +568,9 @@ async function calculateStatistics(pageElement, browserCluster) {
                 }, originalTexts, paragraphStyles, boxStyle
             );
         });
-    
+        
         result = await Promise.all([statistics, originalStatistics]);
     }
-
     return {
         ...result[0],
         boxStyle: boxStyle,
@@ -609,11 +591,15 @@ function __normal(mean, std, x) {
 }
 
 function normDistributionAround(mean, std, x) {
+    if (std === 0) {
+        if (mean === x) {
+            return 1;
+        }
+        return 0;
+    }
     const maxValue = __normal(mean, std, mean);
     return __normal(mean, std, x) / maxValue;
 }
-
-
 
 function single_calculateTextReadabilitySimple(statistics) {
     const FONT_SIZE = 20;
@@ -672,7 +658,7 @@ function single_calculateTextReadabilitySimple(statistics) {
             }
             prev = numChar;
         }
-        if (paragraph.numCharsPerLine.length > 1) {
+        if (paragraph.numCharsPerLine.length > 1 && maxNumChar > 0.0) {
             avgCharDiff /= (paragraph.numCharsPerLine.length - 1);
             valShape = (maxNumChar - avgCharDiff) / maxNumChar;
         }
@@ -682,8 +668,8 @@ function single_calculateTextReadabilitySimple(statistics) {
         valShape = valShape * weightShape;
 
         let valSum = (valFontSize + valTextLength + valNumLines + valLineHeight + valShape);
-
-        result += valSum * (paragraph.textLength / statistics.totalLength);
+        if (statistics.totalLength > 0)
+            result += valSum * (paragraph.textLength / statistics.totalLength);
     }
     
 

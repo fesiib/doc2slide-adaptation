@@ -34,11 +34,16 @@ async function uploadPresentation(data) {
 async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
+    let fast = true;
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    let result = await fitToPresentation_random(resources, templates, cluster);
+    if (fast) {
+        return await fitToPresentation_random(resources, templates, null);
+    }
+    let result = fitToPresentation_random(resources, templates, cluster);
     return result;
 }
 
@@ -48,10 +53,15 @@ async function generateSlideRequests(data, cluster) {
     let sourcePageId = data.sourcePageId;
     let pageNum = data.pageNum;
     let resources = data.resources;
+    let fast = true;
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
+    if (fast) {
+        return await fitToSlide_random(resources, templates, targetPageId, sourcePageId, pageNum, null);
+    }
     let result = await fitToSlide_random(resources, templates, targetPageId, sourcePageId, pageNum, cluster);
     return result;
 }
@@ -61,10 +71,15 @@ async function generateBestSlideRequests(data, cluster) {
     let targetPageId = data.targetPageId;
     let pageNum = data.pageNum;
     let resources = data.resources;
+    let fast = true;
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
+    if (fast) {
+        return await fitToBestSlide_total(resources, templates, targetPageId, pageNum, null);
+    }
     let result = await fitToBestSlide_total(resources, templates, targetPageId, pageNum, cluster);
     return result;
 }
@@ -73,10 +88,15 @@ async function generateAllSlidesRequests(data, cluster) {
     let presentationId = data.presentationId;
     let sort = data.sort;
     let resources = data.resources;
+    let fast = true;
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
+    if (fast) {
+        return await fitToAllSlides_random(resources, templates, sort, null);
+    }
     let result = await fitToAllSlides_random(resources, templates, sort, cluster);
     return result;
 }
