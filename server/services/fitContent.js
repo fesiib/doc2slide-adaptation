@@ -789,6 +789,21 @@ async function fitToAllSlides_random(content, obj, sort, clusterBrowser) {
     };
 }
 
+function getPageIds(obj) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+    let originalTemplates = templates.getCustomTemplates();
+    
+    let pageIds = [];
+    for (let template of originalTemplates) {
+        pageIds.push({
+            pageId: template.originalId,
+            pageNum: template.pageNum,
+            isTitlePage: template.isTitlePage,
+        });
+    }
+    return pageIds;
+}
 
 module.exports = {
     fitToPresentation_random,
@@ -796,4 +811,5 @@ module.exports = {
     fitToBestSlide_total,
     fitToAllSlides_random,
     fitToPresentation_greedy,
+    getPageIds,
 };

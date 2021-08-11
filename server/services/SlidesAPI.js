@@ -1,14 +1,24 @@
 const { extractTemplates } = require('./extractSlide');
 const { initializePresentation } = require('./initializeSlide');
-const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitToAllSlides_random, fitToPresentation_greedy } = require('./fitContent');
+const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitToAllSlides_random, fitToPresentation_greedy, getPageIds } = require('./fitContent');
 
 let templatesLibrary = {};
 
+const BULLETS_PRESENTATION_ID = '1HbS5f9IcAJJwWJqjLPEac03OCNu6Oz_iHfPGsbhYYO4';
+
 async function getAvailablePresentations(data) {
     return new Promise(resolve => {
+        let presentations = [];
+        for (let presentationId in templatesLibrary) {
+            presentations.push({
+                presentationId: presentationId,
+                pageIds: getPageIds(templatesLibrary[presentationId]),
+            });
+        }
         resolve({
             size: Object.keys(templatesLibrary).length,
-            presentationIds: Object.keys(templatesLibrary),
+            presentations: presentations,
+            bulletsPresentationId: BULLETS_PRESENTATION_ID,
         });
     });
 }
