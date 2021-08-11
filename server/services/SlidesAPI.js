@@ -1,6 +1,6 @@
 const { extractTemplates } = require('./extractSlide');
 const { initializePresentation } = require('./initializeSlide');
-const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitToAllSlides_random } = require('./fitContent');
+const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitToAllSlides_random, fitToPresentation_greedy } = require('./fitContent');
 
 let templatesLibrary = {};
 
@@ -35,19 +35,29 @@ async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
     let fast = true;
+    let method = 'greedy';
 
     if (data.hasOwnProperty('fast')) {
         fast = data.fast;
     }
+    if (data.hasOwnProperty('method')) {
+        method = data.method;
+    }
     
+    let fitFunction = fitToPresentation_random;
+
+    if (method === 'greedy') {
+        fitFunction = fitToPresentation_greedy;
+    }
+
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
     if (fast) {
-        return await fitToPresentation_random(resources, templates, null);
+        return await fitFunction(resources, templates, null);
     }
-    let result = fitToPresentation_random(resources, templates, cluster);
+    let result = fitFunction(resources, templates, cluster);
     return result;
 }
 

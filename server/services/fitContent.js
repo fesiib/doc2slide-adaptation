@@ -599,6 +599,63 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
     };
 }
 
+async function fitToPresentation_greedy(contents, obj, clusterBrowser) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+    
+    let pageSize = templates.getPageSizeInPX();
+
+    let requests = [];
+    let matching = [];
+    let matchedList = [];
+
+    let results = [];
+    let pageNum = 0;
+
+    let originalTemplates = templates.getCustomTemplates();
+
+    for (let section of contents.sections) {
+        let done = 0;
+        while (done < section.body.length) {
+            let result = null;
+            for (let originalTemplate of originalTemplates) {
+                let template = templates.copySingleTemplate(originalTemplate);
+                let current = await tryFitBody(section, done, template, clusterBrowser);
+                if (current.done === done) {
+                    continue;
+                }
+                if (result === null || result.totalScore < current.totalScore) {
+                    result = current;
+                }
+            }
+            if (result === null) {
+                // put default
+                //result = await tryFitBody(section, done, originalTemplates[0], clusterBrowser);
+                break;
+            }
+            pageNum++;
+            done = result.done;
+            results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
+        }
+        if (done < section.body.length) {
+            console.log("Could not fit\n");
+        }
+    }
+
+    for (let result of results) {
+        requests = requests.concat(result.requests);
+        matching.push({ ...result.matching });
+        matchedList.push(result.matched);
+    }
+
+    return {
+        requests,
+        matching,
+        matchedList,
+    };
+}
+
+
 async function fitToSlide_random(content, obj, targetPageId, sourcePageId, pageNum, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
@@ -686,4 +743,5 @@ module.exports = {
     fitToSlide_random,
     fitToBestSlide_total,
     fitToAllSlides_random,
+    fitToPresentation_greedy,
 };

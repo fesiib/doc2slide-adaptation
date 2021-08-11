@@ -79,7 +79,7 @@ function FileManager(props) {
 			};
 			let testSessions = [];
 			for (let presentation of files) {
-				let copies = 4;
+				let copies = 1;
 				testSessions.push(testPresentation(presentation.id, copies, resources));
 			}
 			Promise.all(testSessions)
