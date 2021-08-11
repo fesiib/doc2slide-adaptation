@@ -104,7 +104,7 @@ function FileManager(props) {
 			};
 			let testSessions = [];
 			for (let presentation of files) {
-				testSessions.push(comparePresentation(presentation.id, false, resources));
+				testSessions.push(comparePresentation(presentation.id, true, resources));
 			}
 			Promise.all(testSessions)
 			.then((response) => {

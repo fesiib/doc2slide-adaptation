@@ -50,31 +50,25 @@ function extractImageElements(slide) {
 function fitToParagraphMarker(entity, paragraphLength) {
     let shortenings = entity.shortenings;
     let phrases = entity.phrases;
-
+    let maxImportantWords = {
+        ...entity.singleWord,
+    };
     for (let shortening of shortenings) {
-        if (shortening.text.length <= paragraphLength) {
-            return {
-                ...shortening,
+        if (shortening.text.length < paragraphLength) {
+            if (shortening.score.importantWords > maxImportantWords.score.importantWords) {
+                maxImportantWords = { ...shortening };
             }
         }
     }
 
     for (let phrase of phrases) {
-        if (phrase.text.length <= paragraphLength) {
-            return {
-                ...phrase,
+        if (phrase.text.length < paragraphLength) {
+            if (phrase.score.importantWords > maxImportantWords.score.importantWords) {
+                maxImportantWords = { ...phrase };
             }
         }
     }
-
-    if (entity.singleWord.text.length <= paragraphLength) {
-        return {
-            ...entity.singleWord,
-        };   
-    }
-    return {
-        ...entity.singleWord,
-    };
+    return maxImportantWords;
 }
 
 function fitToImage(pageElement) {
@@ -471,20 +465,20 @@ async function tryFitBody(content, start, template, clusterBrowser) {
         }
     };
 
-    let totalScore = 0.0;
+    let totalScore = (result.score.similarity * 4 + result.score.importantWords) / 5;
 
-    if (result.score.similarity < 0) {
-        totalScore = (result.score.similarity 
-            + 100 * (result.moreInfo.totalNumMapped 
-                - result.moreInfo.totalNumContent) );
+    if (totalScore < 0) {
+        totalScore += 10 * (
+            (result.moreInfo.totalNumMapped 
+                - result.moreInfo.totalNumContent) 
+            + (result.moreInfo.totalNumMapped    
+                - result.moreInfo.totalNumSlideElements)
+        );
     }
     else {
-        let total = result.moreInfo.totalNumContent;
+        let total = Math.max(result.moreInfo.totalNumSlideElements, result.moreInfo.totalNumContent);
         if (total > 0) {
-            totalScore = (result.score.similarity * (result.moreInfo.totalNumMapped / total) );
-        }
-        else {
-            totalScore = result.score.similarity;
+            totalScore *= (result.moreInfo.totalNumMapped / total);
         }
     }
 
