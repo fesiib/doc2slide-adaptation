@@ -35,7 +35,7 @@ async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
     let fast = true;
-    let method = 'random';
+    let method = 'greedy';
 
     if (data.hasOwnProperty('fast')) {
         fast = data.fast;
@@ -44,10 +44,10 @@ async function generatePresentationRequests(data, cluster) {
         method = data.method;
     }
     
-    let fitFunction = fitToPresentation_random;
+    let fitFunction = fitToPresentation_greedy;
 
-    if (method === 'greedy') {
-        fitFunction = fitToPresentation_greedy;
+    if (method === 'random') {
+        fitFunction = fitToPresentation_random;
     }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
