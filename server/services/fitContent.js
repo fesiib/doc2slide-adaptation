@@ -607,9 +607,11 @@ async function fitToPresentation_random(contents, obj, clusterBrowser) {
                 }
                 iterations++;
             }
-            pageNum++;
-            done = result.done;
-            results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));
+            if (result !== null) {
+                pageNum++; 
+                done = result.done;
+                results.push(getSingleTemplateResponse(result, null, pageNum, pageSize));    
+            }
         }
     }
 
