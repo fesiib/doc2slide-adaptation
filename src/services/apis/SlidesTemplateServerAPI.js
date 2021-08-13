@@ -42,6 +42,11 @@ export async function generatePresentationRequests(presentationId, resources) {
     let data = {
         presentationId,
         resources,
+        settings: {
+            fast: true,
+            contentControl: true,
+            method: 'greedy',
+        },
     };
 
     const URL = ADDR + SERVICE;
@@ -78,6 +83,10 @@ export async function generateSlideRequests(presentationId, targetPageId, source
         targetPageId,
         pageNum,
         resources,
+        settings: {
+            fast: false,
+            contentControl: false,
+        },
     };
 
     const URL = ADDR + SERVICE;
@@ -113,6 +122,10 @@ export async function generateBestSlideRequests(presentationId, targetPageId, pa
         targetPageId,
         pageNum,
         resources,
+        settings: {
+            fast: false,
+            contentControl: false,
+        },
     };
 
     const URL = ADDR + SERVICE;
@@ -148,6 +161,10 @@ export async function generateAllSlidesRequests(presentationId, sort, resources)
         presentationId,
         sort,
         resources,
+        settings: {
+            fast: false,
+            contentControl: false,
+        },
     };
 
     const URL = ADDR + SERVICE;

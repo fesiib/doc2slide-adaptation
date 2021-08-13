@@ -1,6 +1,12 @@
 const { extractTemplates } = require('./extractSlide');
 const { initializePresentation } = require('./initializeSlide');
-const { fitToPresentation_random, fitToSlide_random, fitToBestSlide_total, fitToAllSlides_random, fitToPresentation_greedy, getPageIds } = require('./fitContent');
+const { 
+    fitToPresentation,
+    fitToSlide,
+    fitToAllSlides,
+    fitToBestSlide,
+    getPageIds,
+} = require('./fitContent');
 
 let templatesLibrary = {};
 
@@ -44,31 +50,26 @@ async function uploadPresentation(data) {
 async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
     let resources = data.resources;
-    let fast = true;
-    let method = 'greedy';
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: true,
+        layoutControl: true,
+        styleControl: true,
+    };
 
-    if (data.hasOwnProperty('fast')) {
-        fast = data.fast;
-    }
-    if (data.hasOwnProperty('method')) {
-        method = data.method;
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
     }
     
-    let fitFunction = fitToPresentation_greedy;
-
-    if (method === 'random') {
-        fitFunction = fitToPresentation_random;
-    }
-
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    if (fast) {
-        return await fitFunction(resources, templates, null);
-    }
-    let result = fitFunction(resources, templates, cluster);
-    return result;
+    return fitToPresentation(resources, templates, cluster, settings);
 }
 
 async function generateSlideRequests(data, cluster) {
@@ -77,21 +78,34 @@ async function generateSlideRequests(data, cluster) {
     let sourcePageId = data.sourcePageId;
     let pageNum = data.pageNum;
     let resources = data.resources;
-    let fast = true;
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: true,
+        layoutControl: true,
+        styleControl: true,
+    };
 
-    if (data.hasOwnProperty('fast')) {
-        fast = data.fast;
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
     }
-
+    
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    if (fast) {
-        return await fitToSlide_random(resources, templates, targetPageId, sourcePageId, pageNum, null);
-    }
-    let result = await fitToSlide_random(resources, templates, targetPageId, sourcePageId, pageNum, cluster);
-    return result;
+    return await fitToSlide(
+        resources,
+        templates,
+        targetPageId,
+        sourcePageId,
+        pageNum,
+        cluster,
+        settings,
+    );
 }
 
 async function generateBestSlideRequests(data, cluster) {
@@ -99,42 +113,52 @@ async function generateBestSlideRequests(data, cluster) {
     let targetPageId = data.targetPageId;
     let pageNum = data.pageNum;
     let resources = data.resources;
-    let fast = true;
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: true,
+        layoutControl: true,
+        styleControl: true,
+    };
 
-    if (data.hasOwnProperty('fast')) {
-        fast = data.fast;
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
     }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    if (fast) {
-        return await fitToBestSlide_total(resources, templates, targetPageId, pageNum, null);
-    }
-    let result = await fitToBestSlide_total(resources, templates, targetPageId, pageNum, cluster);
-    return result;
+    return await fitToBestSlide(resources, templates, targetPageId, pageNum, cluster, settings);
 }
 
 async function generateAllSlidesRequests(data, cluster) {
     let presentationId = data.presentationId;
     let sort = data.sort;
     let resources = data.resources;
-    let fast = true;
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: true,
+        layoutControl: true,
+        styleControl: true,
+    };
 
-    if (data.hasOwnProperty('fast')) {
-        fast = data.fast;
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
     }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    if (fast) {
-        return await fitToAllSlides_random(resources, templates, sort, null);
-    }
-    let result = await fitToAllSlides_random(resources, templates, sort, cluster);
-    return result;
+    return await fitToAllSlides(resources, templates, sort, cluster, settings);
 }
 
 module.exports = {
