@@ -5,7 +5,7 @@ const {
     fitToSlide,
     fitToAllSlides,
     fitToBestSlide,
-    getPageIds,
+    getPageInfos,
 } = require('./fitContent');
 
 let templatesLibrary = {};
@@ -18,7 +18,7 @@ async function getAvailablePresentations(data) {
         for (let presentationId in templatesLibrary) {
             presentations.push({
                 presentationId: presentationId,
-                pageIds: getPageIds(templatesLibrary[presentationId]),
+                pageInfo: getPageInfos(templatesLibrary[presentationId]),
             });
         }
         resolve({

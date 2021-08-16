@@ -270,7 +270,7 @@ async function fitToAllSlides_random(settings, content, obj, sort, clusterBrowse
     };
 }
 
-function getPageIds(obj) {
+function getPageInfos(obj) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     let originalTemplates = templates.getCustomTemplates();
@@ -381,5 +381,5 @@ module.exports = {
     fitToSlide,
     fitToBestSlide,
     fitToAllSlides,
-    getPageIds,
+    getPageInfos,
 };

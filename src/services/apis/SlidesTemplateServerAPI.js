@@ -84,8 +84,8 @@ export async function generateSlideRequests(presentationId, targetPageId, source
         pageNum,
         resources,
         settings: {
-            fast: false,
-            contentControl: false,
+            fast: true,
+            contentControl: true,
         },
     };
 

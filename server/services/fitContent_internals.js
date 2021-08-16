@@ -341,7 +341,9 @@ async function tryFitBody(settings, content, start, template, clusterBrowser) {
                 if (bodyContent.hasOwnProperty('paragraph')) {
                     let currentLength = content.body[i].paragraph.singleWord.text.length;
                     if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
-                        if (!Array.isArray(bodyContent.paragraph.images)) {
+                        if (!Array.isArray(bodyContent.paragraph.images)
+                            || !settings.contentControl
+                        ) {
                             pageElementIdx++;
                             continue;
                         }
