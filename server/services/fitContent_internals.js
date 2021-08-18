@@ -1,6 +1,6 @@
 const { scoreElements, getDominantTextStyle } = require('./apis/EvaluateAPI');
 const { initializeTemplate, initializePageElementShape, initializePageElementImage } = require('./apis/initializeAPI');
-const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, MAX_WORD_LENGTH } = require('./Template');
+const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, MAX_WORD_LENGTH, SUBHEADER_PLACEHOLDER } = require('./Template');
 
 function extractShapeElements(slide) {
     let shapeElements = [];
@@ -282,7 +282,7 @@ async function tryFitBody(settings, content, start, template, clusterBrowser) {
     if (content.hasOwnProperty('header')) {
         totalNumContent++;
         let headerPageElement = null;
-        let headerIdx = HEADER_PLACEHOLDER.length;
+        let headerIdx = HEADER_PLACEHOLDER.length + 1;
         for (let pageElement of elements) {
             if (pageElement.additional.canbeMapped.length < 1
                 || pageElement.additional.canbeMappedMin > 1
@@ -297,6 +297,14 @@ async function tryFitBody(settings, content, start, template, clusterBrowser) {
                 }
                 headerPageElement = pageElement;
                 headerIdx = curIdx;
+            }
+            if (SUBHEADER_PLACEHOLDER.includes(pageElement.type)) {
+                let curIdx = HEADER_PLACEHOLDER.length;
+                if (headerIdx <= curIdx) {
+                    continue;
+                }
+                headerPageElement = pageElement;
+                headerIdx = curIdx;    
             }
         }
         if (headerPageElement !== null) {

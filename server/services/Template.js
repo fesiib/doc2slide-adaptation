@@ -4,6 +4,9 @@ const HEADER_PLACEHOLDER = [
     'CENTERED_TITLE',
     'TITLE',
     'HEADER',
+];
+
+const SUBHEADER_PLACEHOLDER = [
     'SUBTITLE',
 ];
 
@@ -638,6 +641,9 @@ function labelPageElement(pageElement) {
             else if (HEADER_PLACEHOLDER.includes(type)) {
                 pageElement.type = 'HEADER';
             }
+            else if (SUBHEADER_PLACEHOLDER.includes(type)) {
+                pageElement.type = 'SUBHEADER';
+            }
             else if (SLIDE_NUMBER_PLACEHOLDER.includes(type)) {
                 pageElement.type = 'SLIDE_NUMBER';
             }
@@ -892,4 +898,5 @@ module.exports = {
     SLIDE_NUMBER_PLACEHOLDER,
     MAX_WORD_LENGTH,
     PX,
+    SUBHEADER_PLACEHOLDER,
 };
