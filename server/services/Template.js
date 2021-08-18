@@ -519,6 +519,7 @@ function calculateAdditional(pageElement, src) {
                 && !HEADER_PLACEHOLDER.includes(src.shape.placeholder.type)
                 && !BODY_PLACEHOLDER.includes(src.shape.placeholder.type)
             ) {
+                additional.text.push('#');
                 exceptionHappened = true;
             }
         }

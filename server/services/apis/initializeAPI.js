@@ -83,7 +83,9 @@ function getFirstText(shapeText) {
 
 function initializePageElementShape(pageElement) {
     let requests = [];
-
+    if (SLIDE_NUMBER_PLACEHOLDER.includes(pageElement.type)) {
+        return requests;
+    }
     if (!pageElement.hasOwnProperty('mappedContents')) {
         return requests;
     }
@@ -250,7 +252,7 @@ function initializePageElementImage(pageElement) {
     return requests;
 }
 
-function initializeShapeText(pageElement) {
+function initializeShapeText(pageElement, text) {
     if (!pageElement.hasOwnProperty('shape')
         || !pageElement.hasOwnProperty('additional')
         || pageElement.additional.text.length === 0
@@ -279,7 +281,7 @@ function initializeShapeText(pageElement) {
     requests.push({
         insertText: {
             objectId: pageElement.objectId,
-            text: pageElement.type,
+            text: text,
         }
     });
 
@@ -438,9 +440,14 @@ function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
                 createShape: request
             });
             validObjectId = true;
-            
-            if (pageElement.additional.text.length > 0) {
-                requests = requests.concat(initializeShapeText(pageElement));
+
+            let text = pageElement.type;
+
+            if (SLIDE_NUMBER_PLACEHOLDER.includes(text) && pageNum > 0) {
+                text = pageNum.toString();
+            }
+            if (pageElement.hasOwnProperty('type')) {
+                requests = requests.concat(initializeShapeText(pageElement, text));
             }
             if (pageElement.shape.hasOwnProperty('shapeProperties')) {
                 let result = objRecTraverse(pageElement.shape.shapeProperties);
