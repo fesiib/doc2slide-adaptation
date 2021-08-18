@@ -25,7 +25,7 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
             if (!originalTemplate.isTitlePage) {
                 continue
             }
-            let template = templates.copySingleTemplate(originalTemplate);
+            let template = templates.getByOriginalId(originalTemplate.originalId);
             let current = await tryFitBody(settings, titleSection, 0, template, clusterBrowser);
             if (result === null || result.totalScore < current.totalScore) {
                 result = current;
@@ -117,7 +117,7 @@ async function fitToPresentation_greedy(
             if (!originalTemplate.isTitlePage) {
                 continue
             }
-            let template = templates.copySingleTemplate(originalTemplate);
+            let template = templates.getByOriginalId(originalTemplate.originalId);
             let current = await tryFitBody(settings, titleSection, 0, template, clusterBrowser);
             if (result === null || result.totalScore < current.totalScore) {
                 result = current;
@@ -137,7 +137,7 @@ async function fitToPresentation_greedy(
                 if (originalTemplate.isTitlePage) {
                     continue;
                 }
-                let template = templates.copySingleTemplate(originalTemplate);
+                let template = templates.getByOriginalId(originalTemplate.originalId);
                 let current = await tryFitBody(settings, section, done, template, clusterBrowser);
                 if (current.done <= done) {
                     continue;
@@ -208,11 +208,9 @@ async function fitToBestSlide_total(
 
     let pageSize = templates.getPageSizeInPX();
 
-    let poolTemplates = templates.getTemplates();
-
     let fitSessions = [];
-    for (let original of poolTemplates) {
-        let template = templates.copySingleTemplate(original);
+    for (let originalTemplate of templates.getTemplates()) {
+        let template = templates.getByOriginalId(originalTemplate.originalId);
         fitSessions.push(tryFitBody(settings, content, 0, template, clusterBrowser));
     }
 
@@ -234,7 +232,6 @@ async function fitToAllSlides_random(settings, content, obj, sort, clusterBrowse
     
     let pageSize = templates.getPageSizeInPX();
 
-    let poolTemplates = templates.getCustomTemplates();
 
     let requests = [];
     let matching = [];
@@ -242,8 +239,8 @@ async function fitToAllSlides_random(settings, content, obj, sort, clusterBrowse
 
     let fitBodySessions = [];
 
-    for (let original of poolTemplates) {
-        let template = templates.copySingleTemplate(original);
+    for (let originalTemplate of templates.getCustomTemplates()) {
+        let template = templates.getByOriginalId(originalTemplate.originalId);
         fitBodySessions.push(tryFitBody(settings, content, 0, template, clusterBrowser));
     }
 

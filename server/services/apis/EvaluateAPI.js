@@ -1,5 +1,5 @@
 const { fastRenderTexts } = require("./fastRenderAPI");
-const { getRectangle, IMAGE_PLACEHOLDER } = require("./Templates");
+const { getRectangle, IMAGE_PLACEHOLDER } = require("../Template");
 
 const EMU = 1 / 12700;
 

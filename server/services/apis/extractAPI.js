@@ -1,38 +1,8 @@
-const { v4 : uuidv4} = require('uuid');
-
-const { REQ_FIELDS } = require('./SlidesAPIRqFields');
-const { Templates, calculateAdditional } =  require('./Templates');
+const { REQ_FIELDS } = require('./requiredFields');
+const { calculateAdditional } = require('../Template');
 
 const RGB = ['red', 'blue', 'green'];
 const TRANSFORM_VALS = ['scaleX', 'scaleY', 'shearX', 'shearY', 'translateX', 'translateY'];
-
-function random() {
-    let id = uuidv4();
-    return id.replace(/-/g, '');
-}
-
-function updateObjectId(src) {
-    if (typeof src !== 'object' || src === null) {
-        return {};
-    }
-    let ret = {};
-    if (Array.isArray(src)) {
-        for (let obj of src) {
-           ret = Object.assign(ret, updateObjectId(obj));
-        }
-    }
-    else {
-        if (src.hasOwnProperty('objectId')) {
-            ret[src.objectId] = src;
-        }
-        for (let field in src) {
-            if (src.hasOwnProperty(field)) {
-                ret = Object.assign(ret, updateObjectId(src[field]));
-            }
-        }
-    }
-    return ret;
-}
 
 function isEmpty(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
@@ -281,36 +251,6 @@ function extractPage(dict, page) {
     return mergePages(pages.reverse(), dict);
 }
 
-function extractTemplates(source) {
-    //console.log(source);
-    let dict = updateObjectId(source);
-
-    let templates = new Templates(source.title, source.pageSize);
-
-    //Extract Layouts from `source`
-    for (let index = 0; index < source.layouts.length; index++) {
-        layout = source.layouts[index];
-        let page = extractPage(dict, layout);
-        templates.addDefault(random(), layout.objectId, index + 1, page, (index === 0));
-    }
-
-    //Extract the Template From `source`
-    let titlePage = extractPage(dict, source.slides[0]);
-    
-    templates.addCustom(random(), source.slides[0].objectId, 1, titlePage, true);
-    
-    for (let index = 1; index < source.slides.length; index++) {
-        let originalPage = source.slides[index];
-        let extractedPage = extractPage(dict, originalPage);
-        templates.addCustom(random(), originalPage.objectId, index + 1, extractedPage, false);
-    }
-
-    //console.log(templates);
-    return templates;
-}
-
 module.exports = {
     extractPage,
-    extractTemplates,
-    calculateAdditional,
-}
+};

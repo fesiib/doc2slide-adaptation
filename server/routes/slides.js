@@ -5,12 +5,12 @@ const { getAvailablePresentations,
     generatePresentationRequests,
     generateSlideRequests,
     generateBestSlideRequests,
-    generateAllSlidesRequests } = require('../services/SlidesAPI');
+    generateAllSlidesRequests } = require('../services/apis/SlidesAPI');
 
 const {
     getImages,
     getQueries,
-} = require('../services/ImageAPI');
+} = require('../services/apis/ImageAPI');
 var router = express.Router();
 
 /* POST upload Presentation Slides */

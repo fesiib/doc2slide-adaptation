@@ -1,12 +1,11 @@
-const { extractTemplates } = require('./extractSlide');
-const { initializePresentation } = require('./initializeSlide');
+const { Templates } = require('../Templates');
 const { 
     fitToPresentation,
     fitToSlide,
     fitToAllSlides,
     fitToBestSlide,
     getPageInfos,
-} = require('./fitContent');
+} = require('../fitContent');
 
 let templatesLibrary = {};
 
@@ -37,11 +36,12 @@ async function uploadPresentation(data) {
             console.log('Already in the library, but update');
             delete templatesLibrary[presentationId];
         }    
-        let templates = extractTemplates(presentation);
+        let templates = Templates.extractTemplates(presentation);
         templatesLibrary[presentationId] = templates;
+        let requests = templates.initializeTemplates();
         resolve({
             extractedTemplates: templates,
-            requests: initializePresentation(templates),
+            requests: requests,
             librarySize: Object.keys(templatesLibrary).length,
         });
     });

@@ -1,9 +1,8 @@
-const { objRecTraverse } = require('./SlidesAPIRqFields');
+const { objRecTraverse } = require('./requiredFields');
 const { getDominantTextStyle } = require('./EvaluateAPI');
-const { IMAGE_PLACEHOLDER } = require('./Templates');
+const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER } = require('../Template');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
-const SLIDE_NUMBER = 'SLIDE_NUMBER';
 
 function isNumeric(ch) {
     return ch.length === 1 && ch.match(/[0-9]/g);
@@ -249,7 +248,7 @@ function initializePageElementImage(pageElement) {
     return requests;
 }
 
-function initializeShapeText(pageElement, text) {
+function initializeShapeText(pageElement) {
     if (!pageElement.hasOwnProperty('shape')
         || !pageElement.hasOwnProperty('additional')
         || pageElement.additional.text.length === 0
@@ -275,11 +274,10 @@ function initializeShapeText(pageElement, text) {
             }
         }
     });
-
     requests.push({
         insertText: {
             objectId: pageElement.objectId,
-            text,
+            text: pageElement.type,
         }
     });
 
@@ -398,21 +396,12 @@ function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
         }
     }
     else if (pageElement.hasOwnProperty('shape')) {
-        let type = 'BODY';
-        if (pageElement.shape.hasOwnProperty('placeholder')
-            && pageElement.shape.placeholder.hasOwnProperty('type')
-        ) {
-            type = pageElement.shape.placeholder.type;
-        }
-        if (type === SLIDE_NUMBER && pageNum > 0) {
-            type = pageNum.toString();
-        }
 
-        if (IMAGE_PLACEHOLDER.includes(type)) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
             request.elementProperties = assignElementProperties(pageId, pageElement.size, pageElement.transform);
             request['url'] = PLACEHOLDER_IMAGE_URL;
             requests.push({
-                createImage: request
+                createImage: request,
             });
             validObjectId = true;
             if (pageElement.shape.hasOwnProperty('shapeProperties')
@@ -449,7 +438,7 @@ function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
             validObjectId = true;
             
             if (pageElement.additional.text.length > 0) {
-                requests = requests.concat(initializeShapeText(pageElement, type));
+                requests = requests.concat(initializeShapeText(pageElement));
             }
             if (pageElement.shape.hasOwnProperty('shapeProperties')) {
                 let result = objRecTraverse(pageElement.shape.shapeProperties);
@@ -559,9 +548,7 @@ function initializePage(pageId, pageTemplate, pageNum) {
     if (Array.isArray(pageTemplate.pageElements)) {
         let num_pageElement = 0;
         for (let pageElement of pageTemplate.pageElements) {
-            if (pageElement.hasOwnProperty('additional')
-                && pageElement.additional.hasOwnProperty('originalType')
-            ) { 
+            if (pageElement.hasOwnProperty('additional')) { 
                 let result = getPageElementRequests(pageId, pageNum, pageElement, num_pageElement.toString());
                 requests = requests.concat(result.requests);
             }
@@ -612,19 +599,8 @@ function initializeTemplate(template, targetPageId, pageNum = -1) {
     return requests;
 }
 
-function initializePresentation(templates) {
-    let requests = [];
-    let pageNum = 0;
-    for (let template of templates.getTemplates()) {
-        pageNum++;
-        requests = requests.concat(initializeTemplate(template, null, pageNum));
-    }
-    return requests;
-}
-
 module.exports = {
     getFirstParagraphMarker,
-    initializePresentation,
     initializeTemplate,
     getFirstText,
     initializeShapeText,

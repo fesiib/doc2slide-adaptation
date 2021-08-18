@@ -1,6 +1,6 @@
-const { scoreElements, getDominantTextStyle } = require('./EvaluateAPI');
-const { initializeTemplate, initializePageElementShape, initializePageElementImage } = require('./initializeSlide');
-const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, NOT_BODY_PLACEHOLDER, MAX_WORD_LENGTH } = require('./Templates');
+const { scoreElements, getDominantTextStyle } = require('./apis/EvaluateAPI');
+const { initializeTemplate, initializePageElementShape, initializePageElementImage } = require('./apis/initializeAPI');
+const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, MAX_WORD_LENGTH } = require('./Template');
 
 function extractShapeElements(slide) {
     let shapeElements = [];
@@ -9,19 +9,6 @@ function extractShapeElements(slide) {
             && pageElement.hasOwnProperty('shape')
         ) {
             let copyPageElement = { ...pageElement };
-            copyPageElement.type = 'BODY';
-            if (copyPageElement.shape.hasOwnProperty('placeholder')
-                && copyPageElement.shape.placeholder.hasOwnProperty('type')
-            ) {
-                let type = copyPageElement.shape.placeholder.type;
-                if (NOT_BODY_PLACEHOLDER.includes(type) 
-                    && !HEADER_PLACEHOLDER.includes(type)
-                    && !IMAGE_PLACEHOLDER.includes(type)
-                ) {
-                    continue;
-                }
-                copyPageElement.type = type;
-            }
             copyPageElement.mapped = [];
             copyPageElement.mappedContents = [];
             copyPageElement.isHeader = false;
@@ -40,7 +27,6 @@ function extractImageElements(slide) {
             let copyPageElement = { ...pageElement };
             copyPageElement.mapped = [];
             copyPageElement.mappedContents = [];
-            copyPageElement.type = 'PICTURE';
             imageElements.push(copyPageElement);
         }
     }
