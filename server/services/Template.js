@@ -504,14 +504,28 @@ function calculateAdditional(pageElement, src) {
     if (src.hasOwnProperty('shape')) {
         additional.isReplacable = true;
         additional.originalType = 'shape';
+
+        let exceptionHappened = false;
+
         if (src.shape.hasOwnProperty('placeholder')
             && src.shape.placeholder.hasOwnProperty('type')
-            && IMAGE_PLACEHOLDER.includes(src.shape.placeholder.type)
         ) {
-            additional.originalType = 'image';
-            additional.canbeMapped.push(MAX_WORD_LENGTH);
+            if (IMAGE_PLACEHOLDER.includes(src.shape.placeholder.type)) {
+                additional.originalType = 'image';
+                additional.canbeMapped.push(MAX_WORD_LENGTH);
+                exceptionHappened = true;
+            }
+            if (!SUBHEADER_PLACEHOLDER.includes(src.shape.placeholder.type)
+                && !HEADER_PLACEHOLDER.includes(src.shape.placeholder.type)
+                && !BODY_PLACEHOLDER.includes(src.shape.placeholder.type)
+            ) {
+                exceptionHappened = true;
+            }
         }
-        else if (src.shape.hasOwnProperty('text') && Array.isArray(src.shape.text.textElements)) {
+        if (src.shape.hasOwnProperty('text')
+            && Array.isArray(src.shape.text.textElements)
+            && !exceptionHappened
+        ) {
             additional.text = [];
             for (let textElement of src.shape.text.textElements) {
                 if (textElement.hasOwnProperty('paragraphMarker')) {
@@ -534,8 +548,7 @@ function calculateAdditional(pageElement, src) {
                     additional.text.push(textElement.autoText.content);
                 }
             }
-        }
-        
+        }   
     }
     else if (src.hasOwnProperty('image')) {
         additional.isReplacable = true;
@@ -578,6 +591,10 @@ function calculateAdditional(pageElement, src) {
         additional.originalType = 'sheetsChart';
         additional.contentUrl = [src.sheetsChart.contentUrl];
         additional.canbeMapped.push(MAX_WORD_LENGTH);
+    }
+    else {
+        additional.isReplacable = false;
+        additional.originaType = 'none';
     }
     pageElement['additional'] = additional;
     pageElement.objectId = random();

@@ -464,7 +464,6 @@ function getParagraphStyles(pageElement) {
         return [];
     }
     const textElements = pageElement.shape.text.textElements;
-    
     let paragraphStyles = [];
     for (let i = 0; i < textElements.length; i++) {
         const textElement = textElements[i];

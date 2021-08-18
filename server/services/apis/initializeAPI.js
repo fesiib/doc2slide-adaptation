@@ -187,18 +187,20 @@ function initializePageElementShape(pageElement) {
         });
 
         result = objRecTraverse(textStyle, '')
-        requests.push({
-            updateTextStyle: {
-                objectId: pageElement.objectId,
-                style: result.dst,
-                textRange: {
-                    startIndex: start,
-                    endIndex: end,
-                    type: 'FIXED_RANGE',
-                },
-                fields: result.fields.join(),
-            }
-        });
+        if (result.fields.length > 0) {
+            requests.push({
+                updateTextStyle: {
+                    objectId: pageElement.objectId,
+                    style: result.dst,
+                    textRange: {
+                        startIndex: start,
+                        endIndex: end,
+                        type: 'FIXED_RANGE',
+                    },
+                    fields: result.fields.join(),
+                }
+            });
+        }
     }
     requests.unshift({
         insertText: {
