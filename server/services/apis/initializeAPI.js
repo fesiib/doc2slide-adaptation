@@ -1,6 +1,5 @@
 const { objRecTraverse } = require('./requiredFields');
-const { getDominantTextStyle } = require('./EvaluateAPI');
-const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER } = require('../Template');
+const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset } = require('../Template');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
@@ -37,13 +36,6 @@ function addTextBox(shapeId, pageId, text) {
         }
     });
     return requests;
-}
-
-function getBulletPreset(glyph) {
-    // if (isNumeric(glyph[0])) {
-    //     return "NUMBERED_DIGIT_ALPHA_ROMAN";
-    // }
-    return "BULLET_DISC_CIRCLE_SQUARE";
 }
 
 function getFirstParagraphMarker(shapeText) {
@@ -125,6 +117,7 @@ function initializePageElementShape(pageElement) {
             continue;
         }
         let style = {};
+        let bullet = {};
 
         let listId = null;
         let nestingLevel = 0;

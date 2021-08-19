@@ -1,5 +1,5 @@
 const { fastRenderTexts } = require("./fastRenderAPI");
-const { getRectangle, IMAGE_PLACEHOLDER } = require("../Template");
+const { getRectangle, IMAGE_PLACEHOLDER, getDominantTextStyle } = require("../Template");
 
 const EMU = 1 / 12700;
 
@@ -407,55 +407,6 @@ function getParagraphTexts(pageElement) {
     return paragraphContents;
 }
 
-function getDominantTextStyle(textStyle, textElements, start, L, R) {
-    if (L > R) {
-        return textStyle;
-    }
-    let cntStyle = {};
-    let dominantStyle = '{}';
-    for (let i = start + 1; i < textElements.length; i++) {
-        const textElement = textElements[i];
-        let l = 0;
-        let r = 0;
-        if (textElement.hasOwnProperty('startIndex')) {
-            l = textElement.startIndex;
-        }
-        if (textElement.hasOwnProperty('endIndex')) {
-            r = textElement.endIndex;
-        }
-
-        if (l < L) {
-            throw Error('Text Element crosses paragraph');
-        }
-        if (r > R) {
-            break;
-        }
-        if (textElement.hasOwnProperty('textRun') && textElement.textRun.hasOwnProperty('style')) {
-            let styleStr = JSON.stringify({ ...textStyle, ...textElement.textRun.style });
-            if (!cntStyle.hasOwnProperty(styleStr)) {
-                cntStyle[styleStr] = 0;
-            }
-            if (textElement.textRun.hasOwnProperty('content'))
-                cntStyle[styleStr] += textElement.textRun.content.length;    
-            dominantStyle = styleStr;
-        }
-        else if (textElement.hasOwnProperty('autoText') && textElement.autoText.hasOwnProperty('style')) {
-            let styleStr = JSON.stringify({ ...textStyle, ...textElement.autoText.style });
-            if (!cntStyle.hasOwnProperty(styleStr)) {
-                cntStyle[styleStr] = 0;
-            }
-            cntStyle[styleStr] += 1;
-            dominantStyle = styleStr;
-        }
-    }
-    for (let style in cntStyle) {
-        if (cntStyle[dominantStyle] < cntStyle[style]) {
-            dominantStyle = style;
-        }
-    }
-    return JSON.parse(dominantStyle);
-}
-
 function getParagraphStyles(pageElement) {
     if (!pageElement.hasOwnProperty('shape')
         || !pageElement.shape.hasOwnProperty('text')
@@ -762,5 +713,4 @@ function getAreaDiff(statistics) {
 }
 module.exports = {
     scoreElements,
-    getDominantTextStyle,
 };

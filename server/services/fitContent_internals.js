@@ -1,6 +1,6 @@
-const { scoreElements, getDominantTextStyle } = require('./apis/EvaluateAPI');
+const { scoreElements } = require('./apis/EvaluateAPI');
 const { initializeTemplate, initializePageElementShape, initializePageElementImage } = require('./apis/initializeAPI');
-const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, MAX_WORD_LENGTH, SUBHEADER_PLACEHOLDER } = require('./Template');
+const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, MAX_WORD_LENGTH, SUBHEADER_PLACEHOLDER, getDominantTextStyle } = require('./Template');
 
 function extractShapeElements(slide) {
     let shapeElements = [];

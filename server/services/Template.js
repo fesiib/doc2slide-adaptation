@@ -849,6 +849,63 @@ function mergeIntersectingElements(page, pageSize) {
     return page;
 }
 
+
+function getDominantTextStyle(textStyle, textElements, start, L, R) {
+    if (L > R) {
+        return textStyle;
+    }
+    let cntStyle = {};
+    let dominantStyle = '{}';
+    for (let i = start + 1; i < textElements.length; i++) {
+        const textElement = textElements[i];
+        let l = 0;
+        let r = 0;
+        if (textElement.hasOwnProperty('startIndex')) {
+            l = textElement.startIndex;
+        }
+        if (textElement.hasOwnProperty('endIndex')) {
+            r = textElement.endIndex;
+        }
+
+        if (l < L) {
+            throw Error('Text Element crosses paragraph');
+        }
+        if (r > R) {
+            break;
+        }
+        if (textElement.hasOwnProperty('textRun') && textElement.textRun.hasOwnProperty('style')) {
+            let styleStr = JSON.stringify({ ...textStyle, ...textElement.textRun.style });
+            if (!cntStyle.hasOwnProperty(styleStr)) {
+                cntStyle[styleStr] = 0;
+            }
+            if (textElement.textRun.hasOwnProperty('content'))
+                cntStyle[styleStr] += textElement.textRun.content.length;    
+            dominantStyle = styleStr;
+        }
+        else if (textElement.hasOwnProperty('autoText') && textElement.autoText.hasOwnProperty('style')) {
+            let styleStr = JSON.stringify({ ...textStyle, ...textElement.autoText.style });
+            if (!cntStyle.hasOwnProperty(styleStr)) {
+                cntStyle[styleStr] = 0;
+            }
+            cntStyle[styleStr] += 1;
+            dominantStyle = styleStr;
+        }
+    }
+    for (let style in cntStyle) {
+        if (cntStyle[dominantStyle] < cntStyle[style]) {
+            dominantStyle = style;
+        }
+    }
+    return JSON.parse(dominantStyle);
+}
+
+function getBulletPreset(glyph) {
+    // if (isNumeric(glyph[0])) {
+    //     return "NUMBERED_DIGIT_ALPHA_ROMAN";
+    // }
+    return "BULLET_DISC_CIRCLE_SQUARE";
+}
+
 class Template {
     constructor(originalId, pageNum, page, pageSize, weight, isTitlePage, isCustom) {
         this.informationBoxId = random();
@@ -860,7 +917,15 @@ class Template {
         this.originalId = originalId;
         this.isCustom = isCustom;
         this.isTitlePage = isTitlePage;
-    }  
+    }
+
+    getPageSizeInPX() {
+        let obj = {
+            width: this.pageSize.width / PX,
+            height: this.pageSize.height / PX,
+        };
+        return obj;
+    }
 
     getComplexity() {
         //return page.pageElements.length / 10;
@@ -902,6 +967,94 @@ class Template {
             calculateRectangle(pageElement);
         }
     }
+
+    getLayoutJSON() {
+        let result = {
+            boxes: [],
+            pageId: this.originalId,
+            pageSize: this.getPageSizeInPX(),
+        };
+        for (let pageElement of this.page.pageElements) {
+            result.boxes.push({
+                width: (pageElement.rectangle.finishX - pageElement.rectangle.startX),
+                height: (pageElement.rectangle.finishY - pageElement.rectangle.startY),
+                left: pageElement.rectangle.startX,
+                top: pageElement.rectangle.startY,
+                type: pageElement.type,
+                verticalAlign: getVerticalAlign(pageElement),
+            });
+        }
+        return result;
+    }
+
+    getStylesJSON() {
+        let result = {
+            pageId: this.originalId,
+            styles: [],
+        };
+        for (let pageElement of this.page.pageElements) {
+            if (IMAGE_PLACEHOLDER.includes(pageElement.type)
+                || !pageElement.hasOwnProperty('shape')
+                || !pageElement.shape.hasOwnProperty('text')
+                || !Array.isArray(pageElement.shape.text.textElements)
+            ) {
+                continue;
+            }
+            let textElements = pageElement.shape.text.textElements;
+            for (let textElementIdx = 0; textElementIdx < textElements.length; textElementIdx++) {
+                let textElement = textElements[textElementIdx];
+                if (!textElement.hasOwnProperty('paragraphMarker')) {
+                    continue;
+                }
+                let paragraphStyle = {};
+                let bullet = {};
+
+                let listId = null;
+                let nestingLevel = 0;
+                let glyph = '';
+                if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
+                    bullet = { ...textElement.paragraphMarker.bullet };
+                    if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
+                        listId = textElement.paragraphMarker.bullet.listId;
+                    }
+                    if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
+                        nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
+                    }
+                    if (textElement.paragraphMarker.bullet.hasOwnProperty('glyph')) {
+                        glyph = textElement.paragraphMarker.bullet.glyph
+                    }
+                }
+                if (textElement.paragraphMarker.hasOwnProperty('style')) {
+                    paragraphStyle = { ...textElement.paragraphMarker.style };
+                }
+                let l = 0;
+                let r = 0;
+                if (textElement.hasOwnProperty('startIndex'))
+                    l = textElement.startIndex;
+                if (textElement.hasOwnProperty('endIndex')) {
+                    r = textElement.endIndex;
+                }
+                let textStyle = {};
+                if (listId !== null) {
+                    textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
+                    if (typeof textStyle !== 'object') {
+                        textStyle = {};
+                    }
+                    if (glyph != '') {
+                        textStyle.bulletPreset = getBulletPreset(glyph);
+                    }
+                }
+                textStyle = getDominantTextStyle(textStyle, textElements, textElementIdx, l, r);
+                result.styles.push({
+                    type: pageElement.type,
+                    paragraphStyle: paragraphStyle,
+                    textStyle: textStyle,
+                });
+                break;
+            }
+        }
+        return result;
+    }
 }
 
 module.exports = {
@@ -909,6 +1062,8 @@ module.exports = {
     getRectangle,
     consumeSize,
     calculateAdditional,
+    getDominantTextStyle,
+    getBulletPreset,
 
     HEADER_PLACEHOLDER,
     BODY_PLACEHOLDER,

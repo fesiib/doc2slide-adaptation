@@ -145,6 +145,22 @@ class Templates {
         }
         return requests;
     }
+
+    getLayouts() {
+        let result = [];
+        for (let template of this.getTemplates()) {
+            result.push(template.getLayoutJSON());
+        }
+        return result;
+    }
+
+    getStyles() {
+        let result = [];
+        for (let template of this.getTemplates()) {
+            result.push(template.getStylesJSON());
+        }
+        return result;
+    }
 }
 
 module.exports = {

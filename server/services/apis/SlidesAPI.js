@@ -38,11 +38,11 @@ async function uploadPresentation(data) {
         }    
         let templates = Templates.extractTemplates(presentation);
         templatesLibrary[presentationId] = templates;
-        let requests = templates.initializeTemplates();
         resolve({
             extractedTemplates: templates,
-            requests: requests,
-            librarySize: Object.keys(templatesLibrary).length,
+            requests: templates.initializeTemplates(),
+            layouts: templates.getLayouts(),
+            styles: templates.getStyles(),
         });
     });
 }
