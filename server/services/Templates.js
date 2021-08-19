@@ -54,10 +54,6 @@ class Templates {
         return customTemplates;
     }
 
-    getLayouts() {
-        return new Templates('', this.pageSize);
-    }
-
     copyInstance(templates) {
         Object.assign(this, templates);
         for (let template of this.__templates) {

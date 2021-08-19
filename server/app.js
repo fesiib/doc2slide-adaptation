@@ -31,6 +31,9 @@ app.use('/', indexRouter);
 var slidesRouter = require('./routes/slides');
 app.use('/slides', slidesRouter);
 
+var layout_stylesRouter = require('./routes/layout_styles');
+app.use('/layout_styles', layout_stylesRouter);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     next(createError(404));

@@ -981,7 +981,6 @@ class Template {
                 left: pageElement.rectangle.startX,
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
-                verticalAlign: getVerticalAlign(pageElement),
             });
         }
         return result;
