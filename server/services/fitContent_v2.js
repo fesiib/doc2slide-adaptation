@@ -265,14 +265,15 @@ async function fitToAlternatives_random(
     let fitSessions = [];
 
     for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? poolTemplates.length : 1); layoutIdx++) {
-        let layoutTemplate = null;
-        if (layoutPageId === null) {
-            layoutTemplate = poolTemplates[layoutIdx].getFreshJSON();
-        }
-        else {
-            layoutTemplate = templates.getByOriginalId(layoutPageId);
-        }
         for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? poolTemplates.length : 1); stylesIdx++) {
+            let layoutTemplate = null;
+            if (layoutPageId === null) {
+                layoutTemplate = poolTemplates[layoutIdx].getFreshJSON();
+            }
+            else {
+                layoutTemplate = templates.getByOriginalId(layoutPageId);
+            }
+            
             let stylesTemplate = null;
             if (stylesPageId === null) {
                 stylesTemplate = poolTemplates[stylesIdx].getFreshJSON();

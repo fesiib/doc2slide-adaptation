@@ -125,8 +125,8 @@ export async function generateAlternativesRequests(presentationId, sort, layoutP
         stylesPageId,
         resources,
         settings: {
-            fast: false,
-            contentControl: false,
+            fast: true,
+            contentControl: true,
         },
     };
 

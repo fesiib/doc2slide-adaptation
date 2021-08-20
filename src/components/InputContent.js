@@ -13,7 +13,7 @@ import { addThumbnails, clearThumbnails, extractedFile, updatePageCnt } from '..
 import { generateAllSlides, generateSlide, generateBestSlide } from '../services/slideAdapter';
 import { compareAllSlides } from '../services/slideComparator';
 import { processContent } from '../services/contentProcessing';
-import { generateSlide_v2 } from '../services/layoutStylesAdapter';
+import { generateAlternatives, generateSlide_v2 } from '../services/layoutStylesAdapter';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';
@@ -218,6 +218,33 @@ function InputContent(props) {
                     _compileContent(resources.header, resources.body);
             }).catch((error) => {
                 console.log('Couldn`t generate All Slides: ', error);
+                loadingDeactivate(COMPILING);
+            });
+    }
+
+    const submitAlternativesHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        loadingActivate(COMPILING);
+        _clearThumbnails();
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+            .then((response) => {
+                let resources = {
+                    ...response,
+                };
+                generateAlternatives(selected, selectedExt, layoutPageIdDropdownValue, stylesPageIdDropdownValue, sortToggle, resources)
+                    .then((response) => {
+                        let matching = response.matching;
+                        console.log("Generated Alternatives: ", response);
+                        loadingDeactivate(COMPILING);
+                        forceUpdateSelected();
+                    }).catch((error) => {
+                        console.log('Couldn`t generate Alternatives: ', error);
+                        loadingDeactivate(COMPILING);
+                    });
+                    _compileContent(resources.header, resources.body);
+            }).catch((error) => {
+                console.log('Couldn`t generate Alternatives: ', error);
                 loadingDeactivate(COMPILING);
             });
     }
@@ -506,9 +533,9 @@ function InputContent(props) {
                         <Row className='align-items-start justify-content-start'>
                             <Col className='col-2' key='column-1'>
                                 <Button 
-                                    onClick={submitAllSlidesHandler} 
+                                    onClick={submitAlternativesHandler} //submitAllSlidesHandler 
                                     color='success'
-                                > Compare All Slides </Button>
+                                > Get Alternatives </Button>
                             </Col>
                             <Col className='col-2' key='column-2'>
                                 <Input
