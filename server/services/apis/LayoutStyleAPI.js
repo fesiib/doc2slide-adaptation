@@ -132,16 +132,16 @@ async function generateAlternativesRequests(data, cluster) {
         contentControl: true,
     };
 
-    // avoid infinite loop
-    if (!settings.fast) {
-        settings.fast = true;
-    }
-
     if (data.hasOwnProperty('settings')) {
         settings = {
             ...settings,
             ...data.settings,
         };
+    }
+
+    // avoid infinite loop
+    if (!settings.fast) {
+        settings.fast = true;
     }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
