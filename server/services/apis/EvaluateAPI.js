@@ -1,7 +1,31 @@
 const { fastRenderTexts } = require("./fastRenderAPI");
-const { getRectangle, IMAGE_PLACEHOLDER, getDominantTextStyle } = require("../Template");
+const { getRectangle, IMAGE_PLACEHOLDER, getDominantTextStyle, PX } = require("../Template");
 
 const EMU = 1 / 12700;
+
+async function scoreElements_withStyles(elements, browserCluster) {    
+    let statisticsList = [];
+
+    for (let pageElement of elements) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+            continue;
+        }
+        else {
+            statisticsList.push(getCombinedStatistics(pageElement, browserCluster, 1));
+        }
+    }
+
+    statisticsList = await Promise.all(statisticsList);
+
+    return {
+        readability: calculateTextReadabilitySimple(statisticsList),
+        engagement: calculateTextEngagement(statisticsList),
+        grammatical: calculateTextGrammatical(statisticsList),
+        semantic: calculateTextSemantic(statisticsList),
+        importantWords: calculateTextImportantWords(statisticsList),
+        similarity: calculateTextSimilarity(statisticsList),
+    };
+}
 
 async function scoreElements(elements, browserCluster) {    
     let statisticsList = [];
@@ -11,7 +35,7 @@ async function scoreElements(elements, browserCluster) {
             continue;
         }
         else {
-            statisticsList.push(calculateStatistics(pageElement, browserCluster));
+            statisticsList.push(getCombinedStatistics(pageElement, browserCluster, 0));
         }
     }
 
@@ -262,7 +286,7 @@ function getFontStyle(textStyle) {
 
     let backgroundColor = 'transparent';
     let color = 'transparent';
-    let fontSize = 16;
+    let fontSize = 14;
     let fontFamily = 'Arial';
     let fontWeight = 400;
 
@@ -407,6 +431,40 @@ function getParagraphTexts(pageElement) {
     return paragraphContents;
 }
 
+function getParagraphStyles_withStyles(pageElement) {
+    let allStyles = pageElement.mappedContents.map((val, idx) => val.styles);
+
+    let paragraphStyles = [];
+    
+    for (let styles of allStyles) {
+        let paragraphStyle = {
+            direction: 'LEFT_TO_RIGHT',
+        };
+        let bulletStyle = {};
+        let textStyle = {
+            weightedFontFamily: {
+                fontFamily: styles.fontFamily,
+                fontWeight: 400,
+            },
+            foregroundColor: {
+                opaqueColor: {
+                    themeColor: 'DARK',
+                }
+            },
+            fontSize: {
+                magnitude: styles.fontSize * PX * EMU,
+                unit: 'PT',
+            }
+        };
+        paragraphStyles.push({
+            style: getParagraphStyle(paragraphStyle, bulletStyle),
+            fontStyle: getFontStyle(textStyle),
+        });
+    }
+
+    return paragraphStyles;
+}
+
 function getParagraphStyles(pageElement) {
     if (!pageElement.hasOwnProperty('shape')
         || !pageElement.shape.hasOwnProperty('text')
@@ -479,7 +537,7 @@ function getParagraphStyles(pageElement) {
     return paragraphStyles;
 }
 
-async function calculateStatistics(pageElement, browserCluster) {
+async function getCombinedStatistics(pageElement, browserCluster, type) {
     let paragraphStyles = getParagraphStyles(pageElement);
     let boxStyle = getBoxStyle(pageElement);
 
@@ -487,16 +545,33 @@ async function calculateStatistics(pageElement, browserCluster) {
     let texts = pageElement.mappedContents.map((val, idx) => val.text);
     let scores = pageElement.mappedContents.map((val, idx) => val.score);
 
+    let results = [];
+
+    if (type === 0) {
+        results.push(calculateStatistics(texts, scores, paragraphStyles, boxStyle, browserCluster));
+        results.push(calculateStatistics(originalTexts, scores, paragraphStyles, boxStyle, browserCluster));
+    }
+    else {
+        results.push(calculateStatistics(texts, scores, getParagraphStyles_withStyles(pageElement), boxStyle, browserCluster));
+        results.push(calculateStatistics(originalTexts, scores, paragraphStyles, boxStyle, browserCluster));    
+    }
+
+    results = await Promise.all(results);
+    return {
+        ...results[0],
+        originalStatistics: results[1],
+    };
+}
+
+async function calculateStatistics(texts, scores, paragraphStyles, boxStyle, browserCluster) {
+
     let result = null;
 
     if (browserCluster === null) {
-        result = [];
-        result.push(fastRenderTexts(texts, paragraphStyles, boxStyle));
-        result.push(fastRenderTexts(originalTexts, paragraphStyles, boxStyle));
-        //console.log('stats', result[0], result[1]);
+        result = await fastRenderTexts(texts, paragraphStyles, boxStyle);
     }
     else {
-        let statistics = browserCluster.execute( async ({page}) => {
+        result = await browserCluster.execute( async ({page}) => {
             await page.goto('about:blank');
             await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
             page.on('console', (msg) => console.log('Puppeteer PAGELOG Generated: ', msg.text()));
@@ -507,25 +582,11 @@ async function calculateStatistics(pageElement, browserCluster) {
                 }, texts, paragraphStyles, boxStyle
             );
         });
-        let originalStatistics = browserCluster.execute( async ({page}) => {
-            await page.goto('about:blank');
-            await page.addScriptTag({path: './bundles/renderBundle.js', type: 'text/javascript'});
-            page.on('console', (msg) => console.log('Puppeteer PAGELOG Original: ', msg));
-        
-            return page.evaluate(
-                (originalTexts, paragraphStyles, boxStyle) => {
-                    return window.renderTexts(originalTexts, paragraphStyles, boxStyle);
-                }, originalTexts, paragraphStyles, boxStyle
-            );
-        });
-        
-        result = await Promise.all([statistics, originalStatistics]);
     }
+
     return {
-        ...result[0],
-        boxStyle: boxStyle,
+        ...result,
         scores: scores,
-        originalStatistics: result[1],
     };
 }
 
@@ -681,18 +742,16 @@ function getAreaDiff(statistics) {
             curParagraph = { ...oriParagraph };
             oriParagraph = {numCharsPerLine: []};
         }
-        let lineHeight = curParagraph.lineHeight;
-        let charWidth = curParagraph.charWidth;
         let n = Math.max(curParagraph.numCharsPerLine.length, oriParagraph.numCharsPerLine.length);
         let curAreaDiff = 0;
         for (let i = 0; i < n; i++) {
             let cur = 0;
             let original = 0;
             if (i < curParagraph.numCharsPerLine.length) {
-                cur = curParagraph.numCharsPerLine[i] * lineHeight * charWidth;
+                cur = curParagraph.numCharsPerLine[i] * curParagraph.lineHeight * curParagraph.charWidth;
             }
             if (i < oriParagraph.numCharsPerLine.length) {
-                original = oriParagraph.numCharsPerLine[i] * lineHeight * charWidth;
+                original = oriParagraph.numCharsPerLine[i] * oriParagraph.lineHeight * oriParagraph.charWidth;
             }
 
             if (addToOriginalArea === 1) {
@@ -713,4 +772,5 @@ function getAreaDiff(statistics) {
 }
 module.exports = {
     scoreElements,
+    scoreElements_withStyles,
 };

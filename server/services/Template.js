@@ -8,6 +8,7 @@ const HEADER_PLACEHOLDER = [
 
 const SUBHEADER_PLACEHOLDER = [
     'SUBTITLE',
+    'SUBHEADER', //custom
 ];
 
 const BODY_PLACEHOLDER = [
@@ -515,10 +516,7 @@ function calculateAdditional(pageElement, src) {
                 additional.canbeMapped.push(MAX_WORD_LENGTH);
                 exceptionHappened = true;
             }
-            if (!SUBHEADER_PLACEHOLDER.includes(src.shape.placeholder.type)
-                && !HEADER_PLACEHOLDER.includes(src.shape.placeholder.type)
-                && !BODY_PLACEHOLDER.includes(src.shape.placeholder.type)
-            ) {
+            if (SLIDE_NUMBER_PLACEHOLDER.includes(src.shape.placeholder.type)) {
                 additional.text.push('#');
                 exceptionHappened = true;
             }
@@ -906,6 +904,25 @@ function getBulletPreset(glyph) {
     return "BULLET_DISC_CIRCLE_SQUARE";
 }
 
+function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
+    let result = {
+        fontSize: 14,
+        fontFamily: 'Arial',
+        recommendedLength: recommendedLength,
+    }    
+    if (textStyle.hasOwnProperty('fontSize')) {
+        if (correctDimension(textStyle.fontSize)) {
+            result.fontSize = consumeDimension(textStyle.fontSize) / PX;
+        }
+    }
+    if (textStyle.hasOwnProperty('weightedFontFamily')) {
+        if (textStyle.weightedFontFamily.hasOwnProperty('fontFamily')) {
+            result.fontFamily = textStyle.weightedFontFamily.fontFamily;
+        }
+    }
+    return result;
+}
+
 class Template {
     constructor(originalId, pageNum, page, pageSize, weight, isTitlePage, isCustom) {
         this.informationBoxId = random();
@@ -1006,13 +1023,11 @@ class Template {
                     continue;
                 }
                 let paragraphStyle = {};
-                let bullet = {};
-
+                
                 let listId = null;
                 let nestingLevel = 0;
                 let glyph = '';
                 if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
-                    bullet = { ...textElement.paragraphMarker.bullet };
                     if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
                         listId = textElement.paragraphMarker.bullet.listId;
                     }
@@ -1044,10 +1059,14 @@ class Template {
                     }
                 }
                 textStyle = getDominantTextStyle(textStyle, textElements, textElementIdx, l, r);
+                let paragraphLength = r - l;
+                if (this.isTitlePage) {
+                    paragraphLength = Infinity;
+                }
+                let styles = getScopedStyles(paragraphStyle, textStyle, paragraphLength);
                 result.styles.push({
                     type: pageElement.type,
-                    paragraphStyle: paragraphStyle,
-                    textStyle: textStyle,
+                    styles,
                 });
                 break;
             }

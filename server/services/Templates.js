@@ -145,7 +145,10 @@ class Templates {
     getLayouts() {
         let result = [];
         for (let template of this.getTemplates()) {
-            result.push(template.getLayoutJSON());
+            result.push({
+                ...(template.getLayoutJSON()),
+                requests: initializeTemplate(template, null, -1),
+            });
         }
         return result;
     }

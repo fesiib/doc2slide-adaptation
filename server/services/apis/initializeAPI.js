@@ -1,5 +1,5 @@
 const { objRecTraverse } = require('./requiredFields');
-const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset } = require('../Template');
+const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset, PX } = require('../Template');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
@@ -71,6 +71,163 @@ function getFirstText(shapeText) {
         }
     }
     return firstText;
+}
+
+function initializePageElementShape_withStyles(pageElement) {
+    let requests = [];
+    if (SLIDE_NUMBER_PLACEHOLDER.includes(pageElement.type)) {
+        return requests;
+    }
+    if (!Array.isArray(pageElement.mappedContents)) {
+        return requests;
+    }
+    if (pageElement.mappedContents.length === 0) {
+        requests.unshift({
+            deleteText: {
+                objectId: pageElement.objectId,
+                textRange: {
+                    type: 'ALL',
+                }
+            }
+        });
+        requests.unshift({
+            insertText: {
+                objectId: pageElement.objectId,
+                text: 'TEXT_BOX',
+                insertionIndex: 0,
+            }
+        });
+        return requests;
+    }
+    let text = '';
+    for (let contentIdx = 0; contentIdx < pageElement.mappedContents.length; contentIdx++) {
+        let mappedContent = pageElement.mappedContents[contentIdx];
+        if (contentIdx > 0) {
+            text += '\n';
+        }
+        let start = text.length;
+        text += mappedContent.text;
+        let end = text.length;
+        if (start >= end) {
+            continue;
+        }
+
+        let styles = mappedContent.styles;
+
+        let paragraphStyle = {
+            direction: 'LEFT_TO_RIGHT',
+        };
+        
+        let bulletStyle = {};
+
+        let textStyle = {
+            weightedFontFamily: {
+                fontFamily: styles.fontFamily,
+                fontWeight: 400,
+            },
+            foregroundColor: {
+                opaqueColor: {
+                    themeColor: 'DARK',
+                }
+            },
+            fontSize: {
+                magnitude: styles.fontSize * PX,
+                unit: 'EMU',
+            }
+        };
+
+        if (bulletStyle.hasOwnProperty('glyph')
+            && bulletStyle.glyph !== ''
+        ) {
+            requests.push({
+                createParagraphBullets: {
+                    objectId: pageElement.objectId,
+                    textRange: {
+                        startIndex: start,
+                        endIndex: end,
+                        type: "FIXED_RANGE",
+                    },
+                    bulletPreset: getBulletPreset(bulletStyle.glyph),
+                },
+            });
+        }
+
+        let result = objRecTraverse(paragraphStyle, '')
+        requests.push({
+            updateParagraphStyle: {
+                objectId: pageElement.objectId,
+                style: result.dst,
+                textRange: {
+                    startIndex: start,
+                    endIndex: end,
+                    type: 'FIXED_RANGE',
+                },
+                fields: result.fields.join(),
+            }
+        });
+
+        result = objRecTraverse(textStyle, '')
+        if (result.fields.length > 0) {
+            requests.push({
+                updateTextStyle: {
+                    objectId: pageElement.objectId,
+                    style: result.dst,
+                    textRange: {
+                        startIndex: start,
+                        endIndex: end,
+                        type: 'FIXED_RANGE',
+                    },
+                    fields: result.fields.join(),
+                }
+            });
+        }
+    }
+    requests.unshift({
+        insertText: {
+            objectId: pageElement.objectId,
+            text,
+        }
+    });
+    requests.unshift({
+        deleteText: {
+            objectId: pageElement.objectId,
+            textRange: {
+                type: 'ALL',
+            }
+        }
+    });
+    requests.unshift({
+        insertText: {
+            objectId: pageElement.objectId,
+            text: 'TEXT_BOX',
+            insertionIndex: 0,
+        }
+    });
+    return requests;
+}
+
+function initializePageElementImage_withStyles(pageElement) {
+    let requests = [];
+
+    if (!Array.isArray(pageElement.mappedContents)) {
+        return requests;
+    }
+    if (pageElement.mappedContents.length === 0) {
+        // maybe makes sense to delete the placeholder
+        return requests;
+    }
+
+    if (pageElement.mappedContents.length > 1) {
+        throw Error("More than 1 text is mapped to image");
+    }
+    requests.push({
+        replaceImage: {
+            imageObjectId: pageElement.objectId,
+            imageReplaceMethod: 'CENTER_INSIDE',
+            url: pageElement.mappedContents[0].url,
+        }
+    });
+    return requests;
 }
 
 function initializePageElementShape(pageElement) {
@@ -304,8 +461,14 @@ function initializeShapeText(pageElement, text) {
         }
         else {
             style = firstText.autoText.style;
+            style = {
+                fontSize: {
+                    magnitude: 10,
+                    unit: 'PT',
+                }
+            };
         }
-        let result = objRecTraverse(style)
+        let result = objRecTraverse(style, '');
         if (result.fields.length > 0) {
             requests.push({
                 updateTextStyle: {
@@ -608,4 +771,6 @@ module.exports = {
     initializeShapeText,
     initializePageElementShape,
     initializePageElementImage,
+    initializePageElementShape_withStyles,
+    initializePageElementImage_withStyles
 }

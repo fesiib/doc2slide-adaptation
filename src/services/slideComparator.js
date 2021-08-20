@@ -12,7 +12,7 @@ export async function compareAllSlides(originalId, generatedId, matching, sort) 
             matchingList.push({
                 generatedObjectId: slide.objectId,
                 pageNum: slide.pageNum,
-                originalObjectId: slide.originalId,
+                originalObjectId: slide.pageId,
                 score: slide.totalScore,
             });
         }

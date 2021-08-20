@@ -51,7 +51,7 @@ function fastRenderTexts(texts, paragraphStyles, boxStyle) {
             numWordsPerLine: numWordsPerLine,
             numCharsPerLine: numCharsPerLine,
             numLines: numWordsPerLine.length,
-            textLength: text.length,    
+            textLength: text.length, 
         });
     }
 
@@ -61,6 +61,7 @@ function fastRenderTexts(texts, paragraphStyles, boxStyle) {
         paragraphs: paragraphs,
         spaceOccupation: spaceOccupation,
         totalLength: totalLength,
+        boxStyle: boxStyle,
     }
 }
     

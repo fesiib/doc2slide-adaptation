@@ -275,6 +275,7 @@ async function renderTexts(texts, paragraphStyles, boxStyle) {
         paragraphs: paragraphs,
         spaceOccupation: spaceOccupation,
         totalLength: totalLength,
+        boxStyle: boxStyle,
     }
 }
 

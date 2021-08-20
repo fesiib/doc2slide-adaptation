@@ -1,4 +1,4 @@
-const { getPageInfos } = require('../fitContent');
+const { getTemplatesData_v2, fitToPresentation_v2, fitToSlide_v2, fitToAlternatives_v2 } = require('../fitContent_v2');
 const { Templates } = require('../Templates');
 
 let templatesLibrary = {};
@@ -11,7 +11,7 @@ async function getDataPresentations(data) {
         for (let presentationId in templatesLibrary) {
             presentations.push({
                 presentationId: presentationId,
-                pageInfo: getPageInfos(templatesLibrary[presentationId]),
+                templatesData: getTemplatesData_v2(templatesLibrary[presentationId]),
             });
         }
         resolve({
@@ -23,8 +23,15 @@ async function getDataPresentations(data) {
 }
 
 async function getDataSinglePresentation(data) {
+    let presentationId = data.presentationId;
+    if (!templatesLibrary.hasOwnProperty(presentationId)) {
+        throw new Error('No such presentation with id: ' + presentationId);
+    }
     return new Promise(resolve => {
-        resolve({});
+        resolve({
+            presentationId: presentationId,
+            templatesData: getTemplatesData_v2(templatesLibrary[presentationId]),
+        });
     });
 }
 
@@ -54,27 +61,24 @@ async function generatePresentationRequests(data, cluster) {
         method: 'greedy',
         contentControl: true,
     };
-
     if (data.hasOwnProperty('settings')) {
         settings = {
             ...settings,
             ...data.settings,
         };
     }
-    
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    //return fitToPresentation(resources, templates, cluster, settings);
-    return {};
+    return fitToPresentation_v2(resources, templates, cluster, settings);
 }
 
 async function generateSlideRequests(data, cluster) {
     let presentationId = data.presentationId;
+    let targetPageId = data.targetPageId;
     let layoutPageId = data.layoutPageId;
     let stylesPageId = data.stylesPageId;
-    let sourcePageId = data.sourcePageId;
     let pageNum = data.pageNum;
     let resources = data.resources;
     let settings = {
@@ -94,16 +98,16 @@ async function generateSlideRequests(data, cluster) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    // return await fitToSlide(
-    //     resources,
-    //     templates,
-    //     targetPageId,
-    //     sourcePageId,
-    //     pageNum,
-    //     cluster,
-    //     settings,
-    // );
-    return {};
+    return await fitToSlide_v2(
+        resources,
+        templates,
+        targetPageId,
+        layoutPageId,
+        stylesPageId,
+        pageNum,
+        cluster,
+        settings,
+    );
 }
 
 async function generateAlternativesRequests(data, cluster) {
@@ -129,8 +133,15 @@ async function generateAlternativesRequests(data, cluster) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
     let templates = templatesLibrary[presentationId];
-    //return await fitToAllSlides(resources, templates, sort, cluster, settings);
-    return {};
+    return fitToAlternatives_v2(
+        resources,
+        templates,
+        sort,
+        layoutPageId,
+        stylesPageId,
+        cluster,
+        settings,
+    );
 }
 
 module.exports = {
