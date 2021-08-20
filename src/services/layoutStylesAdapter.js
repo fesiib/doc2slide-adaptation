@@ -77,7 +77,7 @@ export async function comparePresentation(presentationId, sort, resources) {
     });
 }
 
-export async function justUploadPresentation(presentationId) {
+export async function justUploadPresentation_v2(presentationId) {
     return new Promise((resolve) => {
         getPresentation(presentationId).then((response) => {
             let presentation = response.result;

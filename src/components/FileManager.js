@@ -12,6 +12,7 @@ import { processContentDoc, processContent } from '../services/contentProcessing
 import { uploadToFolder } from '../services/apis/DriveAPI';
 import { parsePresentations } from "../services/apis/DriveAPI";
 import { resetApp } from "../reducers";
+import { justUploadPresentation_v2 } from "../services/layoutStylesAdapter";
 
 const PRESENTATION_LINK_PREFIX = "https://docs.google.com/presentation/d/";
 
@@ -123,7 +124,7 @@ function FileManager(props) {
 		event.target.active = true;
 		let uploadSessions = [];
 		for (let presentation of files) {
-			uploadSessions.push(justUploadPresentation(presentation.id));
+			uploadSessions.push(justUploadPresentation_v2(presentation.id));
 		}
 		Promise.all(uploadSessions)
 		.then((response) => {
