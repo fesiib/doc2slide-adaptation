@@ -123,11 +123,11 @@ function initializePageElementShape_withStyles(pageElement) {
         let textStyle = {
             weightedFontFamily: {
                 fontFamily: styles.fontFamily,
-                fontWeight: 400,
+                weight: 400,
             },
             foregroundColor: {
                 opaqueColor: {
-                    themeColor: 'DARK',
+                    themeColor: 'TEXT1',
                 }
             },
             fontSize: {

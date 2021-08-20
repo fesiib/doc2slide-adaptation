@@ -158,7 +158,9 @@ function consumeOptionalColor(optionalColor) {
                 return 'rgb(' + rgbColor.red + ', ' + rgbColor.green + ', ' + rgbColor.blue + ')';
             }
             else if (optionalColor.opaqueColor.hasOwnProperty('themeColor')) {
-                if (optionalColor.opaqueColor.themeColor.startsWith('DARK'))
+                if (optionalColor.opaqueColor.themeColor.startsWith('DARK')
+                    || optionalColor.opaqueColor.themeColor.startsWith('TEXT')
+                )
                     return 'black';
                 else
                     return 'gray';
@@ -444,11 +446,11 @@ function getParagraphStyles_withStyles(pageElement) {
         let textStyle = {
             weightedFontFamily: {
                 fontFamily: styles.fontFamily,
-                fontWeight: 400,
+                weight: 400,
             },
             foregroundColor: {
                 opaqueColor: {
-                    themeColor: 'DARK',
+                    themeColor: 'DARK1',
                 }
             },
             fontSize: {

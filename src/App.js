@@ -15,6 +15,7 @@ import ComparisonTableContainer from './components/ComparisonTableContainer';
 import { CREATION_SIGNAL, ERROR_SIGNAL, extractedFile, extractedTemplates, updatePageCnt } from './reducers/presentationFiles';
 
 import { extract } from './services/slideAdapter';
+import { uploadPresentation_v2 } from './services/layoutStylesAdapter';
 
 function App() {
 	const dispatch = useDispatch();
@@ -46,7 +47,7 @@ function App() {
 		_selectedExt = '';
 		let forId = selected;
 		_extractedFile(forId, '');
-		extract(forId).then((result) => {
+		uploadPresentation_v2(forId).then((result) => { // can be changed to extract
 			let presentationId = result.presentationId;
 			let templates = result.templates;
 			_extractedTemplates(forId, templates);

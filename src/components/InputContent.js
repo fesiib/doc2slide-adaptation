@@ -13,6 +13,7 @@ import { addThumbnails, clearThumbnails, extractedFile, updatePageCnt } from '..
 import { generateAllSlides, generateSlide, generateBestSlide } from '../services/slideAdapter';
 import { compareAllSlides } from '../services/slideComparator';
 import { processContent } from '../services/contentProcessing';
+import { generateSlide_v2 } from '../services/layoutStylesAdapter';
 
 export const EXTRACTING = 'extracting';
 export const COMPILING = 'compiling';
@@ -71,10 +72,13 @@ function InputContent(props) {
 
     const { selected, selectedExt, extractedPresentations, extPageCnt, } = useSelector(state => state.presentationFiles);
 
-    const [pageIdDropdownOpen, setPageIdDropdownOpen] = useState(false);
-    const [pageIdDropdownValue, setPageIdDropdownValue] = useState('');
-    const [pageIdDropdownToggle, setPageIdDropdownToggle] = useState(NOT_SELECTED);
+    const [layoutPageIdDropdownOpen, setLayoutPageIdDropdownOpen] = useState(false);
+    const [layoutPageIdDropdownValue, setLayoutPageIdDropdownValue] = useState(null);
+    const [layoutPageIdDropdownToggle, setLayoutPageIdDropdownToggle] = useState(NOT_SELECTED);
 
+    const [stylesPageIdDropdownOpen, setStylesPageIdDropdownOpen] = useState(false);
+    const [stylesPageIdDropdownValue, setStylesPageIdDropdownValue] = useState(null);
+    const [stylesPageIdDropdownToggle, setStylesPageIdDropdownToggle] = useState(NOT_SELECTED);
 
     const [indexDropdownOpen, setIndexDropdownOpen] = useState(false);
     const [indexDropdownValue, setIndexDropdownValue] = useState(0);
@@ -82,8 +86,12 @@ function InputContent(props) {
 
     const [sortToggle, setSortToggle] = useState(false);
 
-    const pageIdToggleDropdown = () => {
-        setPageIdDropdownOpen(prevState => !prevState);
+    const layoutPageIdToggleDropdown = () => {
+        setLayoutPageIdDropdownOpen(prevState => !prevState);
+    }
+
+    const stylesPageIdToggleDropdown = () => {
+        setStylesPageIdDropdownOpen(prevState => !prevState);
     }
 
     const indexToggleDropdown = () => {
@@ -150,7 +158,7 @@ function InputContent(props) {
                 let resources = {
                     ...response,
                 };
-                generateSlide(selected, selectedExt, pageIdDropdownValue, indexDropdownValue, resources)
+                generateSlide_v2(selected, selectedExt, layoutPageIdDropdownValue, stylesPageIdDropdownValue, indexDropdownValue, resources) //can be changed to generateSlide
                     .then((response) => {
                         console.log("Generated Single Slide: ", response);
                         loadingDeactivate(COMPILING);
@@ -307,7 +315,7 @@ function InputContent(props) {
         return result
     }
 
-    const renderPageIdDropdownItems = () => {
+    const renderLayoutPageIdDropdownItems = () => {
         if (!extractedPresentations.hasOwnProperty(selected)
             || !extractedPresentations[selected].hasOwnProperty('__templates')
         ) {
@@ -319,6 +327,17 @@ function InputContent(props) {
         let result = [];
         let contained = false;
         if (Array.isArray(templates)) {
+            result.push(
+                <DropdownItem
+                    key={'layout_default'}
+                    onClick={() => {
+                        setLayoutPageIdDropdownValue(null);
+                        setLayoutPageIdDropdownToggle('Unspecified');
+                    }}
+                > 
+                    {'Unspecified'} 
+                </DropdownItem>
+            );
             for (let template of templates) {
                 let itemName = '';
                 if (template.isCustom) {
@@ -327,15 +346,15 @@ function InputContent(props) {
                 else {
                     itemName = 'Layout ' + template.pageNum.toString();
                 }
-                if (template.originalId === pageIdDropdownValue) {
+                if (template.originalId === layoutPageIdDropdownValue) {
                     contained = true;
                 }
                 result.push(
                     <DropdownItem
                         key={template.originalId}
                         onClick={() => {
-                            setPageIdDropdownValue(template.originalId);
-                            setPageIdDropdownToggle(itemName);
+                            setLayoutPageIdDropdownValue(template.originalId);
+                            setLayoutPageIdDropdownToggle(itemName);
                         }}
                     > 
                         {itemName} 
@@ -348,9 +367,68 @@ function InputContent(props) {
                 <DropdownItem disabled> No Page Ids </DropdownItem>
             );
         }
-        if (!contained && pageIdDropdownValue !== '') {
-            setPageIdDropdownValue('');
-            setPageIdDropdownToggle(NOT_SELECTED);
+        if (!contained && layoutPageIdDropdownValue !== null) {
+            setLayoutPageIdDropdownValue(null);
+            setLayoutPageIdDropdownToggle(NOT_SELECTED);
+        }
+        return result
+    }
+
+    const renderStylesPageIdDropdownItems = () => {
+        if (!extractedPresentations.hasOwnProperty(selected)
+            || !extractedPresentations[selected].hasOwnProperty('__templates')
+        ) {
+            return [(
+                <DropdownItem disabled> No Presentation Selected </DropdownItem>
+            )];
+        }
+        let templates = extractedPresentations[selected].__templates;
+        let result = [];
+        let contained = false;
+        if (Array.isArray(templates)) {
+            result.push(
+                <DropdownItem
+                    key={'styles_default'}
+                    onClick={() => {
+                        setStylesPageIdDropdownValue(null);
+                        setStylesPageIdDropdownToggle('Unspecified');
+                    }}
+                > 
+                    {'Unspecified'} 
+                </DropdownItem>
+            );
+            for (let template of templates) {
+                let itemName = '';
+                if (template.isCustom) {
+                    itemName = 'Page ' + template.pageNum.toString();
+                }
+                else {
+                    itemName = 'Layout ' + template.pageNum.toString();
+                }
+                if (template.originalId === stylesPageIdDropdownValue) {
+                    contained = true;
+                }
+                result.push(
+                    <DropdownItem
+                        key={template.originalId}
+                        onClick={() => {
+                            setStylesPageIdDropdownValue(template.originalId);
+                            setStylesPageIdDropdownToggle(itemName);
+                        }}
+                    > 
+                        {itemName} 
+                    </DropdownItem>
+                );
+            }
+        }
+        else {
+            result.push(
+                <DropdownItem disabled> No Page Ids </DropdownItem>
+            );
+        }
+        if (!contained && stylesPageIdDropdownValue !== null) {
+            setStylesPageIdDropdownValue(null);
+            setStylesPageIdDropdownToggle(NOT_SELECTED);
         }
         return result
     }
@@ -376,7 +454,7 @@ function InputContent(props) {
                                 <Button
                                     type='submit' 
                                     color='success'
-                                    disabled={indexDropdownValue === 0 || pageIdDropdownValue === ''}
+                                    disabled={indexDropdownValue === 0}
                                 > Compile Single Slide </Button>
                             </Col>
                             <Col className='col-2' key='column-2'>
@@ -391,24 +469,36 @@ function InputContent(props) {
                                 </Dropdown>
                             </Col>
                             <Col className='col-2' key='column-3'>
-                                <Label for='pageIdDropdown'> Reference Slide </Label>
-                                <Dropdown direction='right' id='pageIdDropdown' isOpen={pageIdDropdownOpen} toggle={pageIdToggleDropdown}>
+                                <Label for='pageIdDropdown'> Layout </Label>
+                                <Dropdown direction='right' id='pageIdDropdown' isOpen={layoutPageIdDropdownOpen} toggle={layoutPageIdToggleDropdown}>
                                     <DropdownToggle caret key='toggle_pageId'>
-                                        {pageIdDropdownToggle}
+                                        {layoutPageIdDropdownToggle}
                                     </DropdownToggle>
                                     <DropdownMenu key='menu'>
-                                        {renderPageIdDropdownItems()}
+                                        {renderLayoutPageIdDropdownItems()}
                                     </DropdownMenu>
                                 </Dropdown>
                             </Col>
 
                             <Col className='col-2' key='column-4'>
+                                <Label for='pageIdDropdown'> Styles </Label>
+                                <Dropdown direction='right' id='pageIdDropdown' isOpen={stylesPageIdDropdownOpen} toggle={stylesPageIdToggleDropdown}>
+                                    <DropdownToggle caret key='toggle_pageId'>
+                                        {stylesPageIdDropdownToggle}
+                                    </DropdownToggle>
+                                    <DropdownMenu key='menu'>
+                                        {renderStylesPageIdDropdownItems()}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+
+                            {/* <Col className='col-2' key='column-4'>
                                 <Button 
                                     onClick={submitBestSlideHandler}
                                     color='success'
                                     disabled={indexDropdownValue === 0}
                                 > Compile Best Slide </Button>
-                            </Col>
+                            </Col> */}
                         </Row>
                     </Container>
                 </Form>

@@ -1,4 +1,5 @@
 import { createPresentation } from './apis/DriveAPI';
+import { clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation } from './apis/layoutStylesAPI';
 import { getPresentation, updatePresentation } from './apis/SlidesAPI';
 
 export async function testPresentation(presentationId, copies, resources) {
@@ -57,7 +58,7 @@ export async function comparePresentation(presentationId, sort, resources) {
                     }
                     clearPresentationRequests(newId).then((response) => {
                         let clearRequests = response.requests;
-                        generateAllSlidesRequests(presentationId, sort, resources)
+                        generateAlternativesRequests(presentationId, sort, null, null, resources)
                         .then((response) => {
                             let requests = clearRequests.concat(response.requests);
                             let matching = response.matching;
@@ -95,7 +96,7 @@ export async function justUploadPresentation(presentationId) {
  * @param {str} presentationId 
  * @returns 
  */
-export async function extract(presentationId) {
+export async function uploadPresentation_v2(presentationId) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let presentation = response.result;
@@ -130,7 +131,7 @@ export async function extract(presentationId) {
     });
 }
 
-export async function generatePresentation(referencePresentationId, presentationId, resources) {
+export async function generatePresentation_v2(referencePresentationId, presentationId, resources) {
     return new Promise((resolve, reject) => {
         clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
@@ -156,12 +157,12 @@ export async function generatePresentation(referencePresentationId, presentation
     });
 }
 
-export async function generateSlide(referencePresentationId, presentationId, sourcePageId, pageNum, resources) {
+export async function generateSlide_v2(referencePresentationId, presentationId, layoutPageId, stylesPageId, pageNum, resources) {
     return new Promise((resolve, reject) => {
         clearSlideRequests(presentationId, pageNum).then((response) => {
             let clearRequests = response.requests;
             let targetPageId = response.targetPageId;
-            generateSlideRequests(referencePresentationId, targetPageId, sourcePageId, pageNum, resources)
+            generateSlideRequests(referencePresentationId, targetPageId, layoutPageId, stylesPageId, pageNum, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;
@@ -183,38 +184,11 @@ export async function generateSlide(referencePresentationId, presentationId, sou
     });
 }
 
-export async function generateBestSlide(referencePresentationId, presentationId, pageNum, resources) {
-    return new Promise((resolve, reject) => {
-        clearSlideRequests(presentationId, pageNum).then((response) => {
-            let clearRequests = response.requests;
-            let targetPageId = response.targetPageId;
-            generateBestSlideRequests(referencePresentationId, targetPageId, pageNum, resources)
-            .then((response) => {
-                let requests = clearRequests.concat(response.requests);
-                let matching = response.matching;
-                let matched = response.matched;
-                console.log('Matched:', matched, matching);
-                updatePresentation(presentationId, requests).then((response) => {
-                    resolve({
-                        response,
-                    });
-                }).catch((reason) => {
-                    reject(reason);
-                });
-            }).catch((reason) => {
-                reject(reason);
-            });
-        }).catch((reason) => {
-            reject(reason);
-        });
-    });
-}
-
-export async function generateAllSlides(referencePresentationId, presentationId, sort, resources) {
+export async function generateAlternatives(referencePresentationId, presentationId, layoutPageId, stylesPageId, sort, resources) {
     return new Promise((resolve, reject) => {
         clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
-            generateAllSlidesRequests(referencePresentationId, sort, resources)
+            generateAlternativesRequests(referencePresentationId, sort, layoutPageId, stylesPageId, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;

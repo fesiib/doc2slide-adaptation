@@ -5,7 +5,7 @@ const ADDR = 'http://localhost:7777';
 
 
 export async function uploadPresentation(presentation) {
-    const SERVICE = '/slides/upload_presentation';
+    const SERVICE = '/layout_styles/upload_presentation';
 
     let data = {
         presentation,
@@ -37,7 +37,7 @@ export async function uploadPresentation(presentation) {
 }
 
 export async function generatePresentationRequests(presentationId, resources) {
-    const SERVICE = '/slides/generate_presentation_requests';
+    const SERVICE = '/layout_styles/generate_presentation_requests';
 
     let data = {
         presentationId,
@@ -74,13 +74,14 @@ export async function generatePresentationRequests(presentationId, resources) {
     });
 }
 
-export async function generateSlideRequests(presentationId, targetPageId, sourcePageId, pageNum, resources) {
-    const SERVICE = '/slides/generate_slide_requests';
+export async function generateSlideRequests(presentationId, targetPageId, layoutPageId, stylesPageId, pageNum, resources) {
+    const SERVICE = '/layout_styles/generate_slide_requests';
 
     let data = {
         presentationId,
-        sourcePageId,
         targetPageId,
+        layoutPageId,
+        stylesPageId,
         pageNum,
         resources,
         settings: {
@@ -114,52 +115,14 @@ export async function generateSlideRequests(presentationId, targetPageId, source
     });
 }
 
-export async function generateBestSlideRequests(presentationId, targetPageId, pageNum, resources) {
-    const SERVICE = '/slides/generate_best_slide_requests';
-
-    let data = {
-        presentationId,
-        targetPageId,
-        pageNum,
-        resources,
-        settings: {
-            fast: false,
-            contentControl: false,
-        },
-    };
-
-    const URL = ADDR + SERVICE;
-    
-    const request = {
-        method: 'POST',
-        mode: 'cors',
-        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-        //credentials: 'same-origin', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json'
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: JSON.stringify(data)
-    };
-
-    return new Promise((resolve, reject) => {
-        fetch(URL, request).then( (response) => response.json())
-            .then((response) => {
-                resolve(response);
-            })
-            .catch((reason) => {
-                reject(reason);
-            });
-    });
-}
-
-
-export async function generateAllSlidesRequests(presentationId, sort, resources) {
-    const SERVICE = '/slides/generate_all_slides_requests';
+export async function generateAlternativesRequests(presentationId, sort, layoutPageId, stylesPageId, resources) {
+    const SERVICE = '/layout_styles/generate_alternatives_requests';
 
     let data = {
         presentationId,
         sort,
+        layoutPageId,
+        stylesPageId,
         resources,
         settings: {
             fast: false,
