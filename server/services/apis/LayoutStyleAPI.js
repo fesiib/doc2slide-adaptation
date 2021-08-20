@@ -23,14 +23,14 @@ async function getDataPresentations(data) {
 }
 
 async function getDataSinglePresentation(data) {
-    let presentationId = data.presentationId;
-    if (!templatesLibrary.hasOwnProperty(presentationId)) {
-        throw new Error('No such presentation with id: ' + presentationId);
-    }
     return new Promise(resolve => {
+        let presentationId = data.presentationId;
+        if (!templatesLibrary.hasOwnProperty(presentationId)) {
+            throw new Error('No such presentation with id: ' + presentationId);
+        }
+        let templatesData = getTemplatesData_v2(templatesLibrary[presentationId]);
         resolve({
-            presentationId: presentationId,
-            templatesData: getTemplatesData_v2(templatesLibrary[presentationId]),
+            ...templatesData,
         });
     });
 }
@@ -45,10 +45,10 @@ async function uploadPresentation(data) {
         }    
         let templates = Templates.extractTemplates(presentation);
         templatesLibrary[presentationId] = templates;
+        let templatesData = getTemplatesData_v2(templatesLibrary[presentationId]);
         resolve({
             extractedTemplates: templates,
-            layouts: templates.getLayouts(),
-            styles: templates.getStyles(),
+            ...templatesData,
         });
     });
 }

@@ -226,7 +226,7 @@ async function fitToSlide_total(
             else {
                 stylesTemplate = templates.getByOriginalId(stylesPageId);
             }
-            fitSessions(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+            fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
         }
     }
 
@@ -256,12 +256,13 @@ async function fitToAlternatives_random(
     
     let pageSize = templates.getPageSizeInPX();
 
+    let poolTemplates = templates.getTemplates();
 
     let requests = [];
     let matching = [];
     let matchedList = [];
 
-    let fitBodySessions = [];
+    let fitSessions = [];
 
     for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? poolTemplates.length : 1); layoutIdx++) {
         let layoutTemplate = null;
@@ -279,11 +280,11 @@ async function fitToAlternatives_random(
             else {
                 stylesTemplate = templates.getByOriginalId(stylesPageId);
             }
-            fitSessions(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+            fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
         }
     }
 
-    let results = await Promise.all(fitBodySessions);
+    let results = await Promise.all(fitSessions);
 
     if (sort) {
         results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
@@ -309,13 +310,10 @@ async function fitToAlternatives_random(
 function getTemplatesData_v2(obj) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
-    let originalTemplates = templates.getCustomTemplates();
-    
-    let pages = [];
-    for (let template of originalTemplates) {
-        pages.push(getTemplateData(template));
-    }
-    return pages;
+    return {
+        layouts: templates.getLayouts(),
+        styles: templates.getStyles(),
+    };
 }
 
 async function fitToPresentation_v2(resources, templates, cluster, settings) {

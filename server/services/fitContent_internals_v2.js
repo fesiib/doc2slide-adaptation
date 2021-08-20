@@ -22,6 +22,10 @@ function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targ
         }   
     }
 
+    if (styles === null) {
+        throw Error("cannot find styles of type: " + pageElement.type);
+    }
+
     for (let targetLength of targetLenghts) {
         targetLength = Math.min(targetLength, styles.recommendedLength)
     }

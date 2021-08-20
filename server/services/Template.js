@@ -906,7 +906,7 @@ function getBulletPreset(glyph) {
 
 function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
     let result = {
-        fontSize: 14,
+        fontSize: 14 * (4/3),
         fontFamily: 'Arial',
         recommendedLength: recommendedLength,
     }    
@@ -924,7 +924,14 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
 }
 
 class Template {
-    constructor(originalId, pageNum, page, pageSize, weight, isTitlePage, isCustom) {
+    constructor(originalId='',
+        pageNum=-1,
+        page={},
+        pageSize={},
+        weight=0,
+        isTitlePage=false,
+        isCustom=false
+    ) {
         this.informationBoxId = random();
         this.pageId = random();
         this.page = page;
@@ -961,7 +968,10 @@ class Template {
         for (let pageElement of template.page.pageElements) {
             refreshIdsPageElement(pageElement);
         }
-        return template;
+
+        let newInstance = new Template();
+        newInstance.copyInstance(template);
+        return newInstance;
     }
 
     sanitize() {
@@ -1014,6 +1024,10 @@ class Template {
                 || !pageElement.shape.hasOwnProperty('text')
                 || !Array.isArray(pageElement.shape.text.textElements)
             ) {
+                result.styles.push({
+                    type: pageElement.type,
+                    styles: getScopedStyles({}, {}, Infinity),
+                });
                 continue;
             }
             let textElements = pageElement.shape.text.textElements;
