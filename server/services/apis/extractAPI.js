@@ -43,10 +43,29 @@ function objRec(dst, src, prefix, dict) {
                             parent.paragraphMarker.style = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2].paragraphMarker.style));
                             
                         }
-                        else {
+                        else if (obj.hasOwnProperty('textRun')) {
                             parent.textRun = {};
                             parent.textRun.style = JSON.parse(JSON.stringify(prev_dst[nestingLevel * 2 + 1].textRun.style));
                         }
+                    }
+                    if (obj.hasOwnProperty('autoText')) {
+                        // Default slide number style
+                        parent.autoText = {};
+                        parent.autoText.style = {
+                            weightedFontFamily: {
+                                fontFamily: 'Arial',
+                                weight: 400,
+                            },
+                            foregroundColor: {
+                                opaqueColor: {
+                                    themeColor: 'DARK1',
+                                }
+                            },
+                            fontSize: {
+                                magnitude: 10,
+                                unit: 'PT',
+                            }
+                        };
                     }
                     let dstElement = objRec(parent, obj, field, dict);
                     dst.push(dstElement);

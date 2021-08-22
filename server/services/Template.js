@@ -893,6 +893,9 @@ function getDominantTextStyle(textStyle, textElements, start, L, R) {
         if (cntStyle[dominantStyle] < cntStyle[style]) {
             dominantStyle = style;
         }
+        else if (cntStyle[dominantStyle] === cntStyle[style] && dominantStyle.length < style.length) {
+            dominantStyle = style;
+        }
     }
     return JSON.parse(dominantStyle);
 }

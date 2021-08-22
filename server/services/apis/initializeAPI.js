@@ -461,12 +461,6 @@ function initializeShapeText(pageElement, text) {
         }
         else {
             style = firstText.autoText.style;
-            style = {
-                fontSize: {
-                    magnitude: 10,
-                    unit: 'PT',
-                }
-            };
         }
         let result = objRecTraverse(style, '');
         if (result.fields.length > 0) {

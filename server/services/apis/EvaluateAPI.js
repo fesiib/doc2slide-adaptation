@@ -1,5 +1,5 @@
 const { fastRenderTexts } = require("./fastRenderAPI");
-const { getRectangle, IMAGE_PLACEHOLDER, getDominantTextStyle, PX } = require("../Template");
+const { getRectangle, IMAGE_PLACEHOLDER, getDominantTextStyle, PX, SLIDE_NUMBER_PLACEHOLDER } = require("../Template");
 
 const EMU = 1 / 12700;
 
@@ -7,7 +7,9 @@ async function scoreElements_withStyles(elements, browserCluster) {
     let statisticsList = [];
 
     for (let pageElement of elements) {
-        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)
+            || SLIDE_NUMBER_PLACEHOLDER.includes(pageElement.type)
+        ) {
             continue;
         }
         else {
@@ -31,7 +33,9 @@ async function scoreElements(elements, browserCluster) {
     let statisticsList = [];
 
     for (let pageElement of elements) {
-        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)
+            || SLIDE_NUMBER_PLACEHOLDER.includes(pageElement.type)
+        ) {
             continue;
         }
         else {
@@ -559,6 +563,8 @@ async function getCombinedStatistics(pageElement, browserCluster, type) {
     }
 
     results = await Promise.all(results);
+    console.log(results[0], results[1]);
+
     return {
         ...results[0],
         originalStatistics: results[1],
@@ -736,13 +742,21 @@ function getAreaDiff(statistics) {
         }
 
         if (oriParagraph === null) {
-            oriParagraph = {numCharsPerLine: []};
+            oriParagraph = {
+                numCharsPerLine: [],
+                lineHeight: 0,
+                charWidth: 0,
+            };
         }
 
         if (curParagraph === null) {
             addToOriginalArea = 0;
             curParagraph = { ...oriParagraph };
-            oriParagraph = {numCharsPerLine: []};
+            oriParagraph = {
+                numCharsPerLine: [],
+                lineHeight: 0,
+                charWidth: 0,
+            };
         }
         let n = Math.max(curParagraph.numCharsPerLine.length, oriParagraph.numCharsPerLine.length);
         let curAreaDiff = 0;
