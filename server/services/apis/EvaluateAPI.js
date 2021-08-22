@@ -554,7 +554,7 @@ async function getCombinedStatistics(pageElement, browserCluster, type) {
     }
 
     results = await Promise.all(results);
-    console.log(results[0], results[1]);
+    //console.log(results[0], results[1]);
 
     return {
         ...results[0],

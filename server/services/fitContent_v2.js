@@ -29,8 +29,8 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
             let template = templates.getByOriginalId(originalTemplate.originalId);
             fitSessions.push(tryFitBody_v2(settings, titleSection, 0, template, template, clusterBrowser));
         }
-        let results = await Promise.all(fitSessions);
-        for (let current of results) {
+        let fitResults = await Promise.all(fitSessions);
+        for (let current of fitResults) {
             if (result === null || result.totalScore < current.totalScore) {
                 result = current;
             }
@@ -125,8 +125,8 @@ async function fitToPresentation_greedy(
             let template = templates.getByOriginalId(originalTemplate.originalId);
             fitSessions.push(tryFitBody_v2(settings, titleSection, 0, template, template, clusterBrowser));
         }
-        let results = await Promise.all(fitSessions);
-        for (let current of results) {
+        let fitResults = await Promise.all(fitSessions);
+        for (let current of fitResults) {
             if (result === null || result.totalScore < current.totalScore) {
                 result = current;
             }
@@ -139,7 +139,6 @@ async function fitToPresentation_greedy(
     for (let section of contents.sections) {
         let done = 0;
         while (done < section.body.length) {
-            let result = null;
             let fitSessions = [];
             for (let layoutOriginalTemplate of originalTemplates) {
                 if (layoutOriginalTemplate.isTitlePage) {
@@ -154,9 +153,10 @@ async function fitToPresentation_greedy(
                     fitSessions.push(tryFitBody_v2(settings, section, done, layoutTemplate, stylesTemplate, clusterBrowser));
                 }
             }
-            let results = await Promise.all(fitSessions);
+            let fitResults = await Promise.all(fitSessions);
 
-            for (let current of results) {
+            let result = null;
+            for (let current of fitResults) {
                 if (current.done <= done) {
                     continue;
                 }

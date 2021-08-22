@@ -516,7 +516,7 @@ function getSingleTemplateResponse_v2(result, targetPageId, pageNum, pageSize) {
     return {
         requests: globalRequests,
         matching: matching,
-        matched: result.done,
+        matched: result.moreInfo.totalNumMapped,
     };
 }
 
