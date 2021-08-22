@@ -299,12 +299,23 @@ async function fitToAlternatives_random(
     if (sort) {
         results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
     }
+
+    let was = {};
     
     let pageNum = 0;
     for (let result of results) {
         if (pageNum === maxCnt) {
             break;
         }
+        let repStr = JSON.stringify({
+            totalScore: result.totalScore, 
+            ...result.score,
+        });
+        if (was[repStr] === true) {
+            continue;
+        }
+        was[repStr] = true;
+
         pageNum++;
         let response = getSingleTemplateResponse_v2(result, null, pageNum, pageSize);
 
