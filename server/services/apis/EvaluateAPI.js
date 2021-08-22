@@ -258,7 +258,7 @@ function getParagraphStyle(paragraphStyle, bulletStyle) {
         textIndent = (magnitude - paddingLeft);
     }
 
-    let lineHeight = 'normal';
+    let lineHeight = 115;
     if (paragraphStyle.hasOwnProperty('lineSpacing')) {
         lineHeight = paragraphStyle.lineSpacing;
     }
