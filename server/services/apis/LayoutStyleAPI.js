@@ -67,10 +67,6 @@ async function generatePresentationRequests(data, cluster) {
             ...data.settings,
         };
     }
-    // avoid infinite loop
-    if (!settings.fast) {
-        settings.fast = true;
-    }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
         throw new Error('No such presentation with id: ' + presentationId);
@@ -97,11 +93,6 @@ async function generateSlideRequests(data, cluster) {
             ...settings,
             ...data.settings,
         };
-    }
-    
-    // avoid infinite loop
-    if (!settings.fast) {
-        settings.fast = true;
     }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
@@ -142,11 +133,6 @@ async function generateAlternativesRequests(data, cluster) {
 
     if (data.hasOwnProperty('maxCnt')) {
         maxCnt = data.maxCnt;
-    }
-
-    // avoid infinite loop
-    if (!settings.fast) {
-        settings.fast = true;
     }
 
     if (!templatesLibrary.hasOwnProperty(presentationId)) {
