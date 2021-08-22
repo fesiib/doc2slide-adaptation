@@ -1,5 +1,7 @@
 const { v4 : uuidv4} = require('uuid');
 
+const RGB = ['red', 'blue', 'green'];
+
 const HEADER_PLACEHOLDER = [
     'CENTERED_TITLE',
     'TITLE',
@@ -192,6 +194,21 @@ function multiplyTransforms(t1, t2) {
     t.translateY = t1.shearY * t2.translateX + t1.scaleY * t2.translateY + t1.translateY;
 
     return t;
+}
+
+function consumeRGBColor(rgbColor) {
+    let ret = {
+        red: 0,
+        green: 0,
+        blue: 0,
+    };
+    if (rgbColor.hasOwnProperty('red'))
+        ret.red = rgbColor.red;
+    if (rgbColor.hasOwnProperty('green'))
+        ret.green = rgbColor.green;
+    if (rgbColor.hasOwnProperty('blue'))
+        ret.blue = rgbColor.blue;
+    return ret;
 }
 
 function getPageElementType(element) {
@@ -847,6 +864,41 @@ function mergeIntersectingElements(page, pageSize) {
     return page;
 }
 
+function removeThemeColors(obj, colors) {
+    if (Array.isArray(obj)) {
+        for (let element of obj) {
+            element = removeThemeColors(element, colors);
+        }
+    }
+    else if (typeof obj === 'object') {
+        for (let field in obj) {
+            if (field === 'themeColor') {
+                for (let color of colors) {
+                    if (color.type === obj[field]) {
+                        let rgbColor = {
+                            red: 0,
+                            green: 0,
+                            blue: 0,
+                        };
+                        for (let rgb of RGB) {
+                            if (color.color.hasOwnProperty(rgb)) {
+                                rgbColor[rgb] = color.color[rgb];
+                            }
+                        }
+                        delete obj[field];
+                        obj['rgbColor'] = rgbColor;
+                        break;
+                    }
+                }
+            }
+            else {
+                obj[field] = removeThemeColors(obj[field], colors);
+            }
+        }
+    }
+    return obj
+}
+
 
 function getDominantTextStyle(textStyle, textElements, start, L, R) {
     if (L > R) {
@@ -911,6 +963,13 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
     let result = {
         fontSize: 14 * (4/3),
         fontFamily: 'Arial',
+        foregroundColor: {
+            rgbColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+            },
+        },
         recommendedLength: recommendedLength,
     }    
     if (textStyle.hasOwnProperty('fontSize')) {
@@ -918,6 +977,14 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
             result.fontSize = consumeDimension(textStyle.fontSize) / PX;
         }
     }
+
+    if (textStyle.hasOwnProperty('foregroundColor')
+        && textStyle.foregroundColor.hasOwnProperty('opaqueColor')
+        && textStyle.foregroundColor.opaqueColor.hasOwnProperty('rgbColor')
+    ) {
+        result.foregroundColor.rgbColor = consumeRGBColor(textStyle.foregroundColor.opaqueColor.rgbColor);
+    }
+
     if (textStyle.hasOwnProperty('weightedFontFamily')) {
         if (textStyle.weightedFontFamily.hasOwnProperty('fontFamily')) {
             result.fontFamily = textStyle.weightedFontFamily.fontFamily;
@@ -982,6 +1049,7 @@ class Template {
         this.page.pageElements = sanitizePageElements(this.page.pageElements, this.pageSize);
         //this.page = deleteSmallElements(this.page, this.pageSize);
         this.page = mergeIntersectingElements(this.page, this.pageSize);
+        this.page = removeThemeColors(this.page, this.page.pageProperties.colorScheme.colors);
     }
 
     label() {
@@ -1029,7 +1097,7 @@ class Template {
             ) {
                 result.styles.push({
                     type: pageElement.type,
-                    styles: getScopedStyles({}, {}, Infinity),
+                    styles: getScopedStyles({}, {}, -1),
                 });
                 continue;
             }
@@ -1077,8 +1145,8 @@ class Template {
                 }
                 textStyle = getDominantTextStyle(textStyle, textElements, textElementIdx, l, r);
                 let paragraphLength = r - l;
-                if (this.isTitlePage) {
-                    paragraphLength = Infinity;
+                if (!this.isCustom) {
+                    paragraphLength = -1;
                 }
                 let styles = getScopedStyles(paragraphStyle, textStyle, paragraphLength);
                 result.styles.push({
@@ -1096,6 +1164,7 @@ module.exports = {
     Template,
     getRectangle,
     consumeSize,
+    consumeRGBColor,
     calculateAdditional,
     getDominantTextStyle,
     getBulletPreset,
@@ -1106,5 +1175,6 @@ module.exports = {
     SLIDE_NUMBER_PLACEHOLDER,
     MAX_WORD_LENGTH,
     PX,
+    RGB,
     SUBHEADER_PLACEHOLDER,
 };

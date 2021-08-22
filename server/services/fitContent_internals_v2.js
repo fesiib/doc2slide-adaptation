@@ -27,7 +27,8 @@ function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targ
     }
 
     for (let targetLength of targetLenghts) {
-        targetLength = Math.min(targetLength, styles.recommendedLength)
+        if (styles.recommendedLength >= 0)
+            targetLength = Math.min(targetLength, styles.recommendedLength)
     }
     return targetLenghts;
 }

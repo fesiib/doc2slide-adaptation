@@ -1,7 +1,6 @@
 const { REQ_FIELDS } = require('./requiredFields');
-const { calculateAdditional } = require('../Template');
+const { calculateAdditional, RGB } = require('../Template');
 
-const RGB = ['red', 'blue', 'green'];
 const TRANSFORM_VALS = ['scaleX', 'scaleY', 'shearX', 'shearY', 'translateX', 'translateY'];
 
 function isEmpty(obj) {
@@ -58,7 +57,7 @@ function objRec(dst, src, prefix, dict) {
                             },
                             foregroundColor: {
                                 opaqueColor: {
-                                    themeColor: 'DARK1',
+                                    themeColor: 'DARK2',
                                 }
                             },
                             fontSize: {

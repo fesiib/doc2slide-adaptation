@@ -1,5 +1,11 @@
 const { fastRenderTexts } = require("./fastRenderAPI");
-const { getRectangle, IMAGE_PLACEHOLDER, getDominantTextStyle, PX, SLIDE_NUMBER_PLACEHOLDER } = require("../Template");
+const { getRectangle,
+    IMAGE_PLACEHOLDER,
+    getDominantTextStyle,
+    PX,
+    SLIDE_NUMBER_PLACEHOLDER,
+    consumeRGBColor,
+} = require("../Template");
 
 const EMU = 1 / 12700;
 
@@ -130,21 +136,6 @@ function calculateTextSimilarity(statisticsList) {
     }
 
     return Math.round(totalScore * 10000) / 100;
-}
-
-function consumeRGBColor(rgbColor) {
-    let ret = {
-        red: 0,
-        green: 0,
-        blue: 0,
-    };
-    if (rgbColor.hasOwnProperty('red'))
-        ret.red = rgbColor.red;
-    if (rgbColor.hasOwnProperty('green'))
-        ret.green = rgbColor.green;
-    if (rgbColor.hasOwnProperty('blue'))
-        ret.blue = rgbColor.blue;
-    return ret;
 }
 
 function consumeWeightedFontFamily(weightedFontFamily) {
