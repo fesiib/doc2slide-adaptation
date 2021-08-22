@@ -11,6 +11,7 @@ import { generatePresentation } from '../services/slideAdapter';
 import { processContentDoc } from '../services/contentProcessing';
 
 import { COMPILING, loadingActivate, loadingDeactivate } from './InputContent';
+import { generatePresentation_v2 } from '../services/layoutStylesAdapter';
 
 function InputContentDoc(props) {
     const dispatch = useDispatch();
@@ -67,7 +68,7 @@ function InputContentDoc(props) {
                 let resources = {
                     ...response,
                 };
-                generatePresentation(selected, selectedExt, resources)
+                generatePresentation_v2(selected, selectedExt, resources)
                     .then((response) => {
                         console.log("Generated Slide Deck: ", response);
                         _updatePageCnt(response.pageCnt);
