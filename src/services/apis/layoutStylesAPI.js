@@ -45,7 +45,7 @@ export async function generatePresentationRequests(presentationId, resources) {
         settings: {
             fast: true,
             contentControl: true,
-            method: 'greedy',
+            method: 'random',
         },
     };
 

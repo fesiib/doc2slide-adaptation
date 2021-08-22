@@ -12,7 +12,7 @@ import { processContentDoc, processContent } from '../services/contentProcessing
 import { uploadToFolder } from '../services/apis/DriveAPI';
 import { parsePresentations } from "../services/apis/DriveAPI";
 import { resetApp } from "../reducers";
-import { justUploadPresentation_v2 } from "../services/layoutStylesAdapter";
+import { comparePresentation_v2, justUploadPresentation_v2, testPresentation_v2 } from "../services/layoutStylesAdapter";
 
 const PRESENTATION_LINK_PREFIX = "https://docs.google.com/presentation/d/";
 
@@ -81,7 +81,7 @@ function FileManager(props) {
 			let testSessions = [];
 			for (let presentation of files) {
 				let copies = 1;
-				testSessions.push(testPresentation(presentation.id, copies, resources));
+				testSessions.push(testPresentation_v2(presentation.id, copies, resources));
 			}
 			Promise.all(testSessions)
 			.then((response) => {
@@ -105,7 +105,7 @@ function FileManager(props) {
 			};
 			let testSessions = [];
 			for (let presentation of files) {
-				testSessions.push(comparePresentation(presentation.id, true, resources));
+				testSessions.push(comparePresentation_v2(presentation.id, true, resources));
 			}
 			Promise.all(testSessions)
 			.then((response) => {

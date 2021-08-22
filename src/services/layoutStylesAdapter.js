@@ -2,7 +2,7 @@ import { createPresentation } from './apis/DriveAPI';
 import { clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation } from './apis/layoutStylesAPI';
 import { getPresentation, updatePresentation } from './apis/SlidesAPI';
 
-export async function testPresentation(presentationId, copies, resources) {
+export async function testPresentation_v2(presentationId, copies, resources) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let presentation = response.result;
@@ -44,7 +44,7 @@ export async function testPresentation(presentationId, copies, resources) {
     })
 }
 
-export async function comparePresentation(presentationId, sort, resources) {
+export async function comparePresentation_v2(presentationId, sort, resources) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let presentation = response.result;
