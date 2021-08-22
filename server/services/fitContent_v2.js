@@ -206,22 +206,24 @@ async function fitToSlide_total(
 
     let pageSize = templates.getPageSizeInPX();
 
-    let poolTemplates = templates.getTemplates();
+    let layoutTemplates = templates.getUniqueLayoutTemplates();
+
+    let stylesTemplates = templates.getUniqueStylesTemplates();
 
     let fitSessions = [];
 
-    for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? poolTemplates.length : 1); layoutIdx++) {
+    for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? layoutTemplates.length : 1); layoutIdx++) {
         let layoutTemplate = null;
         if (layoutPageId === null) {
-            layoutTemplate = poolTemplates[layoutIdx].getFreshJSON();
+            layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
         }
         else {
             layoutTemplate = templates.getByOriginalId(layoutPageId);
         }
-        for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? poolTemplates.length : 1); stylesIdx++) {
+        for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? stylesTemplates.length : 1); stylesIdx++) {
             let stylesTemplate = null;
             if (stylesPageId === null) {
-                stylesTemplate = poolTemplates[stylesIdx].getFreshJSON();
+                stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
                 if (!stylesTemplate.isCustom) {
                     continue;
                 }
@@ -260,7 +262,9 @@ async function fitToAlternatives_random(
     
     let pageSize = templates.getPageSizeInPX();
 
-    let poolTemplates = templates.getTemplates();
+    let layoutTemplates = templates.getUniqueLayoutTemplates();
+
+    let stylesTemplates = templates.getUniqueStylesTemplates();
 
     let requests = [];
     let matching = [];
@@ -268,11 +272,11 @@ async function fitToAlternatives_random(
 
     let fitSessions = [];
 
-    for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? poolTemplates.length : 1); layoutIdx++) {
-        for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? poolTemplates.length : 1); stylesIdx++) {
+    for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? layoutTemplates.length : 1); layoutIdx++) {
+        for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? stylesTemplates.length : 1); stylesIdx++) {
             let layoutTemplate = null;
             if (layoutPageId === null) {
-                layoutTemplate = poolTemplates[layoutIdx].getFreshJSON();
+                layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
             }
             else {
                 layoutTemplate = templates.getByOriginalId(layoutPageId);
@@ -280,14 +284,12 @@ async function fitToAlternatives_random(
             
             let stylesTemplate = null;
             if (stylesPageId === null) {
-                stylesTemplate = poolTemplates[stylesIdx].getFreshJSON();
-                if (!stylesTemplate.isCustom) {
-                    continue;
-                }
+                stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
             }
             else {
                 stylesTemplate = templates.getByOriginalId(stylesPageId);
             }
+
             fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
         }
     }

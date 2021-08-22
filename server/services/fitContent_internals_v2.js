@@ -10,14 +10,14 @@ function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targ
     let styles = null;
     for (let curStyles of targetStyles.styles) {
         if (curStyles.type === pageElement.type) {
-            styles = curStyles.styles;
+            styles = curStyles;
         }
     }
 
     if (styles === null) {
         for (let curStyles of originalStyles.styles) {
             if (curStyles.type === pageElement.type) {
-                styles = curStyles.styles;
+                styles = curStyles;
             }
         }   
     }
@@ -101,14 +101,14 @@ function fitToImage(settings, pageElement, originalStyles, targetStyles) {
 
     for (let curStyles of targetStyles.styles) {
         if (curStyles.type === pageElement.type) {
-            styles = curStyles.styles;
+            styles = curStyles;
         }
     }
 
     if (styles === null) {
         for (let curStyles of originalStyles.styles) {
             if (curStyles.type === pageElement.type) {
-                styles = curStyles.styles;
+                styles = curStyles;
             }
         }   
     }
@@ -137,7 +137,6 @@ function fitToImage(settings, pageElement, originalStyles, targetStyles) {
                 ...result,
                 contentId: content.paragraph.id,
                 styles: styles,
-                type: pageElement.type,
             });
             break;
         }
@@ -153,14 +152,14 @@ function fitToShape(settings, pageElement, originalStyles, targetStyles, targetL
 
     for (let curStyles of targetStyles.styles) {
         if (curStyles.type === pageElement.type) {
-            styles = curStyles.styles;
+            styles = curStyles;
         }
     }
 
     if (styles === null) {
         for (let curStyles of originalStyles.styles) {
             if (curStyles.type === pageElement.type) {
-                styles = curStyles.styles;
+                styles = curStyles;
             }
         }   
     }
@@ -182,7 +181,6 @@ function fitToShape(settings, pageElement, originalStyles, targetStyles, targetL
                 ...result,
                 contentId: content.paragraph.id,
                 styles: styles,
-                type: pageElement.type,
             });    
         }
         else if (content.hasOwnProperty('bullet')) {
@@ -385,7 +383,6 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                 score: currentContent.score,
                 url: currentContent.url,
                 styles: currentContent.styles,
-                type: currentContent.type,
             };
             pageElement.mappedContents.push(mappedContent);
         }

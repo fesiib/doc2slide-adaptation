@@ -993,6 +993,28 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
     return result;
 }
 
+function areSimilarObjs(obj1, obj2, eps) {
+    if (typeof obj1 !== typeof obj2) {
+        return false;
+    }
+    if (typeof obj1 === 'number') {
+        if (Math.abs(obj1 - obj2) > eps) {
+            return false;
+        }
+    }
+    else if (typeof obj1 === 'object') {
+        for (let field in obj1) {
+            if (!areSimilarObjs(obj1[field], obj2[field], eps)) {
+                return false;
+            }
+        }
+    }
+    else {
+        return obj1 === obj2;
+    }
+    return true;
+}
+
 class Template {
     constructor(originalId='',
         pageNum=-1,
@@ -1064,6 +1086,58 @@ class Template {
         for (let pageElement of this.page.pageElements) {
             calculateRectangle(pageElement);
         }
+        const area = (rectangle) => {
+            let width = rectangle.finishX - rectangle.startX;
+            let height = rectangle.finishY - rectangle.startY;
+            let area = width * height;
+            return area;
+        }
+        
+        this.page.pageElements.sort((p1, p2) => {
+            return area(p2.rectangle) - area(p1.rectangle);
+        });
+    }
+
+    hasSimilarLayout(template) {
+        const EPS = 0.5;
+        let curLayout = this.getLayoutJSON();
+        let layout = template.getLayoutJSON();
+        if (curLayout.boxes.length !== layout.boxes.length) {
+            return false;
+        }
+
+        for (let curBox of curLayout.boxes) {
+            let foundSimilar = false;
+            for (let box of layout.boxes) {
+                if (areSimilarObjs(curBox, box, EPS)) {
+                    foundSimilar = true;
+                    break;
+                }
+            }
+            if (!foundSimilar) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    hasSimilarStyles(template) {
+        const EPS = 0.5;
+        let curAllStyles = this.getStylesJSON();
+        let allStyles = template.getStylesJSON();
+        for (let curStyles of curAllStyles.styles) {
+            let foundSimilar = false;
+            for (let styles of allStyles.styles) {
+                if (areSimilarObjs(curStyles, styles, EPS)) {
+                    foundSimilar = true;
+                    break;
+                }
+            }
+            if (!foundSimilar) {
+                return false;
+            }
+        }
+        return true;
     }
 
     getLayoutJSON() {
@@ -1089,7 +1163,12 @@ class Template {
             pageId: this.originalId,
             styles: [],
         };
+        let alreadyCovered = {};
+
         for (let pageElement of this.page.pageElements) {
+            if (alreadyCovered[pageElement.type]) {
+                continue;
+            }
             if (IMAGE_PLACEHOLDER.includes(pageElement.type)
                 || !pageElement.hasOwnProperty('shape')
                 || !pageElement.shape.hasOwnProperty('text')
@@ -1097,8 +1176,9 @@ class Template {
             ) {
                 result.styles.push({
                     type: pageElement.type,
-                    styles: getScopedStyles({}, {}, -1),
+                    ...(getScopedStyles({}, {}, -1)),
                 });
+                alreadyCovered[pageElement.type] = true;
                 continue;
             }
             let textElements = pageElement.shape.text.textElements;
@@ -1148,11 +1228,11 @@ class Template {
                 if (!this.isCustom) {
                     paragraphLength = -1;
                 }
-                let styles = getScopedStyles(paragraphStyle, textStyle, paragraphLength);
                 result.styles.push({
                     type: pageElement.type,
-                    styles,
+                    ...(getScopedStyles(paragraphStyle, textStyle, paragraphLength)),    
                 });
+                alreadyCovered[pageElement.type] = true;
                 break;
             }
         }

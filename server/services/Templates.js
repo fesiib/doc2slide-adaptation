@@ -31,6 +31,9 @@ class Templates {
         this.title = title;
         this.__templates = [];
         this.__customTemplateIds = [];
+
+        this.__uniqueLayoutTemplateIds = [];
+        this.__uniqueStylesTemplateIds = [];
     }  
 
     getPageSizeInPX() {
@@ -52,6 +55,22 @@ class Templates {
             customTemplates.push(templates[id]);
         }
         return customTemplates;
+    }
+
+    getUniqueLayoutTemplates() {
+        let retTemplates = [];
+        for (let idx of this.__uniqueLayoutTemplateIds) {
+            retTemplates.push(this.__templates[idx]);
+        }
+        return retTemplates;
+    }
+
+    getUniqueStylesTemplates() {
+        let retTemplates = [];
+        for (let idx of this.__uniqueStylesTemplateIds) {
+            retTemplates.push(this.__templates[idx]);
+        }
+        return retTemplates;
     }
 
     copyInstance(templates) {
@@ -89,6 +108,12 @@ class Templates {
         template.initialize();
 
         if (template.getComplexity() <= 0.5) {
+            if (this.__isUniqueLayout(template)) {
+                this.__uniqueLayoutTemplateIds.push(this.__templates.length);
+            }
+            if (this.__isUniqueStyles(template)) {
+                this.__uniqueStylesTemplateIds.push(this.__templates.length);
+            }
             this.__customTemplateIds.push(this.__templates.length);
             this.__templates.push(template);
         }
@@ -99,8 +124,34 @@ class Templates {
         template.initialize();
 
         if (template.getComplexity() <= 0.5) {
+            if (this.__isUniqueLayout(template)) {
+                this.__uniqueLayoutTemplateIds.push(this.__templates.length);
+            }
+            if (this.__isUniqueStyles(template)) {
+                this.__uniqueStylesTemplateIds.push(this.__templates.length);
+            }
             this.__templates.push(template);
         }
+    }
+
+    __isUniqueLayout(template) {
+        for (let idx of this.__uniqueLayoutTemplateIds) {
+            let layoutTemplate = this.__templates[idx];
+            if (template.hasSimilarLayout(layoutTemplate)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    __isUniqueStyles(template) {
+        for (let idx of this.__uniqueStylesTemplateIds) {
+            let stylesTemplate = this.__templates[idx];
+            if (template.hasSimilarStyles(stylesTemplate)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     static extractTemplates(source) {
