@@ -146,7 +146,7 @@ async function fitToPresentation_greedy(
                 }
                 let layoutTemplate = templates.getByOriginalId(layoutOriginalTemplate.originalId);
                 for (let stylesOriginalTemplate of originalTemplates) {
-                    if (stylesOriginalTemplate.isTitlePage) {
+                    if (stylesOriginalTemplate.isTitlePage || !stylesOriginalTemplate.isCustom) {
                         continue;
                     }
                     let stylesTemplate = templates.getByOriginalId(stylesOriginalTemplate.originalId);
@@ -222,6 +222,9 @@ async function fitToSlide_total(
             let stylesTemplate = null;
             if (stylesPageId === null) {
                 stylesTemplate = poolTemplates[stylesIdx].getFreshJSON();
+                if (!stylesTemplate.isCustom) {
+                    continue;
+                }
             }
             else {
                 stylesTemplate = templates.getByOriginalId(stylesPageId);
@@ -278,6 +281,9 @@ async function fitToAlternatives_random(
             let stylesTemplate = null;
             if (stylesPageId === null) {
                 stylesTemplate = poolTemplates[stylesIdx].getFreshJSON();
+                if (!stylesTemplate.isCustom) {
+                    continue;
+                }
             }
             else {
                 stylesTemplate = templates.getByOriginalId(stylesPageId);
