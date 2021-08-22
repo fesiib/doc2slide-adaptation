@@ -133,7 +133,7 @@ const initialState = {
     sections: CONTENT_DOC_SIMPLE.sections.slice(),
     titleResult: [],
     sectionsResult: [],
-    shouldUpdate: true,
+    shouldUpdateDoc: true,
 };
 
 const contentDoc = (state = initialState, action) => {
@@ -143,14 +143,14 @@ const contentDoc = (state = initialState, action) => {
                 ...state,
                 titleResult: action.payload.titleResult,
                 sectionsResult: action.payload.sectionsResult,
-                shouldUpdate: false,
+                shouldUpdateDoc: false,
             };
         }
         case CHANGE_TITLE: {
             return {
                 ...state,
                 title: action.payload.text,
-                shouldUpdate: true,
+                shouldUpdateDoc: true,
             }
         }
         case CHANGE_SECTIONS: {
@@ -162,7 +162,7 @@ const contentDoc = (state = initialState, action) => {
             return {
                 ...state,
                 sections,
-                shouldUpdate: true,
+                shouldUpdateDoc: true,
             }
         }
         default:
