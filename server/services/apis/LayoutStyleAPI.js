@@ -123,6 +123,7 @@ async function generateSlideRequests(data, cluster) {
 async function generateAlternativesRequests(data, cluster) {
     let presentationId = data.presentationId;
     let sort = data.sort;
+    let maxCnt = -1;
     let layoutPageId = data.layoutPageId;
     let stylesPageId = data.stylesPageId;
     let resources = data.resources;
@@ -139,6 +140,10 @@ async function generateAlternativesRequests(data, cluster) {
         };
     }
 
+    if (data.hasOwnProperty('maxCnt')) {
+        maxCnt = data.maxCnt;
+    }
+
     // avoid infinite loop
     if (!settings.fast) {
         settings.fast = true;
@@ -152,6 +157,7 @@ async function generateAlternativesRequests(data, cluster) {
         resources,
         templates,
         sort,
+        maxCnt,
         layoutPageId,
         stylesPageId,
         cluster,

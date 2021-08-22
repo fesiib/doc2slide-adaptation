@@ -58,7 +58,7 @@ export async function comparePresentation(presentationId, sort, resources) {
                     }
                     clearPresentationRequests(newId).then((response) => {
                         let clearRequests = response.requests;
-                        generateAlternativesRequests(presentationId, sort, null, null, resources)
+                        generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
                         .then((response) => {
                             let requests = clearRequests.concat(response.requests);
                             let matching = response.matching;
@@ -188,7 +188,7 @@ export async function generateAlternatives(referencePresentationId, presentation
     return new Promise((resolve, reject) => {
         clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
-            generateAlternativesRequests(referencePresentationId, sort, layoutPageId, stylesPageId, resources)
+            generateAlternativesRequests(referencePresentationId, sort, 40, layoutPageId, stylesPageId, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
                 let matching = response.matching;

@@ -247,6 +247,7 @@ async function fitToAlternatives_random(
     content,
     obj,
     sort,
+    maxCnt,
     layoutPageId,
     stylesPageId,
     clusterBrowser
@@ -293,6 +294,9 @@ async function fitToAlternatives_random(
     
     let pageNum = 0;
     for (let result of results) {
+        if (pageNum === maxCnt) {
+            break;
+        }
         pageNum++;
         let response = getSingleTemplateResponse_v2(result, null, pageNum, pageSize);
 
@@ -363,6 +367,7 @@ async function fitToAlternatives_v2(
     resources,
     templates,
     sort,
+    maxCnt,
     layoutPageId,
     stylesPageId,
     cluster,
@@ -381,6 +386,7 @@ async function fitToAlternatives_v2(
         resources,
         templates,
         sort,
+        maxCnt,
         layoutPageId,
         stylesPageId,
         argCluster,

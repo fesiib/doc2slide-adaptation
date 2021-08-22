@@ -115,12 +115,13 @@ export async function generateSlideRequests(presentationId, targetPageId, layout
     });
 }
 
-export async function generateAlternativesRequests(presentationId, sort, layoutPageId, stylesPageId, resources) {
+export async function generateAlternativesRequests(presentationId, sort, maxCnt, layoutPageId, stylesPageId, resources) {
     const SERVICE = '/layout_styles/generate_alternatives_requests';
 
     let data = {
         presentationId,
         sort,
+        maxCnt,
         layoutPageId,
         stylesPageId,
         resources,
