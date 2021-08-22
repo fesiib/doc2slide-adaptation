@@ -127,7 +127,7 @@ function initializePageElementShape_withStyles(pageElement) {
             },
             foregroundColor: {
                 opaqueColor: {
-                    themeColor: 'TEXT1',
+                    rgbColor: styles.foregroundColor.rgbColor,
                 }
             },
             fontSize: {

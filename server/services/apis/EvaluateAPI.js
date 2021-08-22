@@ -445,7 +445,7 @@ function getParagraphStyles_withStyles(pageElement) {
             },
             foregroundColor: {
                 opaqueColor: {
-                    themeColor: 'DARK1',
+                    rgbColor: styles.foregroundColor.rgbColor,
                 }
             },
             fontSize: {
