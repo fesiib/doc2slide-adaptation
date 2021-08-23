@@ -65,11 +65,15 @@ function extractImageElements(page) {
 }
 
 function fitToParagraphMarker(settings, entity, paragraphLength) {
-    let shortenings = entity.shortenings;
-    let phrases = entity.phrases;
     let maxImportantWords = {
-        ...entity.singleWord,
+        text: '',
+        score: {
+            grammatical: 1,
+            importantWords: 0,
+            semantic: 1,
+        },
     };
+    let shortenings = entity.shortenings;
     if (!settings.contentControl) {
         if (shortenings.length > 0) {
             return {
@@ -78,23 +82,56 @@ function fitToParagraphMarker(settings, entity, paragraphLength) {
         }
         return maxImportantWords;
     }
-    for (let shortening of shortenings) {
-        if (shortening.text.length < paragraphLength) {
-            if (shortening.score.importantWords > maxImportantWords.score.importantWords) {
-                maxImportantWords = { ...shortening };
+    if (Array.isArray(shortenings)) {
+        for (let shortening of shortenings) {
+            if (!shortening.hasOwnProperty('text')
+                || !shortening.hasOwnProperty('score')
+                || !shortening.score.hasOwnProperty('importantWords')
+            ) {
+                continue;
+            }
+            if (shortening.text.length < paragraphLength) {
+                if (shortening.score.importantWords > maxImportantWords.score.importantWords) {
+                    maxImportantWords = { ...shortening };
+                }
+            }
+        }    
+    }
+
+
+    let phrases = entity.phrases;
+    if (Array.isArray(phrases)) {
+        for (let phrase of phrases) {
+            if (!phrase.hasOwnProperty('text')
+                || !phrase.hasOwnProperty('score')
+                || !phrase.score.hasOwnProperty('importantWords')
+            ) {
+                continue;
+            }
+            if (phrase.text.length < paragraphLength) {
+                if (phrase.score.importantWords > maxImportantWords.score.importantWords) {
+                    maxImportantWords = { ...phrase };
+                }
             }
         }
     }
 
-    for (let phrase of phrases) {
-        if (phrase.text.length < paragraphLength) {
-            if (phrase.score.importantWords > maxImportantWords.score.importantWords) {
-                maxImportantWords = { ...phrase };
+    if (entity.hasOwnProperty('singleWord')) {
+        let singleWord = entity.singleWord;
+        if (singleWord.hasOwnProperty('text')
+            && singleWord.hasOwnProperty('score')
+            && singleWord.score.hasOwnProperty('importantWords')
+        ) {
+            if (singleWord.text.length < paragraphLength
+                && singleWord.score.importantWords > maxImportantWords.score.importantWords
+            ) {
+                maxImportantWords = { ...singleWord };
             }
         }
     }
     return maxImportantWords;
 }
+
 
 function fitToImage(settings, pageElement, originalStyles, targetStyles) {
     let styles = null;
@@ -286,7 +323,6 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
             let bodyContent = content.body[i];
             while (pageElementIdx < elements.length) {
                 let pageElement = elements[pageElementIdx];
-
                 let targetLengths = getAppropriateTargetLengths(layoutTemplate.isCustom, pageElement, originalStyles, targetStyles);
                 let targetLengthIdx = pageElement.mapped.length;
                 if (targetLengths.length <= targetLengthIdx
@@ -297,7 +333,6 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                     continue;
                 }
                 if (bodyContent.hasOwnProperty('paragraph')) {
-                    let currentLength = content.body[i].paragraph.singleWord.text.length;
                     if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
                         if (!Array.isArray(bodyContent.paragraph.images)
                             || !settings.contentControl
@@ -307,12 +342,14 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                         }
                     }
                     else {
-                        if (!bodyContent.paragraph.hasOwnProperty('singleWord')
-                            || typeof bodyContent.paragraph.singleWord.text !== 'string'
-                            || !bodyContent.paragraph.singleWord.hasOwnProperty('score')
-                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('importantWords')
-                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('grammatical')
-                            || !bodyContent.paragraph.singleWord.score.hasOwnProperty('semantic')
+                        if (settings.contentControl &&
+                            ( !bodyContent.paragraph.hasOwnProperty('singleWord')
+                                || typeof bodyContent.paragraph.singleWord.text !== 'string'
+                                || !bodyContent.paragraph.singleWord.hasOwnProperty('score')
+                                || !bodyContent.paragraph.singleWord.score.hasOwnProperty('importantWords')
+                                || !bodyContent.paragraph.singleWord.score.hasOwnProperty('grammatical')
+                                || !bodyContent.paragraph.singleWord.score.hasOwnProperty('semantic')
+                            )
                         ) {
                             pageElementIdx++;
                             continue;
@@ -321,7 +358,7 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                     while (targetLengthIdx < targetLengths.length
                         && layoutTemplate.isCustom
                         && settings.contentControl
-                        && targetLengths[targetLengthIdx] <= currentLength
+                        && targetLengths[targetLengthIdx] <= content.body[i].paragraph.singleWord.text.length
                     ) {
                         pageElement.mapped.push({
                             paragraph: {

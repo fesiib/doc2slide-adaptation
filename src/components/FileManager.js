@@ -125,6 +125,7 @@ function FileManager(props) {
 		let uploadSessions = [];
 		for (let presentation of files) {
 			uploadSessions.push(justUploadPresentation_v2(presentation.id));
+            uploadSessions.push(justUploadPresentation(presentation.id));
 		}
 		Promise.all(uploadSessions)
 		.then((response) => {
