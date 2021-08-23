@@ -211,6 +211,21 @@ class Templates {
         }
         return result;
     }
+
+    getLayoutByOriginalId(originalId) {
+        let template = this.getByOriginalId(originalId);
+        return {
+            ...(template.getLayoutJSON()),
+            requests: initializeTemplate(template, null, -1),
+        };
+    }
+
+    getStylesByOriginalId(originalId) {
+        let template = this.getByOriginalId(originalId);
+        return {
+            ...(template.getStylesJSON()),
+        };
+    }
 }
 
 module.exports = {

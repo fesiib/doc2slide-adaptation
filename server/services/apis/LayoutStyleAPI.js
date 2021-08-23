@@ -1,4 +1,4 @@
-const { getTemplatesData_v2, fitToPresentation_v2, fitToSlide_v2, fitToAlternatives_v2 } = require('../fitContent_v2');
+const { getTemplatesData_v2, fitToPresentation_v2, fitToSlide_v2, fitToAlternatives_v2, getTemplateData_v2 } = require('../fitContent_v2');
 const { Templates } = require('../Templates');
 
 let templatesLibrary = {};
@@ -29,6 +29,20 @@ async function getDataSinglePresentation(data) {
             throw new Error('No such presentation with id: ' + presentationId);
         }
         let templatesData = getTemplatesData_v2(templatesLibrary[presentationId]);
+        resolve({
+            ...templatesData,
+        });
+    });
+}
+
+async function getDataSingleSlide(data) {
+    return new Promise(resolve => {
+        let presentationId = data.presentationId;
+        let pageId = data.pageId;
+        if (!templatesLibrary.hasOwnProperty(presentationId)) {
+            throw new Error('No such presentation with id: ' + presentationId);
+        }
+        let templatesData = getTemplateData_v2(templatesLibrary[presentationId], pageId);
         resolve({
             ...templatesData,
         });
@@ -158,4 +172,5 @@ module.exports = {
     getDataPresentations,
     getDataSinglePresentation,
     generateAlternativesRequests,
+    getDataSingleSlide,
 };

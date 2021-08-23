@@ -7,7 +7,8 @@ var { uploadPresentation,
     getDataSinglePresentation,
     generatePresentationRequests,
     generateSlideRequests,
-    generateAlternativesRequests
+    generateAlternativesRequests,
+    getDataSingleSlide
 } = require('../services/apis/LayoutStyleAPI');
 var router = express.Router();
 
@@ -38,6 +39,17 @@ router.post('/get_data_single_presentation', function(req, res, next) {
     console.log(req.body);
 
     getDataSinglePresentation(req.body).then((response) => {
+        res.json(response);
+    }).catch((reason) => {
+        next(reason);
+    });;
+});
+
+/* POST get data about single slide of a presentation in the library */
+router.post('/get_data_single_slide', function(req, res, next) {
+    console.log(req.body);
+
+    getDataSingleSlide(req.body).then((response) => {
         res.json(response);
     }).catch((reason) => {
         next(reason);

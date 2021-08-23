@@ -340,6 +340,15 @@ function getTemplatesData_v2(obj) {
     };
 }
 
+function getTemplateData_v2(obj, pageId) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+    return {
+        layout: templates.getLayoutByOriginalId(pageId),
+        styles: templates.getStylesByOriginalId(pageId),
+    }
+}
+
 async function fitToPresentation_v2(resources, templates, cluster, settings) {
     let fitFunction = fitToPresentation_greedy;
     if (settings.method === 'random') {
@@ -417,4 +426,5 @@ module.exports = {
     fitToSlide_v2,
     getTemplatesData_v2,
     fitToAlternatives_v2,
+    getTemplateData_v2,
 };
