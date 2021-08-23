@@ -37,7 +37,7 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
         }
         if (result !== null) {
             pageNum++;
-            results.push(getSingleTemplateResponse_v2(result, null, pageNum, pageSize));
+            results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));
         }
     }
 
@@ -67,7 +67,7 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
             if (result !== null) {
                 pageNum++; 
                 done = result.done;
-                results.push(getSingleTemplateResponse_v2(result, null, pageNum, pageSize));    
+                results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));    
             }
             else {
                 break;
@@ -133,7 +133,7 @@ async function fitToPresentation_greedy(
         }
         if (result !== null) {
             pageNum++;
-            results.push(getSingleTemplateResponse_v2(result, null, pageNum, pageSize));
+            results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));
         }
     }
     for (let section of contents.sections) {
@@ -167,7 +167,7 @@ async function fitToPresentation_greedy(
             if (result !== null) {
                 pageNum++;
                 done = result.done;
-                results.push(getSingleTemplateResponse_v2(result, null, pageNum, pageSize));
+                results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));
             }
             else {
                 break;
@@ -244,7 +244,7 @@ async function fitToSlide_total(
             finalResult = result;
         }
     }
-    return getSingleTemplateResponse_v2(finalResult, targetPageId, pageNum, pageSize);
+    return getSingleTemplateResponse_v2(settings, finalResult, targetPageId, pageNum, pageSize);
 }
 
 async function fitToAlternatives_random(
@@ -317,7 +317,7 @@ async function fitToAlternatives_random(
         was[repStr] = true;
 
         pageNum++;
-        let response = getSingleTemplateResponse_v2(result, null, pageNum, pageSize);
+        let response = getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize);
 
         requests = requests.concat(response.requests);
         matching.push({ ...response.matching });

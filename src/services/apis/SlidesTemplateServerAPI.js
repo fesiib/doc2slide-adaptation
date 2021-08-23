@@ -1,7 +1,7 @@
 import { getPresentation } from './SlidesAPI';
 
-const ADDR = 'http://server.hyungyu.com:7777';
-//const ADDR = 'http://localhost:7777';
+//const ADDR = 'http://server.hyungyu.com:7777';
+const ADDR = 'http://localhost:7777';
 
 
 export async function uploadPresentation(presentation) {
@@ -46,6 +46,7 @@ export async function generatePresentationRequests(presentationId, resources) {
             fast: true,
             contentControl: true,
             method: 'greedy',
+            debug: true,
         },
     };
 
@@ -86,6 +87,7 @@ export async function generateSlideRequests(presentationId, targetPageId, source
         settings: {
             fast: true,
             contentControl: true,
+            debug: true,
         },
     };
 
@@ -125,6 +127,7 @@ export async function generateBestSlideRequests(presentationId, targetPageId, pa
         settings: {
             fast: false,
             contentControl: false,
+            debug: true,
         },
     };
 
@@ -164,6 +167,7 @@ export async function generateAllSlidesRequests(presentationId, sort, resources)
         settings: {
             fast: false,
             contentControl: false,
+            debug: true,
         },
     };
 

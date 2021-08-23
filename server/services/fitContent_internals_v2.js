@@ -1,5 +1,5 @@
 const { scoreElements_withStyles } = require('./apis/EvaluateAPI');
-const { initializeTemplate, initializePageElementShape_withStyles, initializePageElementImage_withStyles } = require('./apis/initializeAPI');
+const { initializeTemplate, initializePageElementShape_withStyles, initializePageElementImage_withStyles, addTextBox } = require('./apis/initializeAPI');
 const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, SUBHEADER_PLACEHOLDER } = require('./Template');
 
 function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targetStyles) {
@@ -493,10 +493,14 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
     };
 }
 
-function getSingleTemplateResponse_v2(result, targetPageId, pageNum, pageSize) {
+function getSingleTemplateResponse_v2(settings, result, targetPageId, pageNum, pageSize) {
     let globalRequests = [];
     globalRequests = globalRequests.concat(initializeTemplate(result.layoutTemplate, targetPageId, pageNum));
     globalRequests = globalRequests.concat(result.requests);
+
+    if (targetPageId === null) {
+        targetPageId = result.layoutTemplate.pageId;
+    }
 
     let matching = {
         pageSize: pageSize,
@@ -505,48 +509,37 @@ function getSingleTemplateResponse_v2(result, targetPageId, pageNum, pageSize) {
         layoutPageId: result.layoutTemplate.originalId,
         stylesPageId: result.stylesTemplate.originalId,
         pageNum: pageNum,
-        objectId: targetPageId === null ? result.layoutTemplate.pageId : targetPageId,
+        objectId: targetPageId,
     };
-    
-    globalRequests.push({
-        deleteText: {
-            objectId: result.layoutTemplate.informationBoxId,
-            textRange: {
-                type: 'ALL',
-            }
+
+    if (settings.debug) {
+        let informationText = '';
+        let layoutPageNumStr = result.layoutTemplate.pageNum.toString();
+        let stylesPageNumStr = result.stylesTemplate.pageNum.toString();
+        if (result.layoutTemplate.isCustom) {
+            informationText = '(Layout) Page ' + layoutPageNumStr + ' ';
         }
-    });
-
-    let informationText = '';
-    let layoutPageNumStr = result.layoutTemplate.pageNum.toString();
-    let stylesPageNumStr = result.stylesTemplate.pageNum.toString();
-    if (result.layoutTemplate.isCustom) {
-        informationText = '(Layout) Page ' + layoutPageNumStr + ' ';
-    }
-    else {
-        informationText = '(Layout) Layout ' + layoutPageNumStr + ' ';   
-    }
-
-    if (result.stylesTemplate.isCustom) {
-        informationText += '(Styles) Page ' + stylesPageNumStr + ' ';
-    }
-    else {
-        informationText += '(Styles) Layout ' + stylesPageNumStr + ' ';   
-    }
-
-    for (let field in result.score) {
-        let curScore = result.score[field];
-        curScore = Math.round(curScore * 100) / 100;
-        informationText += field + ": " + curScore.toString() + ', ';
-    }
-    informationText += ' similarity+coverage: ' + (Math.round(result.totalScore * 100) / 100).toString();
-    
-    globalRequests.push({
-        insertText: {
-            objectId: result.layoutTemplate.informationBoxId,
-            text: informationText,
+        else {
+            informationText = '(Layout) Layout ' + layoutPageNumStr + ' ';   
         }
-    });
+    
+        if (result.stylesTemplate.isCustom) {
+            informationText += '(Styles) Page ' + stylesPageNumStr + ' ';
+        }
+        else {
+            informationText += '(Styles) Layout ' + stylesPageNumStr + ' ';   
+        }
+    
+        for (let field in result.score) {
+            let curScore = result.score[field];
+            curScore = Math.round(curScore * 100) / 100;
+            informationText += field + ": " + curScore.toString() + ', ';
+        }
+        informationText += ' similarity+coverage: ' + (Math.round(result.totalScore * 100) / 100).toString();
+        
+        globalRequests = globalRequests.concat(addTextBox(result.layoutTemplate.informationBoxId, targetPageId, informationText));
+    }
+    
     return {
         requests: globalRequests,
         matching: matching,

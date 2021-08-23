@@ -724,9 +724,6 @@ function initializeTemplate(template, targetPageId, pageNum = -1) {
     let requests = [];
     let pageId = template.pageId;
     let page = template.page;
-    let weight = template.weight;
-    let pageNumStr = template.pageNum.toString();
-    let informationBoxId = template.informationBoxId;
 
     if (targetPageId === null) {
         targetPageId = pageId;
@@ -747,14 +744,6 @@ function initializeTemplate(template, targetPageId, pageNum = -1) {
         }
     }
     requests = requests.concat(initializePage(targetPageId, page, pageNum));
-
-    if (weight === 1) {
-        ///layout
-        requests = requests.concat(addTextBox(informationBoxId, targetPageId, "Layout: " + pageNumStr));
-    }
-    else {
-        requests = requests.concat(addTextBox(informationBoxId, targetPageId, "Page: " + pageNumStr));    
-    }
     return requests;
 }
 
@@ -766,5 +755,6 @@ module.exports = {
     initializePageElementShape,
     initializePageElementImage,
     initializePageElementShape_withStyles,
-    initializePageElementImage_withStyles
+    initializePageElementImage_withStyles,
+    addTextBox,
 }

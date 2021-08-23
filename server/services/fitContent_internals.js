@@ -588,5 +588,4 @@ function getSingleTemplateResponse(result, targetPageId, pageNum, pageSize) {
 module.exports = {
     tryFitBody, 
     getSingleTemplateResponse,
-
 };
