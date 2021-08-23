@@ -1,5 +1,5 @@
 const { extractPage } = require('./apis/extractAPI');
-const { initializeTemplate } = require('./apis/initializeAPI');
+const { initializeTemplate, initializeLayout } = require('./apis/initializeAPI');
 const { Template, consumeSize, PX } = require('./Template');
 
 
@@ -120,6 +120,7 @@ class Templates {
     }
 
     addDefault(originalId, pageNum, page, isTitlePage = false) {
+        return;
         let template = new Template(originalId, pageNum, page, this.pageSize, 1, isTitlePage, false);
         template.initialize();
 
@@ -198,7 +199,7 @@ class Templates {
         for (let template of this.getTemplates()) {
             result.push({
                 ...(template.getLayoutJSON()),
-                requests: initializeTemplate(template, null, -1),
+                requests: initializeLayout(template),
             });
         }
         return result;
@@ -207,7 +208,7 @@ class Templates {
     getStyles() {
         let result = [];
         for (let template of this.getTemplates()) {
-            result.push(template.getStylesJSON());
+            result.push(template.getStylesJSON(true));
         }
         return result;
     }
@@ -216,14 +217,14 @@ class Templates {
         let template = this.getByOriginalId(originalId);
         return {
             ...(template.getLayoutJSON()),
-            requests: initializeTemplate(template, null, -1),
+            requests: initializeLayout(template),
         };
     }
 
     getStylesByOriginalId(originalId) {
         let template = this.getByOriginalId(originalId);
         return {
-            ...(template.getStylesJSON()),
+            ...(template.getStylesJSON(true)),
         };
     }
 }

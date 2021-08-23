@@ -1,5 +1,5 @@
 const { objRecTraverse } = require('./requiredFields');
-const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset, PX } = require('../Template');
+const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset, PX, rectangleToSizeTransform } = require('../Template');
 
 const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
@@ -720,6 +720,81 @@ function initializePage(pageId, pageTemplate, pageNum) {
     return requests;
 }
 
+function initializeLayout(template) {
+    let requests = [];
+    let pageId = template.pageId;
+
+    requests.push({
+        createSlide: {
+            objectId: pageId,
+        },
+    });
+
+    let layout = template.getLayoutJSON();
+
+    for (box of layout.boxes) {
+        if (box.height === 0) {
+            box.height = 100;
+        }
+        if (box.width === 0) {
+            box.width = 100;
+        }
+        
+        let rectangle = {
+            startX: box.left,
+            startY: box.top,
+            finishX: box.left + box.width,
+            finishY: box.top + box.height,
+        };
+
+        let position = rectangleToSizeTransform(rectangle, 'PX');
+
+        requests.push({
+            createShape: {
+                objectId: box.objectId,
+                elementProperties: {
+                    pageObjectId: pageId,
+                    size: position.size,
+                    transform: position.transform,
+                },
+                shapeType: 'TEXT_BOX',
+            }
+        });
+
+        let outlineShapeProperties = {
+            outline: {
+                outlineFill: {
+                    solidFill: {
+                        color: {
+                            rgbColor: {
+                                red: 0,
+                                green: 0,
+                                blue: 0,
+                            },
+                        },
+                        alpha: 1,
+                    }
+                },
+                weight: {
+                    magnitude: 2,
+                    unit: 'PT',
+                },
+            }
+        }
+
+        let result = objRecTraverse(outlineShapeProperties);
+
+        requests.push({
+            updateShapeProperties: {
+                objectId: box.objectId,
+                shapeProperties: result.dst,
+                fields: result.fields.join(),
+            },
+        });
+    }
+    return requests;
+}
+
 function initializeTemplate(template, targetPageId, pageNum = -1) {
     let requests = [];
     let pageId = template.pageId;
@@ -750,8 +825,8 @@ function initializeTemplate(template, targetPageId, pageNum = -1) {
 module.exports = {
     getFirstParagraphMarker,
     initializeTemplate,
+    initializeLayout,
     getFirstText,
-    initializeShapeText,
     initializePageElementShape,
     initializePageElementImage,
     initializePageElementShape_withStyles,

@@ -724,35 +724,51 @@ function getLayout(page, pageSize) {
     return layout;
 }
 
- function getCoveringRectangle(pageElements, pageSize) {
+function rectangleToSizeTransform(rectangle, unit) {
+
+    unitMultiplier = EMU;
+
+    if (unit === 'PT') {
+        unitMultiplier = PT;
+    }
+    else if (unit === 'PX') {
+        unitMultiplier = PX;
+    }
+    else if (unit !== 'EMU') {
+        throw Error("don't support such unit");
+    }
+
+    let transform = { ...DEFAULT_TRANSFORM };
+    let size = JSON.parse(JSON.stringify(DEFAULT_SIZE));
+    transform.translateX = rectangle.startX * unitMultiplier;
+    transform.translateY = rectangle.startY * unitMultiplier;
+
+    size.width.magnitude = (rectangle.finishX - rectangle.startX) * unitMultiplier;
+    size.height.magnitude = (rectangle.finishY - rectangle.startY) * unitMultiplier;
+    return {
+        transform,
+        size,
+    };
+}
+
+function getCoveringRectangle(pageElements, pageSize) {
     let layout = getLayout({pageElements}, pageSize);
 
     // do transform
     
     let rectangle = {
-        sx: Number.MAX_VALUE,
-        sy: Number.MAX_VALUE,
-        fx: -Number.MAX_VALUE,
-        fy: -Number.MAX_VALUE,
+        startX: Number.MAX_VALUE,
+        startY: Number.MAX_VALUE,
+        finishX: -Number.MAX_VALUE,
+        finishY: -Number.MAX_VALUE,
     };
     for (let e of layout.pageElements) {
-        rectangle.sx = Math.min(rectangle.sx, e.startX);
-        rectangle.sy = Math.min(rectangle.sy, e.startY);
-        rectangle.fx = Math.max(rectangle.fx, e.finishX);
-        rectangle.fy = Math.max(rectangle.fy, e.finishY);
+        rectangle.startX = Math.min(rectangle.startX, e.startX);
+        rectangle.startY = Math.min(rectangle.startY, e.startY);
+        rectangle.finishX = Math.max(rectangle.finishX, e.finishX);
+        rectangle.finishY = Math.max(rectangle.finishY, e.finishY);
     }
-
-    let transform = { ...DEFAULT_TRANSFORM };
-    let size = JSON.parse(JSON.stringify(DEFAULT_SIZE));
-    transform.translateX = rectangle.sx;
-    transform.translateY = rectangle.sy;
-
-    size.width.magnitude = rectangle.fx - rectangle.sx;
-    size.height.magnitude = rectangle.fy - rectangle.sy;
-    return {
-        transform,
-        size,
-    };
+    return rectangleToSizeTransform(rectangle, 'EMU');
 }
 
 function transformElementGroups(pageElements, pageSize, method = 'extract') {
@@ -1153,12 +1169,13 @@ class Template {
                 left: pageElement.rectangle.startX,
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
+                objectId: pageElement.objectId,
             });
         }
         return result;
     }
 
-    getStylesJSON() {
+    getStylesJSON(isDict = false) {
         let result = {
             pageId: this.originalId,
             styles: [],
@@ -1236,6 +1253,20 @@ class Template {
                 break;
             }
         }
+
+        if (isDict) {
+            let stylesDict = {};
+            for (let styles of result.styles) {
+                stylesDict[styles.type] = {
+                    ...styles
+                }
+                delete stylesDict[styles.type].type;
+            }
+            result = {
+                ...result,
+                styles: stylesDict,
+            }
+        }
         return result;
     }
 }
@@ -1248,6 +1279,7 @@ module.exports = {
     calculateAdditional,
     getDominantTextStyle,
     getBulletPreset,
+    rectangleToSizeTransform,
 
     HEADER_PLACEHOLDER,
     BODY_PLACEHOLDER,
