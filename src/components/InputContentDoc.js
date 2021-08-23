@@ -16,7 +16,7 @@ import { generatePresentation_v2 } from '../services/layoutStylesAdapter';
 function InputContentDoc(props) {
     const dispatch = useDispatch();
 
-    const { title, sections, titleResult, sectionsResult, shouldUpdate } = useSelector(state => state.contentDoc);
+    const { title, sections, titleResult, sectionsResult, shouldUpdateDoc } = useSelector(state => state.contentDoc);
 
     const { selected, selectedExt } = useSelector(state => state.presentationFiles);
 
@@ -63,7 +63,7 @@ function InputContentDoc(props) {
         event.preventDefault();
         event.stopPropagation();
         loadingActivate(COMPILING);
-        processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdate)
+        processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdateDoc)
             .then((response) => {
                 let resources = {
                     ...response,
