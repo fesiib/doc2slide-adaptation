@@ -1,7 +1,7 @@
 import { getPresentation } from './SlidesAPI';
 
-//const ADDR = 'http://server.hyungyu.com:7777';
-const ADDR = 'http://localhost:7777';
+const ADDR = 'http://server.hyungyu.com:7777';
+//const ADDR = 'http://localhost:7777';
 
 
 export async function uploadPresentation(presentation) {
@@ -86,7 +86,7 @@ export async function generateSlideRequests(presentationId, targetPageId, source
         resources,
         settings: {
             fast: true,
-            contentControl: true,
+            contentControl: false,
             debug: true,
         },
     };
