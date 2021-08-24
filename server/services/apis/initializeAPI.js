@@ -728,6 +728,8 @@ function initializeLayout(template) {
         },
     });
 
+    return requests;
+
     let layout = template.getLayoutJSON();
 
     for (box of layout.boxes) {
