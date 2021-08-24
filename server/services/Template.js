@@ -1261,6 +1261,7 @@ class Template {
                     ...styles
                 }
                 delete stylesDict[styles.type].type;
+                delete stylesDict[styles.type].recommendedLength;
             }
             result = {
                 ...result,

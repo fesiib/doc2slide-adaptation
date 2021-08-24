@@ -73,7 +73,7 @@ async function generatePresentationRequests(data, cluster) {
     let settings = {
         fast: true,
         method: 'greedy',
-        contentControl: true,
+        contentControl: false,
         debug: false,
     };
     if (data.hasOwnProperty('settings')) {
@@ -100,7 +100,7 @@ async function generateSlideRequests(data, cluster) {
     let settings = {
         fast: true,
         method: 'greedy',
-        contentControl: true,
+        contentControl: false,
         debug: false,
     };
 
@@ -137,7 +137,7 @@ async function generateAlternativesRequests(data, cluster) {
     let settings = {
         fast: true,
         method: 'greedy',
-        contentControl: true,
+        contentControl: false,
         debug: false,
     };
 

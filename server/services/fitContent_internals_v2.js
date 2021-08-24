@@ -76,9 +76,15 @@ function fitToParagraphMarker(settings, entity, paragraphLength) {
     let shortenings = entity.shortenings;
     if (!settings.contentControl) {
         if (shortenings.length > 0) {
-            return {
-                ...shortenings[0],
-            };
+            if (shortenings[0].hasOwnProperty('text')) {
+                maxImportantWords.text = shortenings[0].text;
+            }
+            if (shortenings[0].hasOwnProperty('score'))  {
+                maxImportantWords.score = {
+                    ...maxImportantWords.score,
+                    ...shortenings[0].score,
+                }
+            }
         }
         return maxImportantWords;
     }
@@ -91,7 +97,12 @@ function fitToParagraphMarker(settings, entity, paragraphLength) {
                 continue;
             }
             if (shortening.text.length < paragraphLength) {
-                if (shortening.score.importantWords > maxImportantWords.score.importantWords) {
+                if (shortening.score.importantWords > maxImportantWords.score.importantWords
+                    || (
+                        shortening.score.importantWords === maxImportantWords.score.importantWords
+                        && shortening.text.length > maxImportantWords.text.length
+                    )
+                ) {
                     maxImportantWords = { ...shortening };
                 }
             }
@@ -109,7 +120,12 @@ function fitToParagraphMarker(settings, entity, paragraphLength) {
                 continue;
             }
             if (phrase.text.length < paragraphLength) {
-                if (phrase.score.importantWords > maxImportantWords.score.importantWords) {
+                if (phrase.score.importantWords > maxImportantWords.score.importantWords
+                    || (
+                        phrase.score.importantWords === maxImportantWords.score.importantWords
+                        && phrase.text.length > maxImportantWords.text.length
+                    )
+                ) {
                     maxImportantWords = { ...phrase };
                 }
             }
