@@ -1071,6 +1071,60 @@ function areSimilarObjs(obj1, obj2, eps) {
     return true;
 }
 
+function makeResourcesParagraphs(urls, paragraphs, isOriginalContent = true) {
+    let contents = [];
+    for (let url of urls) {
+        contents.push({
+            paragraph: {
+                id: random(),
+                shortenings: [],
+                phrases: [],
+                singleWord: {
+                    text: "",
+                    score: {
+                        grammatical: 1,
+                        importantWords: 0,
+                        semantic: 0,
+                    },
+                },
+                images: [{
+                    url: url,
+                }],
+                isOriginalContent: isOriginalContent,
+            },
+        });
+    }
+    for (let paragraphText of paragraphs) {
+        contents.push({
+            paragraph: {
+                id: random(),
+                shortenings: [{
+                    text: paragraphText,
+                    score: {
+                        grammatical: 1,
+                        importantWords: 1,
+                        semantic: 0,
+                    }
+                }],
+                phrases: [],
+                singleWord: {
+                    text: "",
+                    score: {
+                        grammatical: 1,
+                        importantWords: 0,
+                        semantic: 0,
+                    },
+                },
+                images: [{
+                    url: PLACEHOLDER_IMAGE_URL,
+                }],
+                isOriginalContent: isOriginalContent,
+            },
+        });
+    }
+    return contents;
+}
+
 class Template {
     constructor(originalId='',
         pageNum=-1,
@@ -1203,7 +1257,7 @@ class Template {
             pageSize: this.getPageSizeInPX(),
         };
         for (let pageElement of this.page.pageElements) {
-            let contentUrl = PLACEHOLDER_IMAGE_URL;
+            let urls = [];
             let paragraphs = [];
 
             if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
@@ -1211,7 +1265,7 @@ class Template {
                     && Array.isArray(pageElement.additional.contentUrl)
                     && pageElement.additional.contentUrl.length > 0
                 ) {
-                    contentUrl = pageElement.additional.contentUrl[0];
+                    urls.push(pageElement.additional.contentUrl[0]);
                 }
             }
             else if (pageElement.hasOwnProperty('shape')
@@ -1227,10 +1281,7 @@ class Template {
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
                 objectId: pageElement.objectId,
-                originalContent: {
-                    url: contentUrl,
-                    paragraphs: paragraphs,
-                },
+                originalContents: makeResourcesParagraphs(urls, paragraphs),
             });
         }
         return result;
@@ -1248,22 +1299,19 @@ class Template {
                 continue;
             }
             if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
-                let contentUrl = PLACEHOLDER_IMAGE_URL;
+                let urls = [];
 
                 if (pageElement.hasOwnProperty('additional')
                     && Array.isArray(pageElement.additional.contentUrl)
                     && pageElement.additional.contentUrl.length > 0
                 ) {
-                    contentUrl = pageElement.additional.contentUrl[0];
+                    urls.push(pageElement.additional.contentUrl[0]);
                 }
 
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
-                    originalContent: {
-                        url: contentUrl,
-                        paragraphs: [],
-                    },
+                    originalContents: makeResourcesParagraphs(urls, []),
                     ...(getScopedStyles({}, {}, -1)),
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1276,17 +1324,14 @@ class Template {
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
-                    originalContent: {
-                        url: PLACEHOLDER_IMAGE_URL,
-                        paragraphs: [],
-                    },
+                    originalContents: [],
                     ...(getScopedStyles({}, {}, -1)),
                 });
                 alreadyCovered[pageElement.type] = true;
                 continue;
             }
             let textElements = pageElement.shape.text.textElements;
-            let originalTexts = getParagraphTexts(pageElement);
+            let paragraphs = getParagraphTexts(pageElement);
             for (let textElementIdx = 0; textElementIdx < textElements.length; textElementIdx++) {
                 let textElement = textElements[textElementIdx];
                 if (!textElement.hasOwnProperty('paragraphMarker')) {
@@ -1336,10 +1381,7 @@ class Template {
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
-                    originalContent: {
-                        url: PLACEHOLDER_IMAGE_URL,
-                        paragraphs: originalTexts,
-                    },
+                    originalContents: makeResourcesParagraphs([], paragraphs),
                     ...(getScopedStyles(paragraphStyle, textStyle, paragraphLength)),    
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1356,7 +1398,7 @@ class Template {
                 // delete stylesDict[styles.type].type;
                 // delete stylesDict[styles.type].recommendedLength;
                 // delete stylesDict[styles.type].objectId;
-                // delete stylesDict[styles.type].originalContent;
+                // delete stylesDict[styles.type].originalContents;
             }
             result = {
                 ...result,

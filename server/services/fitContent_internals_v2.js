@@ -190,6 +190,7 @@ function fitToImage(settings, pageElement, originalBox, originalStyles, targetSt
                 ...result,
                 contentId: content.paragraph.id,
                 styles: styles,
+                isOriginalContent: content.paragraph.isOriginalContent,
             });
             break;
         }
@@ -229,11 +230,15 @@ function fitToShape(settings, pageElement, originalBox, originalStyles, targetSt
         let content = pageElement.mapped[contentIdx];
         let targetLength = targetLengths[contentIdx];
         if (content.hasOwnProperty('paragraph')) {
+            if (content.paragraph.id === null) {
+                continue;
+            }
             let result = fitToParagraphMarker(settings, content.paragraph, targetLength);
             pageElementInfo.contents.push({
                 ...result,
                 contentId: content.paragraph.id,
                 styles: styles,
+                isOriginalContent: content.paragraph.isOriginalContent,
             });    
         }
         else if (content.hasOwnProperty('bullet')) {
@@ -326,7 +331,12 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
             }
         }
         if (headerPageElement !== null) {
-            headerPageElement.mapped.push({paragraph : { ...content.header} });
+            headerPageElement.mapped.push({
+                paragraph: { 
+                    ...content.header,
+                    isOriginalContent: false,
+                },
+            });
             headerPageElement.isHeader = true;
             totalNumMapped++;
         }
@@ -353,7 +363,7 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                 if (bodyContent.hasOwnProperty('paragraph')) {
                     if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
                         if (!Array.isArray(bodyContent.paragraph.images)
-                            || !settings.contentControl
+                            //|| !settings.contentControl
                         ) {
                             pageElementIdx++;
                             continue;
@@ -391,7 +401,8 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                                         importantWords: 1,
                                         semantic: 1,
                                     },
-                                }
+                                },
+                                isOriginalContent: false,  
                             },
                         });
                         targetLengthIdx++;
@@ -400,7 +411,12 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                         pageElementIdx++;
                         continue;
                     }
-                    pageElement.mapped.push({ ...bodyContent });
+                    pageElement.mapped.push({
+                        paragraph: {
+                            ...bodyContent.paragraph,
+                            isOriginalContent: false,
+                        },
+                    });
                     didMapped = true;
                     break;
                 }
@@ -432,6 +448,15 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
             }
         }
 
+        if (settings.putOriginalContent 
+            && pageElement.mapped.length === 0
+            && originalBox.hasOwnProperty('originalContents')
+        ) {
+            // put OriginalContent
+            for (let content of originalBox.originalContents) {
+                pageElement.mapped.push(content);
+            }
+        }
         if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
             currentMatching = fitToImage(settings, pageElement, originalBox, originalStyles, targetStyles);
         }
