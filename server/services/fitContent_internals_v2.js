@@ -149,7 +149,7 @@ function fitToParagraphMarker(settings, entity, paragraphLength) {
 }
 
 
-function fitToImage(settings, pageElement, originalStyles, targetStyles) {
+function fitToImage(settings, pageElement, originalBox, originalStyles, targetStyles) {
     let styles = null;
 
     for (let curStyles of targetStyles.styles) {
@@ -171,7 +171,7 @@ function fitToImage(settings, pageElement, originalStyles, targetStyles) {
     // }
 
     let pageElementInfo = {
-        rectangle: pageElement.rectangle,
+        box: originalBox,
         contents: [],
     };
 
@@ -200,7 +200,7 @@ function fitToImage(settings, pageElement, originalStyles, targetStyles) {
     return matching;
 }
 
-function fitToShape(settings, pageElement, originalStyles, targetStyles, targetLengths) {
+function fitToShape(settings, pageElement, originalBox, originalStyles, targetStyles, targetLengths) {
     let styles = null;
 
     for (let curStyles of targetStyles.styles) {
@@ -222,7 +222,7 @@ function fitToShape(settings, pageElement, originalStyles, targetStyles, targetL
     }
 
     let pageElementInfo = {
-        rectangle: pageElement.rectangle,
+        box: originalBox,
         contents: [],
     };
     for (let contentIdx = 0; contentIdx < pageElement.mapped.length; contentIdx++) {
@@ -292,6 +292,8 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
 
     let originalStyles = layoutTemplate.getStylesJSON();
     let targetStyles = stylesTemplate.getStylesJSON();
+
+    let originalLayout = layoutTemplate.getLayoutJSON();
 
     // Fit the header
     if (content.hasOwnProperty('header')) {
@@ -421,11 +423,20 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
     for (let pageElement of elements) {
         let targetLengths = getAppropriateTargetLengths(layoutTemplate.isCustom, pageElement, originalStyles, targetStyles);
         let currentMatching = {};
+
+        let originalBox = {};
+        for (let box of originalLayout.boxes) {
+            if (box.objectId === pageElement.objectId) {
+                originalBox = { ...box };
+                break;
+            }
+        }
+
         if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
-            currentMatching = fitToImage(settings, pageElement, originalStyles, targetStyles);
+            currentMatching = fitToImage(settings, pageElement, originalBox, originalStyles, targetStyles);
         }
         else {
-            currentMatching = fitToShape(settings, pageElement, originalStyles, targetStyles, targetLengths);
+            currentMatching = fitToShape(settings, pageElement, originalBox, originalStyles, targetStyles, targetLengths);
         }
 
         let currentContents = currentMatching[pageElement.objectId].contents;

@@ -1,5 +1,7 @@
 const { v4 : uuidv4} = require('uuid');
 
+const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
+
 const RGB = ['red', 'blue', 'green'];
 
 const HEADER_PLACEHOLDER = [
@@ -1009,6 +1011,44 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
     return result;
 }
 
+function getParagraphTexts(pageElement) {
+    if (!pageElement.hasOwnProperty('shape')
+        || !pageElement.shape.hasOwnProperty('text')
+        || !Array.isArray(pageElement.shape.text.textElements)
+    ) {
+        return [];
+    }
+    let textElements = pageElement.shape.text.textElements;
+    
+    let paragraphContents = [];
+    let text = '';
+    for (let i = 0; i < textElements.length; i++) {
+        const textElement = textElements[i];
+        if (textElement.hasOwnProperty('paragraphMarker')) {
+            if (i > 0) {
+                if (text.endsWith('\n')) {
+                    text = text.slice(0, text.length - 1);
+                }
+                paragraphContents.push(text);
+                text = '';
+            }
+        }
+        if (textElement.hasOwnProperty('textRun') && textElement.textRun.hasOwnProperty('content')) {
+            text += textElement.textRun.content;
+        }
+        if (textElement.hasOwnProperty('autoText') && textElement.autoText.hasOwnProperty('content')) {
+            text += textElement.autoText.content;
+        }
+    }
+    if (textElements.length > 0) {
+        if (text.endsWith('\n')) {
+            text = text.slice(0, text.length - 1);
+        }
+        paragraphContents.push(text);
+    }
+    return paragraphContents;
+}
+
 function areSimilarObjs(obj1, obj2, eps) {
     if (typeof obj1 !== typeof obj2) {
         return false;
@@ -1163,6 +1203,23 @@ class Template {
             pageSize: this.getPageSizeInPX(),
         };
         for (let pageElement of this.page.pageElements) {
+            let contentUrl = PLACEHOLDER_IMAGE_URL;
+            let paragraphs = [];
+
+            if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+                if (pageElement.hasOwnProperty('additional')
+                    && Array.isArray(pageElement.additional.contentUrl)
+                    && pageElement.additional.contentUrl.length > 0
+                ) {
+                    contentUrl = pageElement.additional.contentUrl[0];
+                }
+            }
+            else if (pageElement.hasOwnProperty('shape')
+                && pageElement.shape.hasOwnProperty('text')
+                && Array.isArray(pageElement.shape.text.textElements)
+            ) {
+                paragraphs = getParagraphTexts(pageElement);
+            }
             result.boxes.push({
                 width: (pageElement.rectangle.finishX - pageElement.rectangle.startX),
                 height: (pageElement.rectangle.finishY - pageElement.rectangle.startY),
@@ -1170,6 +1227,10 @@ class Template {
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
                 objectId: pageElement.objectId,
+                originalContent: {
+                    url: contentUrl,
+                    paragraphs: paragraphs,
+                },
             });
         }
         return result;
@@ -1186,19 +1247,46 @@ class Template {
             if (alreadyCovered[pageElement.type]) {
                 continue;
             }
-            if (IMAGE_PLACEHOLDER.includes(pageElement.type)
-                || !pageElement.hasOwnProperty('shape')
+            if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+                let contentUrl = PLACEHOLDER_IMAGE_URL;
+
+                if (pageElement.hasOwnProperty('additional')
+                    && Array.isArray(pageElement.additional.contentUrl)
+                    && pageElement.additional.contentUrl.length > 0
+                ) {
+                    contentUrl = pageElement.additional.contentUrl[0];
+                }
+
+                result.styles.push({
+                    type: pageElement.type,
+                    objectId: pageElement.objectId,
+                    originalContent: {
+                        url: contentUrl,
+                        paragraphs: [],
+                    },
+                    ...(getScopedStyles({}, {}, -1)),
+                });
+                alreadyCovered[pageElement.type] = true;
+                continue;
+            }
+            if (!pageElement.hasOwnProperty('shape')
                 || !pageElement.shape.hasOwnProperty('text')
                 || !Array.isArray(pageElement.shape.text.textElements)
             ) {
                 result.styles.push({
                     type: pageElement.type,
+                    objectId: pageElement.objectId,
+                    originalContent: {
+                        url: PLACEHOLDER_IMAGE_URL,
+                        paragraphs: [],
+                    },
                     ...(getScopedStyles({}, {}, -1)),
                 });
                 alreadyCovered[pageElement.type] = true;
                 continue;
             }
             let textElements = pageElement.shape.text.textElements;
+            let originalTexts = getParagraphTexts(pageElement);
             for (let textElementIdx = 0; textElementIdx < textElements.length; textElementIdx++) {
                 let textElement = textElements[textElementIdx];
                 if (!textElement.hasOwnProperty('paragraphMarker')) {
@@ -1247,6 +1335,11 @@ class Template {
                 }
                 result.styles.push({
                     type: pageElement.type,
+                    objectId: pageElement.objectId,
+                    originalContent: {
+                        url: PLACEHOLDER_IMAGE_URL,
+                        paragraphs: originalTexts,
+                    },
                     ...(getScopedStyles(paragraphStyle, textStyle, paragraphLength)),    
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1260,8 +1353,10 @@ class Template {
                 stylesDict[styles.type] = {
                     ...styles
                 }
-                delete stylesDict[styles.type].type;
-                delete stylesDict[styles.type].recommendedLength;
+                // delete stylesDict[styles.type].type;
+                // delete stylesDict[styles.type].recommendedLength;
+                // delete stylesDict[styles.type].objectId;
+                // delete stylesDict[styles.type].originalContent;
             }
             result = {
                 ...result,
@@ -1281,6 +1376,7 @@ module.exports = {
     getDominantTextStyle,
     getBulletPreset,
     rectangleToSizeTransform,
+    getParagraphTexts,
 
     HEADER_PLACEHOLDER,
     BODY_PLACEHOLDER,
@@ -1290,4 +1386,5 @@ module.exports = {
     PX,
     RGB,
     SUBHEADER_PLACEHOLDER,
+    PLACEHOLDER_IMAGE_URL,
 };

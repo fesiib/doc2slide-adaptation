@@ -5,6 +5,7 @@ const { getRectangle,
     PX,
     SLIDE_NUMBER_PLACEHOLDER,
     consumeRGBColor,
+    getParagraphTexts,
 } = require("../Template");
 
 const EMU = 1 / 12700;
@@ -388,44 +389,6 @@ function getBoxStyle(pageElement) {
             y: rectangle.startY,
         },
     };
-}
-
-function getParagraphTexts(pageElement) {
-    if (!pageElement.hasOwnProperty('shape')
-        || !pageElement.shape.hasOwnProperty('text')
-        || !Array.isArray(pageElement.shape.text.textElements)
-    ) {
-        return [];
-    }
-    let textElements = pageElement.shape.text.textElements;
-    
-    let paragraphContents = [];
-    let text = '';
-    for (let i = 0; i < textElements.length; i++) {
-        const textElement = textElements[i];
-        if (textElement.hasOwnProperty('paragraphMarker')) {
-            if (i > 0) {
-                if (text.endsWith('\n')) {
-                    text = text.slice(0, text.length - 1);
-                }
-                paragraphContents.push(text);
-                text = '';
-            }
-        }
-        if (textElement.hasOwnProperty('textRun') && textElement.textRun.hasOwnProperty('content')) {
-            text += textElement.textRun.content;
-        }
-        if (textElement.hasOwnProperty('autoText') && textElement.autoText.hasOwnProperty('content')) {
-            text += textElement.autoText.content;
-        }
-    }
-    if (textElements.length > 0) {
-        if (text.endsWith('\n')) {
-            text = text.slice(0, text.length - 1);
-        }
-        paragraphContents.push(text);
-    }
-    return paragraphContents;
 }
 
 function getParagraphStyles_withStyles(pageElement) {

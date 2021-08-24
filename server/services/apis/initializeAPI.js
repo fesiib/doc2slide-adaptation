@@ -1,7 +1,5 @@
 const { objRecTraverse } = require('./requiredFields');
-const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset, PX, rectangleToSizeTransform } = require('../Template');
-
-const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
+const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset, PX, rectangleToSizeTransform, PLACEHOLDER_IMAGE_URL } = require('../Template');
 
 function isNumeric(ch) {
     return ch.length === 1 && ch.match(/[0-9]/g);
