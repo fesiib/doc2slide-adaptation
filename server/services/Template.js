@@ -571,7 +571,10 @@ function calculateAdditional(pageElement, src) {
     else if (src.hasOwnProperty('image')) {
         additional.isReplacable = true;
         additional.originalType = 'image';
-        additional.contentUrl = [src.image.contentUrl];
+
+        if (typeof src.image.contentUrl === 'string') {
+            additional.contentUrl = [src.image.contentUrl];
+        }
         additional.canbeMapped.push(MAX_WORD_LENGTH);
     }
     else if (src.hasOwnProperty('elementGroup')) {
@@ -607,7 +610,7 @@ function calculateAdditional(pageElement, src) {
     else if (src.hasOwnProperty('sheetsChart')) {
         additional.isReplacable = true;
         additional.originalType = 'sheetsChart';
-        additional.contentUrl = [src.sheetsChart.contentUrl];
+        additional.contentUrl = [];
         additional.canbeMapped.push(MAX_WORD_LENGTH);
     }
     else {
@@ -794,16 +797,7 @@ function transformElementGroups(pageElements, pageSize, method = 'extract') {
                     transform = multiplyTransforms(pageElement.transform, transform);
                     ch.transform = { ...transform };
                 }
-                ch = calculateAdditional(ch, ch);
-                if (ch.hasOwnProperty('image')) {
-                    newPageElements.push(ch);
-                }
-                else if (ch.hasOwnProperty('shape') 
-                    && ch.shape.hasOwnProperty('shapeType') 
-                    && ch.shape.shapeType === 'TEXT_BOX'
-                ) {
-                    newPageElements.push(ch);
-                }
+                newPageElements.push(ch);
             }
         }
         else if (method === 'merge') {
@@ -852,9 +846,12 @@ function transformElementGroups(pageElements, pageSize, method = 'extract') {
                     }
                 }
             }
-            newPageElement = calculateAdditional(newPageElement, newPageElement);
             newPageElements.push(newPageElement);
         }
+    }
+    for (let pageElement of newPageElements) {
+        if (!pageElement.hasOwnProperty('additional'))
+            pageElement = calculateAdditional(pageElement, pageElement);
     }
     return newPageElements;
 }

@@ -450,6 +450,7 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
 
         if (settings.putOriginalContent 
             && pageElement.mapped.length === 0
+            && pageElement.additional.canbeMapped.length > 0
             && originalBox.hasOwnProperty('originalContents')
         ) {
             // put OriginalContent
