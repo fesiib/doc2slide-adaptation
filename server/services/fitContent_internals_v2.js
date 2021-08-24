@@ -482,9 +482,20 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
             }
         }
 
+
+        let putOriginalContent = true;
+        for (let mappedContent of pageElement.mapped) {
+            if (mappedContent.paragraph.id !== null
+                && typeof mappedContent.paragraph.id === 'string'
+            ) {
+                putOriginalContent = false;
+                break;
+            }
+        }
+
         if (settings.putOriginalContent 
-            && pageElement.mapped.length === 0
             && pageElement.additional.canbeMapped.length > 0
+            && putOriginalContent
             && originalBox.hasOwnProperty('originalContents')
         ) {
             // put OriginalContent

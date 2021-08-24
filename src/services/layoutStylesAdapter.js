@@ -190,7 +190,7 @@ export async function generateAlternatives(referencePresentationId, presentation
                 console.log(requests);
                 console.log('All Slides Matched:', response.matchings, response.mappings);
                 updatePresentation(presentationId, requests).then(() => {
-                    resolve();
+                    resolve(response);
                 }).catch((reason) => {
                     reject(reason);
                 });

@@ -47,12 +47,11 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
             let iterations = 0;
             let result = null;
             while (iterations < 3) {     
-                let layoutTemplate = templates.randomDraw();
-                let stylesTemplate = templates.randomDraw();
-                if (layoutTemplate.isTitlePage || stylesTemplate.isTitlePage) {
+                let template = templates.randomDraw();
+                if (template.isTitlePage) {
                     continue
                 }
-                let current = await tryFitBody_v2(settings, section, done, layoutTemplate, stylesTemplate, clusterBrowser);
+                let current = await tryFitBody_v2(settings, section, done, template, template, clusterBrowser);
                 if (current.done === done) {
                     continue;
                 }
@@ -140,18 +139,12 @@ async function fitToPresentation_greedy(
         let done = 0;
         while (done < section.body.length) {
             let fitSessions = [];
-            for (let layoutOriginalTemplate of originalTemplates) {
-                if (layoutOriginalTemplate.isTitlePage) {
+            for (let originalTemplate of originalTemplates) {
+                if (originalTemplate.isTitlePage) {
                     continue;
                 }
-                let layoutTemplate = templates.getByOriginalId(layoutOriginalTemplate.originalId);
-                for (let stylesOriginalTemplate of originalTemplates) {
-                    if (stylesOriginalTemplate.isTitlePage || !stylesOriginalTemplate.isCustom) {
-                        continue;
-                    }
-                    let stylesTemplate = templates.getByOriginalId(stylesOriginalTemplate.originalId);
-                    fitSessions.push(tryFitBody_v2(settings, section, done, layoutTemplate, stylesTemplate, clusterBrowser));
-                }
+                let template = originalTemplate.getFreshJSON();
+                fitSessions.push(tryFitBody_v2(settings, section, done, template, template, clusterBrowser));
             }
             let fitResults = await Promise.all(fitSessions);
 
@@ -206,33 +199,26 @@ async function fitToSlide_total(
 
     let pageSize = templates.getPageSizeInPX();
 
-    let layoutTemplates = templates.getUniqueLayoutTemplates();
-
-    let stylesTemplates = templates.getUniqueStylesTemplates();
+    let originalTemplates = templates.getCustomTemplates();
 
     let fitSessions = [];
 
-    for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? layoutTemplates.length : 1); layoutIdx++) {
-        let layoutTemplate = null;
+    if (layoutPageId === null && stylesPageId === null) {
+        for (let originalTemplate of  originalTemplates) {
+            let template = originalTemplate.getFreshJSON();
+            fitSessions.push(tryFitBody_v2(settings, content, 0, template, template, clusterBrowser));
+        }
+    }
+    else {
         if (layoutPageId === null) {
-            layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
+            layoutPageId = stylesPageId;
         }
-        else {
-            layoutTemplate = templates.getByOriginalId(layoutPageId);
+        if (stylesPageId === null) {
+            stylesPageId = layoutPageId;
         }
-        for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? stylesTemplates.length : 1); stylesIdx++) {
-            let stylesTemplate = null;
-            if (stylesPageId === null) {
-                stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
-                if (!stylesTemplate.isCustom) {
-                    continue;
-                }
-            }
-            else {
-                stylesTemplate = templates.getByOriginalId(stylesPageId);
-            }
-            fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
-        }
+        layoutTemplate = templates.getByOriginalId(layoutPageId);
+        stylesTemplate = templates.getByOriginalId(stylesPageId);
+        fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
     }
 
     let results = await Promise.all(fitSessions);
@@ -288,6 +274,20 @@ async function fitToAlternatives_random(
             }
             else {
                 stylesTemplate = templates.getByOriginalId(stylesPageId);
+            }
+
+            let originalStyles = layoutTemplate.getStylesJSON(true);
+            let targetStyles = stylesTemplate.getStylesJSON(true);
+
+            hasAllNecessary = true;
+            for (let field in originalStyles.styles) {
+                if (!targetStyles.styles.hasOwnProperty(field)) {
+                    hasAllNecessary = false;
+                }
+            }
+
+            if (!hasAllNecessary) {
+                continue;
             }
 
             fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));

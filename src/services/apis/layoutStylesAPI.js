@@ -89,7 +89,7 @@ export async function generateSlideRequests(presentationId, targetPageId, layout
         settings: {
             fast: false,
             contentControl: false,
-            debug: false,
+            debug: true,
             putOriginalContent: false,
         },
     };
@@ -190,6 +190,7 @@ export async function clearSlideRequests(presentationId, pageNum) {
             let requests = [];
             if (Array.isArray(response.result.slides)
                 && pageNum <= response.result.slides.length
+                && Array.isArray(response.result.slides[pageNum - 1].pageElements)
             ) {
                 for (let pageElement of response.result.slides[pageNum - 1].pageElements) {
                     requests.push({
