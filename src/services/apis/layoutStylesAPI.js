@@ -45,9 +45,9 @@ export async function generatePresentationRequests(presentationId, resources) {
         settings: {
             fast: true,
             contentControl: false,
-            method: 'greedy',
+            method: 'random',
             debug: true,
-            putOriginalContent: true,
+            putOriginalContent: false,
         },
     };
 
@@ -133,7 +133,7 @@ export async function generateAlternativesRequests(presentationId, sort, maxCnt,
             fast: true,
             contentControl: false,
             debug: true,
-            putOriginalContent: true,
+            putOriginalContent: false,
         },
     };
 

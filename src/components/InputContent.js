@@ -234,7 +234,6 @@ function InputContent(props) {
                 };
                 generateAlternatives(selected, selectedExt, layoutPageIdDropdownValue, stylesPageIdDropdownValue, sortToggle, resources)
                     .then((response) => {
-                        let matching = response.matching;
                         console.log("Generated Alternatives: ", response);
                         loadingDeactivate(COMPILING);
                         forceUpdateSelected();

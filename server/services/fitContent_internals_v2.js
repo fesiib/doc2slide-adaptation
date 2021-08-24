@@ -254,7 +254,36 @@ function fitToShape(settings, pageElement, originalBox, originalStyles, targetSt
 async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTemplate, clusterBrowser) {
     let done = start;
     let matching = {};
+    let mapping = {};
     let requests = [];
+
+    let totalNumContent = 0;
+    if (content.hasOwnProperty('header')) {
+        totalNumContent++;
+        mapping[content.header.id] = {
+            wasMatched: false,
+            type: null,
+        };
+    }
+    if (content.hasOwnProperty('body')) {
+        for (let i = start; i < content.body.length; i++) {
+            bodyContent = content.body[i];
+            if (bodyContent.hasOwnProperty('paragraph')) {
+                totalNumContent++;
+                mapping[bodyContent.paragraph.id] = {
+                    wasMatched: false,
+                    type: null,
+                };
+            }
+            else if (bodyContent.hasOwnProperty('bullet')) {
+                //TODO
+                mapping[bodyContent.bullet.id] = {
+                    wasMatched: false,
+                    type: null,
+                };
+            }
+        }
+    }
 
     if (!Array.isArray(layoutTemplate.page.pageElements)) {
         return {
@@ -266,10 +295,11 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
             stylesTemplate,
             done,
             matching,
+            mapping,
             requests,
             moreInfo: {
                 totalNumMapped: 0,
-                totalNumContent: 0,
+                totalNumContent: totalNumContent,
                 totalNumSlideElements: 0,    
             },
         };
@@ -292,7 +322,6 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
     });
 
     let totalNumMapped = 0;
-    let totalNumContent = 0;
     let totalNumSlideElements = elements.length;
 
     let originalStyles = layoutTemplate.getStylesJSON();
@@ -302,7 +331,6 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
 
     // Fit the header
     if (content.hasOwnProperty('header')) {
-        totalNumContent++;
         let headerPageElement = null;
         let headerIdx = HEADER_PLACEHOLDER.length + SUBHEADER_PLACEHOLDER.length;
         for (let pageElement of elements) {
@@ -339,12 +367,14 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
             });
             headerPageElement.isHeader = true;
             totalNumMapped++;
+            mapping[content.header.id] = {
+                wasMatched: true,
+                type: headerPageElement.type,
+            };
         }
     }
 
     if (Array.isArray(content.body)) {
-        totalNumContent += (content.body.length - start);
-
         let pageElementIdx = 0;
         for (let i = start; i < content.body.length; i++) {
             let didMapped = false;
@@ -417,6 +447,10 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
                             isOriginalContent: false,
                         },
                     });
+                    mapping[bodyContent.paragraph.id] = {
+                        wasMatched: true,
+                        type: pageElement.type,
+                    };
                     didMapped = true;
                     break;
                 }
@@ -515,6 +549,7 @@ async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTem
         done,
         content,
         matching,
+        mapping,
         requests,
         moreInfo: {
             totalNumMapped,
@@ -592,11 +627,10 @@ function getSingleTemplateResponse_v2(settings, result, targetPageId, pageNum, p
         
         globalRequests = globalRequests.concat(addTextBox(result.layoutTemplate.informationBoxId, targetPageId, informationText));
     }
-    
     return {
         requests: globalRequests,
         matching: matching,
-        matched: result.moreInfo.totalNumMapped,
+        mapping: result.mapping,
     };
 }
 

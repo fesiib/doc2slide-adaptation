@@ -23,8 +23,7 @@ export async function testPresentation_v2(presentationId, copies, resources) {
                                     generatePresentationRequests(presentationId, resources)
                                     .then((response) => {
                                         let requests = clearRequests.concat(response.requests);
-                                        let matching = response.matching;
-                                        console.log('Matching:', title, matching);
+                                        console.log('Matching:', title, response.matchings, response.mappings);
                                         updatePresentation(newId, requests).then((response) => {
                                             resolve_inner({
                                                 response,
@@ -61,9 +60,7 @@ export async function comparePresentation_v2(presentationId, sort, resources) {
                         generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
                         .then((response) => {
                             let requests = clearRequests.concat(response.requests);
-                            let matching = response.matching;
-                            let matchedList = response.matchedList;
-                            console.log('Matching:', title, matchedList, matching);
+                            console.log('Matching:', title, response.matchings, response.mappings);
                             updatePresentation(newId, requests).then((response) => {
                                 resolve({
                                     response,
@@ -138,9 +135,10 @@ export async function generatePresentation_v2(referencePresentationId, presentat
             generatePresentationRequests(referencePresentationId, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
-                let matching = response.matching;
-                let pageCnt = Object.keys(matching).length;
-                console.log('Matching:', matching);
+                let matchings = response.matchings;
+                let mappings = response.mappings;
+                let pageCnt = Object.keys(matchings).length;
+                console.log('Matching:', matchings, mappings);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({
                         pageCnt,
@@ -165,9 +163,7 @@ export async function generateSlide_v2(referencePresentationId, presentationId, 
             generateSlideRequests(referencePresentationId, targetPageId, layoutPageId, stylesPageId, pageNum, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
-                let matching = response.matching;
-                let matched = response.matched;
-                console.log('Matched:', matched, matching);
+                console.log('Matched:', response.matching, response.mapping);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({
                         response,
@@ -191,14 +187,10 @@ export async function generateAlternatives(referencePresentationId, presentation
             generateAlternativesRequests(referencePresentationId, sort, 40, layoutPageId, stylesPageId, resources)
             .then((response) => {
                 let requests = clearRequests.concat(response.requests);
-                let matching = response.matching;
-                let matchedList = response.matchedList;
                 console.log(requests);
-                console.log('All Slides Matched:', matchedList, matching);
+                console.log('All Slides Matched:', response.matchings, response.mappings);
                 updatePresentation(presentationId, requests).then(() => {
-                    resolve({
-                        matching,
-                    });
+                    resolve();
                 }).catch((reason) => {
                     reject(reason);
                 });

@@ -8,8 +8,8 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
     let pageSize = templates.getPageSizeInPX();
 
     let requests = [];
-    let matching = [];
-    let matchedList = [];
+    let matchings = [];
+    let mappings = [];
 
     let results = [];
     let pageNum = 0;
@@ -80,14 +80,14 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
 
     for (let result of results) {
         requests = requests.concat(result.requests);
-        matching.push({ ...result.matching });
-        matchedList.push(result.matched);
+        matchings.push({ ...result.matching });
+        mappings.push({ ...result.mapping });
     }
 
     return {
         requests,
-        matching,
-        matchedList,
+        matchings,
+        mappings,
     };
 }
 
@@ -103,8 +103,8 @@ async function fitToPresentation_greedy(
     let pageSize = templates.getPageSizeInPX();
 
     let requests = [];
-    let matching = [];
-    let matchedList = [];
+    let matchings = [];
+    let mappings = [];
 
     let results = [];
     let pageNum = 0;
@@ -180,14 +180,14 @@ async function fitToPresentation_greedy(
 
     for (let result of results) {
         requests = requests.concat(result.requests);
-        matching.push({ ...result.matching });
-        matchedList.push(result.matched);
+        matchings.push({ ...result.matching });
+        mappings.push({ ...result.mapping });
     }
 
     return {
         requests,
-        matching,
-        matchedList,
+        matchings,
+        mappings,
     };
 }
 
@@ -267,8 +267,8 @@ async function fitToAlternatives_random(
     let stylesTemplates = templates.getUniqueStylesTemplates();
 
     let requests = [];
-    let matching = [];
-    let matchedList = [];
+    let matchings = [];
+    let mappings = [];
 
     let fitSessions = [];
 
@@ -320,14 +320,14 @@ async function fitToAlternatives_random(
         let response = getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize);
 
         requests = requests.concat(response.requests);
-        matching.push({ ...response.matching });
-        matchedList.push(response.matched);
+        matchings.push({ ...response.matching });
+        mappings.push({ ...response.mapping });
     }
 
     return {
         requests,
-        matching,
-        matchedList,
+        matchings,
+        mappings,
     };
 }
 
