@@ -44,7 +44,7 @@ export async function generatePresentationRequests(presentationId, resources) {
         resources,
         settings: {
             fast: true,
-            contentControl: true,
+            contentControl: false,
             method: 'greedy',
             debug: true,
             putOriginalContent: true,
@@ -87,10 +87,10 @@ export async function generateSlideRequests(presentationId, targetPageId, layout
         pageNum,
         resources,
         settings: {
-            fast: false,
+            fast: true,
             contentControl: false,
             debug: true,
-            putOriginalContent: false,
+            putOriginalContent: true,
         },
     };
 
@@ -131,7 +131,7 @@ export async function generateAlternativesRequests(presentationId, sort, maxCnt,
         resources,
         settings: {
             fast: true,
-            contentControl: true,
+            contentControl: false,
             debug: true,
             putOriginalContent: false,
         },

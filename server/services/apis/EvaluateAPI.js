@@ -2,11 +2,11 @@ const { fastRenderTexts } = require("./fastRenderAPI");
 const { getRectangle,
     IMAGE_PLACEHOLDER,
     getDominantTextStyle,
-    PX,
     SLIDE_NUMBER_PLACEHOLDER,
     consumeRGBColor,
     getParagraphTexts,
 } = require("../Template");
+const { stylesToTextStyle } = require("./initializeAPI");
 
 const EMU = 1 / 12700;
 
@@ -401,21 +401,7 @@ function getParagraphStyles_withStyles(pageElement) {
             direction: 'LEFT_TO_RIGHT',
         };
         let bulletStyle = {};
-        let textStyle = {
-            weightedFontFamily: {
-                fontFamily: styles.fontFamily,
-                weight: 400,
-            },
-            foregroundColor: {
-                opaqueColor: {
-                    rgbColor: styles.foregroundColor.rgbColor,
-                }
-            },
-            fontSize: {
-                magnitude: styles.fontSize * PX * EMU,
-                unit: 'PT',
-            }
-        };
+        let textStyle = stylesToTextStyle(styles);
         paragraphStyles.push({
             style: getParagraphStyle(paragraphStyle, bulletStyle),
             fontStyle: getFontStyle(textStyle),

@@ -1,8 +1,36 @@
 const { objRecTraverse } = require('./requiredFields');
-const { IMAGE_PLACEHOLDER, SLIDE_NUMBER_PLACEHOLDER, getDominantTextStyle, getBulletPreset, PX, rectangleToSizeTransform, PLACEHOLDER_IMAGE_URL } = require('../Template');
+const { 
+    IMAGE_PLACEHOLDER,
+    SLIDE_NUMBER_PLACEHOLDER,
+    getDominantTextStyle,
+    getBulletPreset,
+    PX,
+    rectangleToSizeTransform,
+    PLACEHOLDER_IMAGE_URL,
+    PT
+} = require('../Template');
 
 function isNumeric(ch) {
     return ch.length === 1 && ch.match(/[0-9]/g);
+}
+
+function stylesToTextStyle(styles) {
+    let textStyle = {
+        weightedFontFamily: {
+            fontFamily: styles.fontFamily,
+            weight: 400,
+        },
+        foregroundColor: {
+            opaqueColor: {
+                rgbColor: styles.foregroundColor.rgbColor,
+            }
+        },
+        fontSize: {
+            magnitude: styles.fontSize * PX / PT,
+            unit: 'PT',
+        }
+    };
+    return textStyle;
 }
 
 function addTextBox(shapeId, pageId, text) {
@@ -118,21 +146,7 @@ function initializePageElementShape_withStyles(pageElement) {
         
         let bulletStyle = {};
 
-        let textStyle = {
-            weightedFontFamily: {
-                fontFamily: styles.fontFamily,
-                weight: 400,
-            },
-            foregroundColor: {
-                opaqueColor: {
-                    rgbColor: styles.foregroundColor.rgbColor,
-                }
-            },
-            fontSize: {
-                magnitude: styles.fontSize * PX,
-                unit: 'EMU',
-            }
-        };
+        let textStyle = stylesToTextStyle(styles);
 
         if (bulletStyle.hasOwnProperty('glyph')
             && bulletStyle.glyph !== ''
@@ -832,4 +846,5 @@ module.exports = {
     initializePageElementShape_withStyles,
     initializePageElementImage_withStyles,
     addTextBox,
+    stylesToTextStyle,
 }
