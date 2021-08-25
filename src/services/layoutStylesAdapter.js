@@ -186,7 +186,10 @@ export async function generateAlternatives(referencePresentationId, presentation
             let clearRequests = response.requests;
             generateAlternativesRequests(referencePresentationId, sort, 40, layoutPageId, stylesPageId, resources)
             .then((response) => {
-                let requests = clearRequests.concat(response.requests);
+                let requests = clearRequests;
+                for (let obj of response.requestsList) {
+                    requests = requests.concat(obj.requests);
+                }
                 console.log(requests);
                 console.log('All Slides Matched:', response.matchings, response.mappings);
                 updatePresentation(presentationId, requests).then(() => {
