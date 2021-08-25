@@ -37,7 +37,9 @@ export async function processContent(request, possibleResponse, shouldUpdate) {
 
     let header = {
         ...headerText,
-        images: headerImage
+        images: headerImage,
+        format: 'text',
+        type: 'HEADER',
     };
     let body = [];
 
@@ -46,6 +48,8 @@ export async function processContent(request, possibleResponse, shouldUpdate) {
             paragraph: {
                 ...bodyText[i],
                 images: bodyImage[i],
+                format: 'text',
+                type: 'BODY',
             }
         });
     }
@@ -62,12 +66,19 @@ export async function processContentDoc(request, possibleResponse, shouldUpdate)
     }
     let titleText = request.title;
     let sectionsTexts = request.sections;
-    let titlePromise = textTFIDF(titleText);
+    let titleTextPromise = textTFIDF(titleText);
+    let titleImagePromise = imageAll(titleText);
     let sectionsPromises = [];
     for (let section of sectionsTexts) {
         sectionsPromises.push(processContent(section, null, true));
     }
-    let title = await titlePromise;
+    let title = {
+        ...(await titleTextPromise),
+        images: (await titleImagePromise),
+        format: 'text',
+        type: 'HEADER',
+    };
+
     let sections = await Promise.all(sectionsPromises);
     console.log(title, sections);
     for (let section of sections) {
