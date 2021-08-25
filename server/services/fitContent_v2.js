@@ -43,6 +43,10 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
 
     for (let section of contents.sections) {
         let done = 0;
+        let mapToSingleSlide = false;
+        if (section.hasOwnProperty('mapToSingleSlide')) {
+            mapToSingleSlide = section.mapToSingleSlide;
+        }
         while (done < section.body.length) {
             let iterations = 0;
             let result = null;
@@ -66,7 +70,10 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
             if (result !== null) {
                 pageNum++; 
                 done = result.done;
-                results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));    
+                results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));
+                if (mapToSingleSlide) {
+                    break;
+                }
             }
             else {
                 break;
@@ -137,6 +144,10 @@ async function fitToPresentation_greedy(
     }
     for (let section of contents.sections) {
         let done = 0;
+        let mapToSingleSlide = false;
+        if (section.hasOwnProperty('mapToSingleSlide')) {
+            mapToSingleSlide = section.mapToSingleSlide;
+        }
         while (done < section.body.length) {
             let fitSessions = [];
             for (let originalTemplate of originalTemplates) {
@@ -161,6 +172,9 @@ async function fitToPresentation_greedy(
                 pageNum++;
                 done = result.done;
                 results.push(getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize));
+                if (mapToSingleSlide) {
+                    break;
+                }
             }
             else {
                 break;
