@@ -286,13 +286,11 @@ function initializePageElementShape(pageElement) {
             continue;
         }
         let style = {};
-        let bullet = {};
 
         let listId = null;
         let nestingLevel = 0;
         let glyph = '';
         if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
-            bullet = { ...textElement.paragraphMarker.bullet };
             if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
                 listId = textElement.paragraphMarker.bullet.listId;
             }
@@ -440,52 +438,53 @@ function initializeShapeText(pageElement, text) {
             }
         }
     });
-    requests.push({
-        insertText: {
-            objectId: pageElement.objectId,
-            text: text,
+    if (text !== null) {
+        requests.push({
+            insertText: {
+                objectId: pageElement.objectId,
+                text: text,
+            }
+        });
+        let firstParagraphMarker = getFirstParagraphMarker(pageElement.shape.text);
+        let firstText = getFirstText(pageElement.shape.text);
+        if (firstParagraphMarker !== null
+            && firstParagraphMarker.paragraphMarker.hasOwnProperty('style')
+        ) {
+            let result = objRecTraverse(firstParagraphMarker.paragraphMarker.style, '');
+            if (result.fields.length > 0) {
+                requests.push({
+                    updateParagraphStyle: {
+                        objectId: pageElement.objectId,
+                        style: result.dst,
+                        textRange: {
+                            type: 'ALL',
+                        },
+                        fields: result.fields.join(),
+                    }
+                });
+            }
         }
-    });
-
-    let firstParagraphMarker = getFirstParagraphMarker(pageElement.shape.text);
-    let firstText = getFirstText(pageElement.shape.text);
-    if (firstParagraphMarker !== null
-        && firstParagraphMarker.paragraphMarker.hasOwnProperty('style')
-    ) {
-        let result = objRecTraverse(firstParagraphMarker.paragraphMarker.style, '');
-        if (result.fields.length > 0) {
-            requests.push({
-                updateParagraphStyle: {
-                    objectId: pageElement.objectId,
-                    style: result.dst,
-                    textRange: {
-                        type: 'ALL',
-                    },
-                    fields: result.fields.join(),
-                }
-            });
-        }
-    }
-    if (firstText !== null) {
-        let style = null;
-        if (firstText.hasOwnProperty('textRun')) {
-            style = firstText.textRun.style;
-        }
-        else {
-            style = firstText.autoText.style;
-        }
-        let result = objRecTraverse(style, '');
-        if (result.fields.length > 0) {
-            requests.push({
-                updateTextStyle: {
-                    objectId: pageElement.objectId,
-                    style: result.dst,
-                    textRange: {
-                        type: 'ALL',
-                    },
-                    fields: result.fields.join(),
-                }
-            });
+        if (firstText !== null) {
+            let style = null;
+            if (firstText.hasOwnProperty('textRun')) {
+                style = firstText.textRun.style;
+            }
+            else {
+                style = firstText.autoText.style;
+            }
+            let result = objRecTraverse(style, '');
+            if (result.fields.length > 0) {
+                requests.push({
+                    updateTextStyle: {
+                        objectId: pageElement.objectId,
+                        style: result.dst,
+                        textRange: {
+                            type: 'ALL',
+                        },
+                        fields: result.fields.join(),
+                    }
+                });
+            }
         }
     }
     return requests;
@@ -603,12 +602,12 @@ function getPageElementRequests(pageId, pageNum, pageElement, suffix) {
             });
             validObjectId = true;
 
-            let text = pageElement.type;
 
-            if (SLIDE_NUMBER_PLACEHOLDER.includes(text) && pageNum > 0) {
-                text = pageNum.toString();
-            }
             if (pageElement.hasOwnProperty('type')) {
+                let text = null;
+                if (SLIDE_NUMBER_PLACEHOLDER.includes(pageElement.type) && pageNum > 0) {
+                    text = pageNum.toString();
+                }
                 requests = requests.concat(initializeShapeText(pageElement, text));
             }
             if (pageElement.shape.hasOwnProperty('shapeProperties')) {
