@@ -279,6 +279,7 @@ const CUSTOM_FIELDS = [
     'hasLink',
     'hasConnection',
     'additional',
+    'bulletPreset',
 ];
 
 function objRecTraverse(obj, prefix = '') {

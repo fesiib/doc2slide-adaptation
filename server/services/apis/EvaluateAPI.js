@@ -1,10 +1,10 @@
 const { fastRenderTexts } = require("./fastRenderAPI");
 const { getRectangle,
     IMAGE_PLACEHOLDER,
-    getDominantTextStyle,
     SLIDE_NUMBER_PLACEHOLDER,
     consumeRGBColor,
     getParagraphTexts,
+    getParagraphTextStyles,
 } = require("../Template");
 const { stylesToTextStyle } = require("./initializeAPI");
 
@@ -186,12 +186,9 @@ function consumeFontSize(fontSize, def) {
 }
 
 
-function getParagraphStyle(paragraphStyle, bulletStyle) {
+function getParagraphStyle(paragraphStyle) {
     if (typeof paragraphStyle !== 'object') {
         paragraphStyle = {};
-    }
-    if (typeof bulletStyle !== 'object') {
-        bulletStyle = {};
     }
     if (paragraphStyle.hasOwnProperty('direction') 
         && paragraphStyle.direction !== 'LEFT_TO_RIGHT'
@@ -255,13 +252,9 @@ function getParagraphStyle(paragraphStyle, bulletStyle) {
         lineHeight = paragraphStyle.lineSpacing;
     }
 
-    let glyph = '';
     let isListElement = false;
-    if (bulletStyle.hasOwnProperty('listId')) {
+    if (paragraphStyle.hasOwnProperty('bulletPreset')) {
         isListElement = true;
-        if (bulletStyle.hasOwnProperty('glyph')) {
-            glyph = bulletStyle.glyph;
-        }    
         textIndent = 0;
     }
 
@@ -274,7 +267,6 @@ function getParagraphStyle(paragraphStyle, bulletStyle) {
         textIndent,
         lineHeight,
         collapseLists,
-        glyph,
         isListElement,
     };
 }
@@ -397,13 +389,12 @@ function getParagraphStyles_withStyles(pageElement) {
     let paragraphStyles = [];
     
     for (let styles of allStyles) {
-        let paragraphStyle = {
-            direction: 'LEFT_TO_RIGHT',
-        };
-        let bulletStyle = {};
-        let textStyle = stylesToTextStyle(styles);
+        let {
+            paragraphStyle,
+            textStyle,
+        } = stylesToTextStyle(styles);
         paragraphStyles.push({
-            style: getParagraphStyle(paragraphStyle, bulletStyle),
+            style: getParagraphStyle(paragraphStyle),
             fontStyle: getFontStyle(textStyle),
         });
     }
@@ -418,59 +409,23 @@ function getParagraphStyles(pageElement) {
     ) {
         return [];
     }
-    const textElements = pageElement.shape.text.textElements;
     let paragraphStyles = [];
-    for (let i = 0; i < textElements.length; i++) {
-        const textElement = textElements[i];
-        if (textElement.hasOwnProperty('paragraphMarker')) {
-            let paragraph = {};
-
-            let bullet = {};
-            let style = {};
-
-            let listId = null;
-            let nestingLevel = 0;
-            if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
-                bullet = { ...textElement.paragraphMarker.bullet };
-                if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
-                    listId = textElement.paragraphMarker.bullet.listId;
-                }
-                if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
-                    nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
-                }
-            }
-            if (textElement.paragraphMarker.hasOwnProperty('style')) {
-                style = { ...textElement.paragraphMarker.style };
-            }
-            paragraph.style = getParagraphStyle(style, bullet);
-            
-            let l = 0;
-            let r = 0;
-            if (textElement.hasOwnProperty('startIndex'))
-                l = textElement.startIndex;
-            if (textElement.hasOwnProperty('endIndex')) {
-                r = textElement.endIndex;
-            }
-            let textStyle = {};
-            if (listId !== null) {
-                textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
-                if (typeof textStyle !== 'object') {
-                    textStyle = {};
-                }
-            }
-            
-            textStyle = getDominantTextStyle(textStyle, textElements, i, l, r);
-            try {
-                paragraph.fontStyle = getFontStyle(textStyle);
-            }
-            catch(error) {
-                console.log('Error in Font Style extraction with: ', textStyle, error);
-                continue;
-            }
-            paragraphStyles.push(paragraph);
+    let paragraphs = getParagraphTextStyles(pageElement);
+    for (let { paragraphStyle, textStyle } of paragraphs) {
+        let paragraph = {
+            style: {},
+            fontStyle: {},
+        };
+        paragraph.style = getParagraphStyle(paragraphStyle);
+        try {
+            paragraph.fontStyle = getFontStyle(textStyle);
         }
+        catch(error) {
+            console.log('Error in Font Style extraction with: ', textStyle, error);
+            continue;
+        }
+        paragraphStyles.push(paragraph);
     }
-
     for (let i = 1; i < paragraphStyles.length; i++) {
         if (paragraphStyles[i].style.isListElement && paragraphStyles[i - 1].style.isListElement) {
             if (paragraphStyles[i].style.collapseLists)

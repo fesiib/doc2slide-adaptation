@@ -91,6 +91,10 @@ const DEFAULT_TRANSFORM = {
 }
 
 
+function isNumeric(ch) {
+    return ch.length === 1 && ch.match(/[0-9]/g);
+}
+
 function random() {
     let id = uuidv4();
     return id.replace(/-/g, '');
@@ -968,9 +972,9 @@ function getDominantTextStyle(textStyle, textElements, start, L, R) {
 }
 
 function getBulletPreset(glyph) {
-    // if (isNumeric(glyph[0])) {
-    //     return "NUMBERED_DIGIT_ALPHA_ROMAN";
-    // }
+    if (isNumeric(glyph[0])) {
+        return "NUMBERED_DIGIT_ALPHA_ROMAN";
+    }
     return "BULLET_DISC_CIRCLE_SQUARE";
 }
 
@@ -985,6 +989,8 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
                 blue: 0,
             },
         },
+        textAlign: "left",
+        prefix: "none",
         recommendedLength: recommendedLength,
     }    
     if (textStyle.hasOwnProperty('fontSize')) {
@@ -1003,6 +1009,27 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
     if (textStyle.hasOwnProperty('weightedFontFamily')) {
         if (textStyle.weightedFontFamily.hasOwnProperty('fontFamily')) {
             result.fontFamily = textStyle.weightedFontFamily.fontFamily;
+        }
+    }
+
+    if (paragraphStyle.hasOwnProperty('bulletPreset')) {
+        if (paragraphStyle.bulletPreset.startsWith("NUMBERED")) {
+            result.prefix = 'number';
+        }
+        if (paragraphStyle.bulletPreset.startsWith("BULLET")) {
+            result.prefix = 'bullet';
+        }
+    }
+
+    if (paragraphStyle.hasOwnProperty('alignment')) {
+        if (paragraphStyle.alignment === 'END') {
+            result.textAlign = 'right';
+        }
+        if (paragraphStyle.alignment === 'CENTER') {
+            result.textAlign = 'center';
+        }
+        if (paragraphStyle.alignment === 'JUSTIFIED') {
+            result.textAlign = 'justify';
         }
     }
     return result;
@@ -1120,6 +1147,64 @@ function makeResourcesParagraphs(urls, paragraphs, isOriginalContent = true) {
         });
     }
     return contents;
+}
+
+function getParagraphTextStyles(pageElement) {
+    let textElements = pageElement.shape.text.textElements;
+    let paragraphs = [];
+    for (let i = 0; i < textElements.length; i++) {
+        const textElement = textElements[i];
+        if (textElement.hasOwnProperty('paragraphMarker')) {
+            let paragraphStyle = {};
+            let textStyle = {};
+            let paragraphLength = -1;
+
+            let listId = null;
+            let nestingLevel = 0;
+            let glyph = '';
+            if (textElement.paragraphMarker.hasOwnProperty('bullet')) {;
+                if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
+                    listId = textElement.paragraphMarker.bullet.listId;
+                }
+                if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
+                    nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
+                }
+                if (textElement.paragraphMarker.bullet.hasOwnProperty('glyph')) {
+                    glyph = textElement.paragraphMarker.bullet.glyph
+                }
+            }
+            if (textElement.paragraphMarker.hasOwnProperty('style')) {
+                paragraphStyle = { ...textElement.paragraphMarker.style };
+            }
+            let l = 0;
+            let r = 0;
+            if (textElement.hasOwnProperty('startIndex'))
+                l = textElement.startIndex;
+            if (textElement.hasOwnProperty('endIndex')) {
+                r = textElement.endIndex;
+            }
+
+            paragraphLength = r - l;
+
+            if (listId !== null) {
+                textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
+                if (typeof textStyle !== 'object') {
+                    textStyle = {};
+                }
+                if (glyph != '') {
+                    paragraphStyle.bulletPreset = getBulletPreset(glyph);
+                }
+            }
+            textStyle = getDominantTextStyle(textStyle, textElements, i, l, r);
+
+            paragraphs.push({
+                paragraphStyle,
+                textStyle,
+                paragraphLength,
+            });
+        }
+    }
+    return paragraphs;
 }
 
 class Template {
@@ -1327,58 +1412,16 @@ class Template {
                 alreadyCovered[pageElement.type] = true;
                 continue;
             }
-            let textElements = pageElement.shape.text.textElements;
-            let paragraphs = getParagraphTexts(pageElement);
-            for (let textElementIdx = 0; textElementIdx < textElements.length; textElementIdx++) {
-                let textElement = textElements[textElementIdx];
-                if (!textElement.hasOwnProperty('paragraphMarker')) {
-                    continue;
-                }
-                let paragraphStyle = {};
-                
-                let listId = null;
-                let nestingLevel = 0;
-                let glyph = '';
-                if (textElement.paragraphMarker.hasOwnProperty('bullet')) {
-                    if (textElement.paragraphMarker.bullet.hasOwnProperty('listId')) {
-                        listId = textElement.paragraphMarker.bullet.listId;
-                    }
-                    if (textElement.paragraphMarker.bullet.hasOwnProperty('nestingLevel')) {
-                        nestingLevel = textElement.paragraphMarker.bullet.nestingLevel;
-                    }
-                    if (textElement.paragraphMarker.bullet.hasOwnProperty('glyph')) {
-                        glyph = textElement.paragraphMarker.bullet.glyph
-                    }
-                }
-                if (textElement.paragraphMarker.hasOwnProperty('style')) {
-                    paragraphStyle = { ...textElement.paragraphMarker.style };
-                }
-                let l = 0;
-                let r = 0;
-                if (textElement.hasOwnProperty('startIndex'))
-                    l = textElement.startIndex;
-                if (textElement.hasOwnProperty('endIndex')) {
-                    r = textElement.endIndex;
-                }
-                let textStyle = {};
-                if (listId !== null) {
-                    textStyle = pageElement.shape.text.lists[listId].nestingLevel[nestingLevel].bulletStyle;
-                    if (typeof textStyle !== 'object') {
-                        textStyle = {};
-                    }
-                    if (glyph != '') {
-                        textStyle.bulletPreset = getBulletPreset(glyph);
-                    }
-                }
-                textStyle = getDominantTextStyle(textStyle, textElements, textElementIdx, l, r);
-                let paragraphLength = r - l;
+            let paragraphs = getParagraphTextStyles(pageElement);
+
+            for (let { paragraphStyle, textStyle, paragraphLength } of paragraphs) {
                 if (!this.isCustom) {
                     paragraphLength = -1;
                 }
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
-                    originalContents: makeResourcesParagraphs([], paragraphs),
+                    originalContents: makeResourcesParagraphs([], getParagraphTexts(pageElement)),
                     ...(getScopedStyles(paragraphStyle, textStyle, paragraphLength)),    
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1416,6 +1459,7 @@ module.exports = {
     getBulletPreset,
     rectangleToSizeTransform,
     getParagraphTexts,
+    getParagraphTextStyles,
 
     HEADER_PLACEHOLDER,
     BODY_PLACEHOLDER,

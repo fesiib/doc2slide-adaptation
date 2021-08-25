@@ -10,10 +10,6 @@ const {
     PT
 } = require('../Template');
 
-function isNumeric(ch) {
-    return ch.length === 1 && ch.match(/[0-9]/g);
-}
-
 function stylesToTextStyle(styles) {
     let textStyle = {
         weightedFontFamily: {
@@ -28,9 +24,36 @@ function stylesToTextStyle(styles) {
         fontSize: {
             magnitude: styles.fontSize * PX / PT,
             unit: 'PT',
-        }
+        },
     };
-    return textStyle;
+    let paragraphStyle = {
+        direction: "LEFT_TO_RIGHT",
+        alignment: "START",
+    };
+
+    if (styles.prefix === 'number') {
+        paragraphStyle.bulletPreset = "NUMBERED_DIGIT_ALPHA_ROMAN";
+    }
+    if (styles.prefix === 'bullet') {
+        paragraphStyle.bulletPreset = "BULLET_DISC_CIRCLE_SQUARE";
+    }
+
+    if (styles.textAlign === 'right') {
+        paragraphStyle.alignment = "END";
+    }
+
+    if (styles.textAlign === 'center') {
+        paragraphStyle.alignment = "CENTER";
+    }
+
+    if (styles.textAlign === 'justify') {
+        paragraphStyle.alignment = "JUSTIFIED";
+    }
+
+    return {
+        paragraphStyle,
+        textStyle,
+    };
 }
 
 function addTextBox(shapeId, pageId, text) {
@@ -140,17 +163,12 @@ function initializePageElementShape_withStyles(pageElement) {
 
         let styles = mappedContent.styles;
 
-        let paragraphStyle = {
-            direction: 'LEFT_TO_RIGHT',
-        };
-        
-        let bulletStyle = {};
+        let {
+            paragraphStyle,
+            textStyle,
+        } = stylesToTextStyle(styles);
 
-        let textStyle = stylesToTextStyle(styles);
-
-        if (bulletStyle.hasOwnProperty('glyph')
-            && bulletStyle.glyph !== ''
-        ) {
+        if (paragraphStyle.hasOwnProperty('bulletPreset')) {
             requests.push({
                 createParagraphBullets: {
                     objectId: pageElement.objectId,
@@ -159,11 +177,10 @@ function initializePageElementShape_withStyles(pageElement) {
                         endIndex: end,
                         type: "FIXED_RANGE",
                     },
-                    bulletPreset: getBulletPreset(bulletStyle.glyph),
+                    bulletPreset: paragraphStyle.bulletPreset,
                 },
             });
         }
-
         let result = objRecTraverse(paragraphStyle, '')
         requests.push({
             updateParagraphStyle: {
@@ -285,7 +302,7 @@ function initializePageElementShape(pageElement) {
         if (start >= end) {
             continue;
         }
-        let style = {};
+        let paragraphStyle = {};
 
         let listId = null;
         let nestingLevel = 0;
@@ -302,7 +319,7 @@ function initializePageElementShape(pageElement) {
             }
         }
         if (textElement.paragraphMarker.hasOwnProperty('style')) {
-            style = { ...textElement.paragraphMarker.style };
+            paragraphStyle = { ...textElement.paragraphMarker.style };
         }
         let l = 0;
         let r = 0;
@@ -318,23 +335,27 @@ function initializePageElementShape(pageElement) {
                 textStyle = {};
             }
             if (glyph != '') {
-                requests.push({
-                    createParagraphBullets: {
-                        objectId: pageElement.objectId,
-                        textRange: {
-                            startIndex: start,
-                            endIndex: end,
-                            type: "FIXED_RANGE",
-                        },
-                        bulletPreset: getBulletPreset(glyph),
-                    },
-                });
+                paragraphStyle.bulletPreset = getBulletPreset(glyph);
             }
         }
         
         textStyle = getDominantTextStyle(textStyle, textElements, mappedContent.textElementIdx, l, r);
 
-        let result = objRecTraverse(style, '')
+        if (paragraphStyle.hasOwnProperty('bulletPreset')) {
+            requests.push({
+                createParagraphBullets: {
+                    objectId: pageElement.objectId,
+                    textRange: {
+                        startIndex: start,
+                        endIndex: end,
+                        type: "FIXED_RANGE",
+                    },
+                    bulletPreset: paragraphStyle.bulletPreset,
+                },
+            });
+        }
+
+        let result = objRecTraverse(paragraphStyle, '')
         requests.push({
             updateParagraphStyle: {
                 objectId: pageElement.objectId,
