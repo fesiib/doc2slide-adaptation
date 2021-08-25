@@ -307,10 +307,12 @@ async function fitToAlternatives_random(
         if (pageNum === maxCnt) {
             break;
         }
-        let repStr = JSON.stringify({
-            totalScore: result.totalScore, 
-            ...result.score,
-        });
+
+        let rep = {
+            ...result.score
+        };
+        delete rep.similarity;
+        let repStr = JSON.stringify(rep);
         if (was[repStr] === true) {
             continue;
         }
