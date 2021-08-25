@@ -252,7 +252,7 @@ async function fitToAlternatives_random(
 
     let stylesTemplates = templates.getUniqueStylesTemplates();
 
-    let requests = [];
+    let requestsList = [];
     let matchings = [];
     let mappings = [];
 
@@ -319,13 +319,16 @@ async function fitToAlternatives_random(
         pageNum++;
         let response = getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize);
 
-        requests = requests.concat(response.requests);
+        requestsList.push({
+            pageId: response.matching.objectId,
+            requests: response.requests,
+        });
         matchings.push({ ...response.matching });
         mappings.push({ ...response.mapping });
     }
 
     return {
-        requests,
+        requestsList,
         matchings,
         mappings,
     };

@@ -70,6 +70,9 @@ export async function processContentDoc(request, possibleResponse, shouldUpdate)
     let title = await titlePromise;
     let sections = await Promise.all(sectionsPromises);
     console.log(title, sections);
+    for (let section of sections) {
+        section.mapToSingleSlide = true;
+    }
     return {
         title,
         sections,
