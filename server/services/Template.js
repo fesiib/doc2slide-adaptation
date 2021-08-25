@@ -1315,17 +1315,13 @@ class Template {
 
     hasSimilarStyles(template) {
         const EPS = 0.5;
-        let curAllStyles = this.getStylesJSON();
-        let allStyles = template.getStylesJSON();
-        for (let curStyles of curAllStyles.styles) {
-            let foundSimilar = false;
-            for (let styles of allStyles.styles) {
-                if (areSimilarObjs(curStyles, styles, EPS)) {
-                    foundSimilar = true;
-                    break;
-                }
+        let curAllStyles = this.getStylesJSON(true);
+        let allStyles = template.getStylesJSON(true);
+        for (let property in curAllStyles.styles) {
+            if (!allStyles.styles.hasOwnProperty(property)) {
+                return false;
             }
-            if (!foundSimilar) {
+            if (!areSimilarObjs(curAllStyles.styles[property], allStyles.styles[property], EPS)) {
                 return false;
             }
         }
@@ -1432,13 +1428,16 @@ class Template {
         if (isDict) {
             let stylesDict = {};
             for (let styles of result.styles) {
+                if (IMAGE_PLACEHOLDER.includes(styles.type)) {
+                    continue;
+                }
                 stylesDict[styles.type] = {
                     ...styles
                 }
-                // delete stylesDict[styles.type].type;
-                // delete stylesDict[styles.type].recommendedLength;
-                // delete stylesDict[styles.type].objectId;
-                // delete stylesDict[styles.type].originalContents;
+                delete stylesDict[styles.type].type;
+                delete stylesDict[styles.type].recommendedLength;
+                delete stylesDict[styles.type].objectId;
+                delete stylesDict[styles.type].originalContents;
             }
             result = {
                 ...result,
