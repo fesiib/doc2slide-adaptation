@@ -300,7 +300,12 @@ async function fitToAlternatives_random(
                 }
             }
 
-            if (!hasAllNecessary) {
+            if (!hasAllNecessary
+                && (
+                    layoutPageId === null
+                    || stylesPageId === null
+                )
+            ) {
                 continue;
             }
 
