@@ -34,31 +34,30 @@ function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targ
 }
 
 function extractShapeElements(page) {
+    if (!Array.isArray(page.pageElements)) {
+        return [];
+    }
     let shapeElements = [];
     for (let pageElement of page.pageElements) {
         if (pageElement.hasOwnProperty('additional')
             && pageElement.hasOwnProperty('shape')
         ) {
-            let copyPageElement = { ...pageElement };
-            copyPageElement.mapped = [];
-            copyPageElement.mappedContents = [];
-            copyPageElement.isHeader = false;
-            shapeElements.push(copyPageElement);
+            shapeElements.push( { ...pageElement } );
         }
     }
     return shapeElements;
 }
 
 function extractImageElements(page) {
+    if (!Array.isArray(page.pageElements)) {
+        return [];
+    }
     let imageElements = [];
     for (let pageElement of page.pageElements) {
         if (pageElement.hasOwnProperty('additional')
             && pageElement.hasOwnProperty('image')
         ) {
-            let copyPageElement = { ...pageElement };
-            copyPageElement.mapped = [];
-            copyPageElement.mappedContents = [];
-            imageElements.push(copyPageElement);
+            imageElements.push({ ...pageElement } );
         }
     }
     return imageElements;
@@ -249,6 +248,360 @@ function fitToShape(settings, pageElement, originalBox, originalStyles, targetSt
     let matching = {};
     matching[pageElement.objectId] = pageElementInfo;
     return matching;
+}
+
+function initializeMapping(content, start, layoutTemplate) {
+    let mapping = {};
+    if (content.hasOwnProperty('header')) {
+        mapping[content.header.id] = {
+            wasMatched: false,
+            type: null,
+        };
+    }
+    if (content.hasOwnProperty('body')) {
+        for (let i = start; i < content.body.length; i++) {
+            bodyContent = content.body[i];
+            if (bodyContent.hasOwnProperty('paragraph')) {
+                mapping[bodyContent.paragraph.id] = {
+                    wasMatched: false,
+                    type: null,
+                };
+            }
+            else if (bodyContent.hasOwnProperty('bullet')) {
+                //TODO
+                mapping[bodyContent.bullet.id] = {
+                    wasMatched: false,
+                    type: null,
+                };
+            }
+        }
+    }
+    let shapeElements = extractShapeElements(layoutTemplate.page);
+    let imageElements = extractImageElements(layoutTemplate.page);
+
+    let elements = shapeElements.concat(imageElements);
+
+    for (let pageElement of elements) {
+        pageElement.mapped = [];
+        pageElement.mappedContents = [];
+        pageElement.isHeader = false;
+    }
+
+    return {
+        mapping,
+        elements,
+    }
+}
+
+function getMappingArea(settings, content, start, layoutTemplate, stylesTemplate) {
+    let {
+        mapping,
+        elements,
+    } = initializeMapping(content, start, layoutTemplate);
+
+    let done = start;
+
+    const area = (rectangle) => {
+        let width = rectangle.finishX - rectangle.startX;
+        let height = rectangle.finishY - rectangle.startY;
+        let area = width * height;
+        return area;
+    }
+    
+    elements.sort((p1, p2) => {
+        return area(p2.rectangle) - area(p1.rectangle);
+    });
+
+    let originalStyles = layoutTemplate.getStylesJSON();
+    let targetStyles = stylesTemplate.getStylesJSON();
+
+    // Fit the header
+    if (content.hasOwnProperty('header')) {
+        let headerPageElement = null;
+        let headerIdx = HEADER_PLACEHOLDER.length + SUBHEADER_PLACEHOLDER.length;
+        for (let pageElement of elements) {
+            if (pageElement.additional.canbeMapped.length < 1
+                || pageElement.additional.canbeMappedMin > 1
+            ) {
+                continue;
+            }
+            
+            if (HEADER_PLACEHOLDER.includes(pageElement.type)) {
+                let curIdx = HEADER_PLACEHOLDER.findIndex((el) => el === pageElement.type);
+                if (headerIdx <= curIdx) {
+                    continue;
+                }
+                headerPageElement = pageElement;
+                headerIdx = curIdx;
+            }
+            if (SUBHEADER_PLACEHOLDER.includes(pageElement.type)) {
+                let curIdx = SUBHEADER_PLACEHOLDER.findIndex((el) => el === pageElement.type);
+                curIdx += HEADER_PLACEHOLDER.length;
+                if (headerIdx <= curIdx) {
+                    continue;
+                }
+                headerPageElement = pageElement;
+                headerIdx = curIdx;    
+            }
+        }
+        if (headerPageElement !== null) {
+            headerPageElement.mapped.push({
+                paragraph: { 
+                    ...content.header,
+                    isOriginalContent: false,
+                },
+            });
+            headerPageElement.isHeader = true;
+            mapping[content.header.id] = {
+                wasMatched: true,
+                type: headerPageElement.type,
+            };
+        }
+    }
+
+    if (Array.isArray(content.body)) {
+        let pageElementIdx = 0;
+        for (let i = start; i < content.body.length; i++) {
+            let didMapped = false;
+            let bodyContent = content.body[i];
+            while (pageElementIdx < elements.length) {
+                let pageElement = elements[pageElementIdx];
+                let targetLengths = getAppropriateTargetLengths(layoutTemplate.isCustom, pageElement, originalStyles, targetStyles);
+                let targetLengthIdx = pageElement.mapped.length;
+                if (targetLengths.length <= targetLengthIdx
+                    || pageElement.additional.canbeMappedMin > (content.body.length - i)
+                    || pageElement.isHeader || didMapped
+                ) {
+                    pageElementIdx++;
+                    continue;
+                }
+                if (bodyContent.hasOwnProperty('paragraph')) {
+                    if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+                        if (!Array.isArray(bodyContent.paragraph.images)
+                            //|| !settings.contentControl
+                        ) {
+                            pageElementIdx++;
+                            continue;
+                        }
+                    }
+                    else {
+                        if (settings.contentControl &&
+                            ( !bodyContent.paragraph.hasOwnProperty('singleWord')
+                                || typeof bodyContent.paragraph.singleWord.text !== 'string'
+                                || !bodyContent.paragraph.singleWord.hasOwnProperty('score')
+                                || !bodyContent.paragraph.singleWord.score.hasOwnProperty('importantWords')
+                                || !bodyContent.paragraph.singleWord.score.hasOwnProperty('grammatical')
+                                || !bodyContent.paragraph.singleWord.score.hasOwnProperty('semantic')
+                            )
+                        ) {
+                            pageElementIdx++;
+                            continue;
+                        }
+                    }
+                    while (targetLengthIdx < targetLengths.length
+                        && layoutTemplate.isCustom
+                        && settings.contentControl
+                        && targetLengths[targetLengthIdx] <= content.body[i].paragraph.singleWord.text.length
+                    ) {
+                        pageElement.mapped.push({
+                            paragraph: {
+                                id: null,
+                                images: [],
+                                phrases: [],
+                                shortenings: [],
+                                singleWord: {
+                                    text: '',
+                                    score: {
+                                        grammatical: 1,
+                                        importantWords: 1,
+                                        semantic: 1,
+                                    },
+                                },
+                                isOriginalContent: false,  
+                            },
+                        });
+                        targetLengthIdx++;
+                    }
+                    if (targetLengthIdx >= targetLengths.length) {
+                        pageElementIdx++;
+                        continue;
+                    }
+                    pageElement.mapped.push({
+                        paragraph: {
+                            ...bodyContent.paragraph,
+                            isOriginalContent: false,
+                        },
+                    });
+                    mapping[bodyContent.paragraph.id] = {
+                        wasMatched: true,
+                        type: pageElement.type,
+                    };
+                    didMapped = true;
+                    break;
+                }
+                else if (bodyContent.hasOwnProperty('bullet')) {
+                    didMapped = true;
+                    //TODO
+                    break;
+                }
+            }
+            if (didMapped) {
+                done++;
+            }
+            else {
+                break;
+            }
+        }
+    }
+    return {
+        mapping,
+        elements,
+        done,
+    };
+}
+
+async function fitToSlide(settings, content, start, layoutTemplate, stylesTemplate, clusterBrowser) {
+    let matching = {};
+    let {
+        mapping,
+        elements,
+        done,
+    } = getMappingArea(settings, content, start, layoutTemplate, stylesTemplate);
+    let requests = [];
+
+
+    let originalStyles = layoutTemplate.getStylesJSON();
+    let targetStyles = stylesTemplate.getStylesJSON();
+    let originalLayout = layoutTemplate.getLayoutJSON();
+    for (let pageElement of elements) {
+        let targetLengths = getAppropriateTargetLengths(layoutTemplate.isCustom, pageElement, originalStyles, targetStyles);
+        let currentMatching = {};
+
+        let originalBox = {};
+        for (let box of originalLayout.boxes) {
+            if (box.objectId === pageElement.objectId) {
+                originalBox = { ...box };
+                break;
+            }
+        }
+
+
+        // let putOriginalContent = true;
+        // for (let mappedContent of pageElement.mapped) {
+        //     if (mappedContent.paragraph.id !== null
+        //         && typeof mappedContent.paragraph.id === 'string'
+        //     ) {
+        //         putOriginalContent = false;
+        //         break;
+        //     }
+        // }
+
+        if (settings.putOriginalContent 
+            && pageElement.additional.canbeMapped.length > 0
+            && pageElement.mapped.length === 0
+            && originalBox.hasOwnProperty('originalContents')
+        ) {
+            // put OriginalContent
+            for (let content of originalBox.originalContents) {
+                pageElement.mapped.push(content);
+            }
+        }
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+            currentMatching = fitToImage(settings, pageElement, originalBox, originalStyles, targetStyles);
+        }
+        else {
+            currentMatching = fitToShape(settings, pageElement, originalBox, originalStyles, targetStyles, targetLengths);
+        }
+
+        let currentContents = currentMatching[pageElement.objectId].contents;
+
+        for (let currentContent of currentContents) {
+            let mappedContent = {
+                text: currentContent.text,
+                score: currentContent.score,
+                url: currentContent.url,
+                styles: currentContent.styles,
+            };
+            pageElement.mappedContents.push(mappedContent);
+        }
+
+        while (pageElement.mappedContents.length > 0) {
+            let n = pageElement.mappedContents.length;
+            if (pageElement.mappedContents[n - 1].text === '') {
+                pageElement.mappedContents.pop();
+            }
+            else {
+                break;
+            }
+        }
+
+        // currentMatching[pageElement.objectId].contents = currentContents.filter((val) => {
+        //     return val.contentId !== null;
+        // });
+
+        matching = {
+            ...currentMatching,
+            ...matching,
+        };
+    }
+
+    let score = await scoreElements_withStyles(elements, clusterBrowser);
+    
+    for (let pageElement of elements) {
+        if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+            requests = requests.concat(initializePageElementImage_withStyles(pageElement));
+        }
+        else {
+            requests = requests.concat(initializePageElementShape_withStyles(pageElement));
+        }
+    }
+
+    let totalNumMapped = 0;
+
+    for (let contentId in mapping) {
+        if (mapping[contentId].hasOwnProperty('wasMatched')) {
+            if (mapping[contentId].wasMatched)
+                totalNumMapped++;
+        }
+    }
+
+    let result = {
+        score: score,
+        layoutTemplate,
+        stylesTemplate,
+        done,
+        content,
+        matching,
+        mapping,
+        requests,
+        moreInfo: {
+            totalNumMapped: totalNumMapped,
+            totalNumContent: Object.keys(mapping),
+            totalNumSlideElements: elements.length,    
+        }
+    };
+
+    let totalScore = (result.score.similarity * 4 + result.score.importantWords) / 5;
+
+    if (totalScore < 0) {
+        totalScore += 10 * (
+            (result.moreInfo.totalNumMapped 
+                - result.moreInfo.totalNumContent) 
+            + (result.moreInfo.totalNumMapped    
+                - result.moreInfo.totalNumSlideElements)
+        );
+    }
+    else {
+        let total = Math.max(result.moreInfo.totalNumSlideElements, result.moreInfo.totalNumContent);
+        if (total > 0) {
+            totalScore *= (result.moreInfo.totalNumMapped / total);
+        }
+    }
+
+    return {
+        totalScore,
+        ...result,
+    };
 }
 
 async function tryFitBody_v2(settings, content, start, layoutTemplate, stylesTemplate, clusterBrowser) {
@@ -648,4 +1001,5 @@ function getSingleTemplateResponse_v2(settings, result, targetPageId, pageNum, p
 module.exports = {
     tryFitBody_v2, 
     getSingleTemplateResponse_v2,
+    fitToSlide,
 };

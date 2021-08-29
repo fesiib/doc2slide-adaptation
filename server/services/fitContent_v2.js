@@ -1,5 +1,5 @@
 const { Templates } = require('./Templates');
-const { tryFitBody_v2, getSingleTemplateResponse_v2 } = require('./fitContent_internals_v2');
+const { fitToSlide, getSingleTemplateResponse_v2 } = require('./fitContent_internals_v2');
 
 async function fitToPresentation_random(settings, contents, obj, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
@@ -27,7 +27,7 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
                 continue
             }
             let template = templates.getByOriginalId(originalTemplate.originalId);
-            fitSessions.push(tryFitBody_v2(settings, titleSection, 0, template, template, clusterBrowser));
+            fitSessions.push(fitToSlide(settings, titleSection, 0, template, template, clusterBrowser));
         }
         let fitResults = await Promise.all(fitSessions);
         for (let current of fitResults) {
@@ -55,7 +55,7 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
                 if (template.isTitlePage) {
                     continue
                 }
-                let current = await tryFitBody_v2(settings, section, done, template, template, clusterBrowser);
+                let current = await fitToSlide(settings, section, done, template, template, clusterBrowser);
                 if (current.done === done) {
                     continue;
                 }
@@ -129,7 +129,7 @@ async function fitToPresentation_greedy(
                 continue
             }
             let template = templates.getByOriginalId(originalTemplate.originalId);
-            fitSessions.push(tryFitBody_v2(settings, titleSection, 0, template, template, clusterBrowser));
+            fitSessions.push(fitToSlide(settings, titleSection, 0, template, template, clusterBrowser));
         }
         let fitResults = await Promise.all(fitSessions);
         for (let current of fitResults) {
@@ -155,7 +155,7 @@ async function fitToPresentation_greedy(
                     continue;
                 }
                 let template = originalTemplate.getFreshJSON();
-                fitSessions.push(tryFitBody_v2(settings, section, done, template, template, clusterBrowser));
+                fitSessions.push(fitToSlide(settings, section, done, template, template, clusterBrowser));
             }
             let fitResults = await Promise.all(fitSessions);
 
@@ -220,7 +220,7 @@ async function fitToSlide_total(
     if (layoutPageId === null && stylesPageId === null) {
         for (let originalTemplate of  originalTemplates) {
             let template = originalTemplate.getFreshJSON();
-            fitSessions.push(tryFitBody_v2(settings, content, 0, template, template, clusterBrowser));
+            fitSessions.push(fitToSlide(settings, content, 0, template, template, clusterBrowser));
         }
     }
     else {
@@ -232,7 +232,7 @@ async function fitToSlide_total(
         }
         layoutTemplate = templates.getByOriginalId(layoutPageId);
         stylesTemplate = templates.getByOriginalId(stylesPageId);
-        fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+        fitSessions.push(fitToSlide(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
     }
 
     let results = await Promise.all(fitSessions);
@@ -304,7 +304,7 @@ async function fitToAlternatives_random(
                 continue;
             }
 
-            fitSessions.push(tryFitBody_v2(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+            fitSessions.push(fitToSlide(settings, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
         }
     }
 
