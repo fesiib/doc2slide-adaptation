@@ -59,7 +59,10 @@ export async function comparePresentation_v2(presentationId, sort, resources) {
                         let clearRequests = response.requests;
                         generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
                         .then((response) => {
-                            let requests = clearRequests.concat(response.requests);
+                            let requests = clearRequests;
+                            for (let obj of response.requestsList) {
+                                requests = requests.concat(obj.requests);
+                            }
                             console.log('Matching:', title, response.matchings, response.mappings);
                             updatePresentation(newId, requests).then((response) => {
                                 resolve({
