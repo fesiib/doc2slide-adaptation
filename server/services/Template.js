@@ -989,8 +989,16 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
                 blue: 0,
             },
         },
+        bold: false,
+        italic: false,
+        strikethrough: false,
+        underline: false,
+
         textAlign: "left",
         prefix: "none",
+        lineHeight: 115.0,
+        spaceAbove: 0,
+        spaceBelow: 0,
         recommendedLength: recommendedLength,
     }    
     if (textStyle.hasOwnProperty('fontSize')) {
@@ -1012,6 +1020,21 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
         }
     }
 
+    if (textStyle.hasOwnProperty('bold')) {
+        result.bold = textStyle.bold;
+    }
+
+    if (textStyle.hasOwnProperty('italic')) {
+        result.italic = textStyle.italic;
+    }
+
+    if (textStyle.hasOwnProperty('strikethrough')) {
+        result.strikethrough = textStyle.strikethrough;
+    }
+
+    if (textStyle.hasOwnProperty('underline')) {
+        result.underline = textStyle.underline;
+    }
     if (paragraphStyle.hasOwnProperty('bulletPreset')) {
         if (paragraphStyle.bulletPreset.startsWith("NUMBERED")) {
             result.prefix = 'number';
@@ -1030,6 +1053,22 @@ function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
         }
         if (paragraphStyle.alignment === 'JUSTIFIED') {
             result.textAlign = 'justify';
+        }
+    }
+    
+    if (paragraphStyle.hasOwnProperty('lineSpacing')) {
+        result.lineHeight = paragraphStyle.lineSpacing;
+    }
+
+    if (paragraphStyle.hasOwnProperty('spaceAbove')) {
+        if (correctDimension(paragraphStyle.spaceAbove)) {
+            result.spaceAbove = consumeDimension(paragraphStyle.spaceAbove) / PX;
+        }
+    }
+
+    if (paragraphStyle.hasOwnProperty('spaceBelow')) {
+        if (correctDimension(paragraphStyle.spaceBelow)) {
+            result.spaceBelow = consumeDimension(paragraphStyle.spaceBelow) / PX;
         }
     }
     return result;
@@ -1438,6 +1477,24 @@ class Template {
                 delete stylesDict[styles.type].recommendedLength;
                 delete stylesDict[styles.type].objectId;
                 delete stylesDict[styles.type].originalContents;
+                if (stylesDict[styles.type].spaceAbove === 0) {
+                    delete stylesDict[styles.type].spaceAbove;
+                }
+                if (stylesDict[styles.type].spaceBelow === 0) {
+                    delete stylesDict[styles.type].spaceBelow;
+                }
+                if (!stylesDict[styles.type].bold) {
+                    delete stylesDict[styles.type].bold;
+                }
+                if (!stylesDict[styles.type].italic) {
+                    delete stylesDict[styles.type].italic;
+                }
+                if (!stylesDict[styles.type].strikethrough) {
+                    delete stylesDict[styles.type].strikethrough;
+                }
+                if (!stylesDict[styles.type].underline) {
+                    delete stylesDict[styles.type].underline;
+                }
             }
             result = {
                 ...result,

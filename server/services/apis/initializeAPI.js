@@ -25,10 +25,23 @@ function stylesToTextStyle(styles) {
             magnitude: styles.fontSize * PX / PT,
             unit: 'PT',
         },
+        bold: styles.bold,
+        italic: styles.italic,
+        strikethrough: styles.strikethrough,
+        underline: styles.underline,
     };
     let paragraphStyle = {
         direction: "LEFT_TO_RIGHT",
         alignment: "START",
+        lineSpacing: styles.lineHeight,
+        spaceAbove: {
+            magnitude: styles.spaceAbove * PX / PT,
+            unit: 'PT',
+        },
+        spaceBelow: {
+            magnitude: styles.spaceBelow * PX / PT,
+            unit: 'PT',
+        },
     };
 
     if (styles.prefix === 'number') {
