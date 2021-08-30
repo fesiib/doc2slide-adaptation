@@ -293,7 +293,23 @@ function initializeMapping(content, start, layoutTemplate) {
     }
 }
 
-function getMappingPreserveType_Greedy(settings, content, start, layoutTemplate, stylesTemplate) {
+function getMappingNoPreserveType_DP(settings, content, start, layoutTemplate, stylesTemplate) {
+    if (content.hasOwnProperty('header')) {
+        content.header.type = 'ANY';
+        content.header.format = 'any';
+    }
+    if (Array.isArray(content.body)) {
+        for (let bodyContent of content.body) {
+            if (bodyContent.hasOwnProperty('paragraph')) {
+                bodyContent.paragraph.type = 'ANY';
+                bodyContent.paragraph.format = 'any';
+            }
+        }
+    }
+    return getMappingPreserveType_DP(settings, content, start, layoutTemplate, stylesTemplate);
+}
+
+function getMappingPreserveType_DP(settings, content, start, layoutTemplate, stylesTemplate) {
     let {
         mapping,
         elements,
@@ -777,13 +793,13 @@ function getMappingArea(settings, content, start, layoutTemplate, stylesTemplate
     };
 }
 
-async function fitToSlide(settings, content, start, layoutTemplate, stylesTemplate, clusterBrowser) {
+async function fitToPage(settings, mappingFunction, content, start, layoutTemplate, stylesTemplate, clusterBrowser) {
     let matching = {};
     let {
         mapping,
         elements,
         done,
-    } = getMappingPreserveType_Greedy(settings, content, start, layoutTemplate, stylesTemplate);
+    } = mappingFunction(settings, content, start, layoutTemplate, stylesTemplate);
     let requests = [];
 
 
@@ -1318,5 +1334,8 @@ function getSingleTemplateResponse_v2(settings, result, targetPageId, pageNum, p
 module.exports = {
     //tryFitBody_v2, 
     getSingleTemplateResponse_v2,
-    fitToSlide,
+    fitToPage,
+    getMappingPreserveType_DP,
+    getMappingArea,
+    getMappingNoPreserveType_DP,
 };
