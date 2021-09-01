@@ -1385,6 +1385,7 @@ class Template {
     }
 
     static fromStylesJSON(styles, pageSizeInPX) {
+        styles = styles.styles;
         let pageSize = {
             width: pageSizeInPX.width * PX,
             height: pageSizeInPX.height * PX,

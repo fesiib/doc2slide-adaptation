@@ -63,6 +63,118 @@ async function explicitFitFunction_total(
     return getSingleTemplateResponse_v2(settings, finalResult, targetPageId, pageNum, pageSize);
 }
 
+
+async function explicitFitToAlternatives_random(
+    settings,
+    content,
+    obj,
+    sort,
+    maxCnt,
+    layout,
+    styles,
+    clusterBrowser
+) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+    
+    let pageSize = templates.getPageSizeInPX();
+
+    let layoutTemplates = templates.getUniqueLayoutTemplates();
+
+    let stylesTemplates = templates.getUniqueStylesTemplates();
+
+    let requestsList = [];
+    let matchings = [];
+    let mappings = [];
+
+    let fitSessions = [];
+
+    for (let layoutIdx = 0; layoutIdx < (layout === null ? layoutTemplates.length : 1); layoutIdx++) {
+        for (let stylesIdx = 0; stylesIdx < (styles === null ? stylesTemplates.length : 1); stylesIdx++) {
+            let layoutTemplate = null;
+            if (layout === null) {
+                layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
+                let tempLayout = layoutTemplate.getLayoutJSON();
+                layoutTemplate = Template.fromLayoutJSON(tempLayout);
+            }
+            else {
+                layoutTemplate = Template.fromLayoutJSON(layout);
+            }
+            let stylesTemplate = null;
+            if (styles === null) {
+                stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
+                let tempStyles = stylesTemplate.getStylesJSON(true);
+                stylesTemplate = Template.fromStylesJSON(tempStyles, templates.getPageSizeInPX());
+            }
+            else {
+                stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
+            }
+
+            let originalStyles = layoutTemplate.getStylesJSON(true);
+            let targetStyles = stylesTemplate.getStylesJSON(true);
+
+            let hasAllNecessary = true;
+            for (let field in originalStyles.styles) {
+                if (!targetStyles.styles.hasOwnProperty(field)) {
+                    hasAllNecessary = false;
+                }
+            }
+
+            if (!hasAllNecessary
+                && (
+                    layout === null
+                    || styles === null
+                )
+            ) {
+                continue;
+            }
+
+            fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+        }
+    }
+
+    let results = await Promise.all(fitSessions);
+
+    if (sort) {
+        results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
+    }
+
+    let was = {};
+    
+    let pageNum = 0;
+    for (let result of results) {
+        if (pageNum === maxCnt) {
+            break;
+        }
+
+        let rep = {
+            ...result.score
+        };
+        delete rep.similarity;
+        let repStr = JSON.stringify(rep);
+        if (was[repStr] === true) {
+            continue;
+        }
+        was[repStr] = true;
+
+        pageNum++;
+        let response = getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize);
+
+        requestsList.push({
+            pageId: response.matching.objectId,
+            requests: response.requests,
+        });
+        matchings.push({ ...response.matching });
+        mappings.push({ ...response.mapping });
+    }
+
+    return {
+        requestsList,
+        matchings,
+        mappings,
+    };
+}
+
 async function explicitFitToSlide(
     resources,
     templates,
@@ -74,12 +186,14 @@ async function explicitFitToSlide(
     settings,
 ) {
 
+    let explicitFitFunction = explicitFitFunction_total;
+
     let argCluster = cluster;
     if (settings.fast) {
         argCluster = null;
     }
 
-    return await explicitFitFunction_total(
+    return await explicitFitFunction(
         settings,
         resources,
         templates,
@@ -91,7 +205,39 @@ async function explicitFitToSlide(
     );
 }
 
+async function explicitFitToAlternatives(
+    resources,
+    templates,
+    sort,
+    maxCnt,
+    layout,
+    styles,
+    cluster,
+    settings,
+) {
+
+    let explicitFitFunction = explicitFitToAlternatives_random;
+
+    let argCluster = cluster;
+    if (settings.fast) {
+        argCluster = null;
+    }
+
+    return await explicitFitFunction(
+        settings,
+        resources,
+        templates,
+        sort,
+        maxCnt,
+        layout,
+        styles,
+        argCluster,
+    );
+}
+
 module.exports = {
     explicitFitToSlide,
     explicitFitFunction_total,
+    explicitFitToAlternatives_random,
+    explicitFitToAlternatives,
 };

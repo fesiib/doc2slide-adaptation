@@ -206,7 +206,8 @@ function initializePageElementImage_withStyles(pageElement) {
         replaceImage: {
             imageObjectId: pageElement.objectId,
             imageReplaceMethod: 'CENTER_INSIDE',
-            url: pageElement.mappedContents[0].url,
+            //url: pageElement.mappedContents[0].url,
+            url: PLACEHOLDER_IMAGE_URL,
         }
     });
     return requests;
