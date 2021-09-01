@@ -1418,9 +1418,96 @@ class Template {
                 },
             },
         };
+        
+        for (let type in styles) {
+            let {
+                paragraphStyle,
+                textStyle,
+            } = stylesToTextStyle(styles[type]);
 
-        let newTemplate = new Template(random(), -1, page, pageSize, 2, false, true);
-        return newTemplate;
+            let bullet = null;
+
+            if (paragraphStyle.hasOwnProperty('bulletPreset')) {
+                bullet = {
+                    listId: 'customCreatedBulletList',
+                    nestingLevel: 0,
+                };
+                if (paragraphStyle.bulletPreset.startsWith('BULLET')) {
+                    bullet.glyph = '*';
+                }
+                else {
+                    bullet.glyph = '1.';
+                }
+                delete paragraphStyle.bulletPreset;
+            }
+
+            let rectangle = {
+                startX: 0,
+                startY: 0,
+                finishX: 50,
+                finishY: 50,
+                unit: "PX",
+            };
+            let {
+                size,
+                transform,
+            } = rectangleToSizeTransform(rectangle, rectangle.unit);
+            let pageElement = {
+                additional: {
+                    canbeMapped: [Infinity],
+                    canbeMappedMin: 0,
+                    contentUrl: [],
+                    text: [],
+                    isReplacable: true,
+                    originalType: (IMAGE_PLACEHOLDER.includes(type) ? "image" : "shape"),
+                },
+                objectId: random(),
+                rectangle: rectangle,
+                size: size,
+                shape: {
+                    placeholder: {
+                        type: type,
+                    },
+                    text: {
+                        lists: {
+                            'customCreatedBulletList': {
+                                listId: 'customCreatedBulletList',
+                                nestingLevel: {
+                                    0: {
+                                        bulletStyle: { ...textStyle },
+                                    }
+                                },
+                            }
+                        },
+                        textElements: [
+                            {
+                                paragraphMarker: {
+                                    style: { ...paragraphStyle },
+                                },
+                                endIndex: styles[type].recommendedLength,
+                            },
+                            {
+                                textRun: {
+                                    content: "$" * styles[type].recommendedLength,
+                                    style: { ...textStyle },
+                                },
+                                endIndex: styles[type].recommendedLength,
+                            },
+                        ],
+                    },
+                    shapeType: "RECTANGLE",
+                },
+                transform: transform,
+                type: type,
+            };
+
+            if (bullet !== null) {
+                pageElement.shape.text.textElements[0].paragraphMarker.bullet = { ...bullet };
+            }
+            page.pageElements.push(pageElement);
+        }
+        let newTemplate = new Template(random(), -1, page, pageSize, 1, false, true);
+        return newTemplate;;
     }
 
     getPageSizeInPX() {
@@ -1643,28 +1730,28 @@ class Template {
                 stylesDict[styles.type] = {
                     ...styles
                 }
-                delete stylesDict[styles.type].type;
-                delete stylesDict[styles.type].recommendedLength;
-                delete stylesDict[styles.type].objectId;
-                delete stylesDict[styles.type].originalContents;
-                if (stylesDict[styles.type].spaceAbove === 0) {
-                    delete stylesDict[styles.type].spaceAbove;
-                }
-                if (stylesDict[styles.type].spaceBelow === 0) {
-                    delete stylesDict[styles.type].spaceBelow;
-                }
-                if (!stylesDict[styles.type].bold) {
-                    delete stylesDict[styles.type].bold;
-                }
-                if (!stylesDict[styles.type].italic) {
-                    delete stylesDict[styles.type].italic;
-                }
-                if (!stylesDict[styles.type].strikethrough) {
-                    delete stylesDict[styles.type].strikethrough;
-                }
-                if (!stylesDict[styles.type].underline) {
-                    delete stylesDict[styles.type].underline;
-                }
+                // delete stylesDict[styles.type].type;
+                // delete stylesDict[styles.type].recommendedLength;
+                // delete stylesDict[styles.type].objectId;
+                // delete stylesDict[styles.type].originalContents;
+                // if (stylesDict[styles.type].spaceAbove === 0) {
+                //     delete stylesDict[styles.type].spaceAbove;
+                // }
+                // if (stylesDict[styles.type].spaceBelow === 0) {
+                //     delete stylesDict[styles.type].spaceBelow;
+                // }
+                // if (!stylesDict[styles.type].bold) {
+                //     delete stylesDict[styles.type].bold;
+                // }
+                // if (!stylesDict[styles.type].italic) {
+                //     delete stylesDict[styles.type].italic;
+                // }
+                // if (!stylesDict[styles.type].strikethrough) {
+                //     delete stylesDict[styles.type].strikethrough;
+                // }
+                // if (!stylesDict[styles.type].underline) {
+                //     delete stylesDict[styles.type].underline;
+                // }
             }
             result = {
                 ...result,

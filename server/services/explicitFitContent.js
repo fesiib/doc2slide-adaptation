@@ -244,9 +244,8 @@ async function explicitFitFunction_total(
     }
     else {
         let layoutTemplate = Template.fromLayoutJSON(layout);
-        console.log(layoutTemplate);
-        //let stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
-        let stylesTemplate = originalTemplates[0].getFreshJSON();
+        let stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
+        console.log(layoutTemplate.getLayoutJSON(), stylesTemplate.getStylesJSON());
         fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
     }
 
