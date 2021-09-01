@@ -452,7 +452,7 @@ async function fitToSlide_v2(
     settings,
 ) {
 
-    let fitFunction = fitToSlide_experimental;
+    let fitFunction = fitToSlide_total;
 
     let argCluster = cluster;
     if (settings.fast) {
@@ -482,7 +482,7 @@ async function fitToAlternatives_v2(
     settings,
 ) {
 
-    let fitFunction = fitToAlternatives_experimental;
+    let fitFunction = fitToAlternatives_random;
 
     let argCluster = cluster;
     if (settings.fast) {

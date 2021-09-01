@@ -9,7 +9,8 @@ var { uploadPresentation,
     generateSlideRequests,
     generateAlternativesRequests,
     getDataSingleSlide,
-    explicitGenerateSlideRequests
+    explicitGenerateSlideRequests,
+    explicitGenerateAlternativesRequests
 } = require('../services/apis/LayoutStyleAPI');
 var router = express.Router();
 
@@ -110,6 +111,17 @@ router.post('/get_data_single_slide', function(req, res, next) {
         console.log(req.body);
 
         explicitGenerateSlideRequests(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            next(reason);
+        });;
+    });
+
+     /* POST get requests for alternative slides from explicit layout and styles */
+     router.post('/explicit_generate_alternatives_requests', function(req, res, next) {
+        console.log(req.body);
+
+        explicitGenerateAlternativesRequests(req.body, cluster).then((response) => {
             res.json(response);
         }).catch((reason) => {
             next(reason);

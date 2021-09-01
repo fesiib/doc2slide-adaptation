@@ -94,8 +94,8 @@ async function explicitFitToAlternatives_random(
             let layoutTemplate = null;
             if (layout === null) {
                 layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
-                let tempLayout = layoutTemplate.getLayoutJSON();
-                layoutTemplate = Template.fromLayoutJSON(tempLayout);
+                // let tempLayout = layoutTemplate.getLayoutJSON();
+                // layoutTemplate = Template.fromLayoutJSON(tempLayout);
             }
             else {
                 layoutTemplate = Template.fromLayoutJSON(layout);
@@ -103,8 +103,8 @@ async function explicitFitToAlternatives_random(
             let stylesTemplate = null;
             if (styles === null) {
                 stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
-                let tempStyles = stylesTemplate.getStylesJSON(true);
-                stylesTemplate = Template.fromStylesJSON(tempStyles, templates.getPageSizeInPX());
+                // let tempStyles = stylesTemplate.getStylesJSON(true);
+                // stylesTemplate = Template.fromStylesJSON(tempStyles, templates.getPageSizeInPX());
             }
             else {
                 stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
