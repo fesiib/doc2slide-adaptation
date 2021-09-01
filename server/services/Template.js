@@ -979,6 +979,66 @@ function getBulletPreset(glyph) {
     return "BULLET_DISC_CIRCLE_SQUARE";
 }
 
+
+function stylesToTextStyle(styles) {
+    let textStyle = {
+        weightedFontFamily: {
+            fontFamily: styles.fontFamily,
+            weight: 400,
+        },
+        foregroundColor: {
+            opaqueColor: {
+                rgbColor: styles.foregroundColor.rgbColor,
+            }
+        },
+        fontSize: {
+            magnitude: styles.fontSize * PX / PT,
+            unit: 'PT',
+        },
+        bold: styles.bold,
+        italic: styles.italic,
+        strikethrough: styles.strikethrough,
+        underline: styles.underline,
+    };
+    let paragraphStyle = {
+        direction: "LEFT_TO_RIGHT",
+        alignment: "START",
+        lineSpacing: styles.lineHeight,
+        spaceAbove: {
+            magnitude: styles.spaceAbove * PX / PT,
+            unit: 'PT',
+        },
+        spaceBelow: {
+            magnitude: styles.spaceBelow * PX / PT,
+            unit: 'PT',
+        },
+    };
+
+    if (styles.prefix === 'number') {
+        paragraphStyle.bulletPreset = "NUMBERED_DIGIT_ALPHA_ROMAN";
+    }
+    if (styles.prefix === 'bullet') {
+        paragraphStyle.bulletPreset = "BULLET_DISC_CIRCLE_SQUARE";
+    }
+
+    if (styles.textAlign === 'right') {
+        paragraphStyle.alignment = "END";
+    }
+
+    if (styles.textAlign === 'center') {
+        paragraphStyle.alignment = "CENTER";
+    }
+
+    if (styles.textAlign === 'justify') {
+        paragraphStyle.alignment = "JUSTIFIED";
+    }
+
+    return {
+        paragraphStyle,
+        textStyle,
+    };
+}
+
 function getScopedStyles(paragraphStyle, textStyle, recommendedLength) {
     let result = {
         fontSize: 14 * (4/3),
@@ -1626,6 +1686,8 @@ module.exports = {
     rectangleToSizeTransform,
     getParagraphTexts,
     getParagraphTextStyles,
+
+    stylesToTextStyle,
 
     HEADER_PLACEHOLDER,
     BODY_PLACEHOLDER,

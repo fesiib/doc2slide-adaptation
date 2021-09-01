@@ -5,8 +5,8 @@ const { getRectangle,
     consumeRGBColor,
     getParagraphTexts,
     getParagraphTextStyles,
+    stylesToTextStyle,
 } = require("../Template");
-const { stylesToTextStyle } = require("./initializeAPI");
 
 const EMU = 1 / 12700;
 
