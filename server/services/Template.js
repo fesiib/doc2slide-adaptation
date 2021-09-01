@@ -536,6 +536,7 @@ function calculateAdditional(pageElement, src) {
         ) {
             if (IMAGE_PLACEHOLDER.includes(src.shape.placeholder.type)) {
                 additional.originalType = 'image';
+                additional.contentUrl.push(PLACEHOLDER_IMAGE_URL);
                 additional.canbeMapped.push(MAX_WORD_LENGTH);
                 exceptionHappened = true;
             }
@@ -1266,6 +1267,102 @@ class Template {
         this.isTitlePage = isTitlePage;
     }
 
+    static fromLayoutJSON(layout) {
+        let pageSize = {
+            width: layout.pageSize.width * PX,
+            height: layout.pageSize.height * PX,
+        };
+        
+        let page = {
+            pageElements: [],
+            pageProperties: {
+                pageBackgroundFill: {
+                    solidFill: {
+                        alpha: 1,
+                        color: {
+                            rgbColor: {
+                                red: 1,
+                                green: 1,
+                                blue: 1,
+                            },
+                        }
+                    }
+                },
+            },
+        };
+
+        for (let box of layout.boxes) {
+            let rectangle = {
+                startX: box.left,
+                startY: box.top,
+                finishX: box.left + box.width,
+                finishY: box.top + box.height,
+                unit: "PX",
+            };
+            let {
+                size,
+                transform,
+            } = rectangleToSizeTransform(rectangle, rectangle.unit);
+            let pageElement = {
+                additional: {
+                    canbeMapped: [],
+                    canbeMappedMin: 0,
+                    contentUrl: [],
+                    text: [],
+                    isReplacable: true,
+                    originalType: (IMAGE_PLACEHOLDER.includes(box.type) ? "image" : "shape"),
+                },
+                objectId: random(),
+                rectangle: rectangle,
+                size: size,
+                shape: {
+                    placeholder: {
+                        type: box.type,
+                    },
+                    shapeProperties: {
+                        contentAlignment: box.contentAlignment,
+                    },
+                    shapeType: "RECTANGLE",
+                },
+                transform: transform,
+                type: box.type,
+            };
+            for (let i = 0; i < box.canbeMapped; i++) {
+                pageElement.additional.canbeMapped.push(Infinity);
+            }
+            page.pageElements.push(pageElement);
+        }
+        let newTemplate = new Template(random(), -1, page, pageSize, 1, false, true);
+        return newTemplate;
+    }
+
+    static fromStylesJSON(styles, pageSizeInPX) {
+        let pageSize = {
+            width: pageSizeInPX.width * PX,
+            height: pageSizeInPX.height * PX,
+        };
+        let page = {
+            pageElements: [],
+            pageProperties: {
+                pageBackgroundFill: {
+                    solidFill: {
+                        alpha: 1,
+                        color: {
+                            rgbColor: {
+                                red: 1,
+                                green: 1,
+                                blue: 1,
+                            },
+                        }
+                    }
+                },
+            },
+        };
+
+        let newTemplate = new Template(random(), -1, page, pageSize, 2, false, true);
+        return newTemplate;
+    }
+
     getPageSizeInPX() {
         let obj = {
             width: this.pageSize.width / PX,
@@ -1302,7 +1399,11 @@ class Template {
         this.page.pageElements = sanitizePageElements(this.page.pageElements, this.pageSize);
         //this.page = deleteSmallElements(this.page, this.pageSize);
         this.page = mergeIntersectingElements(this.page, this.pageSize);
-        this.page = removeThemeColors(this.page, this.page.pageProperties.colorScheme.colors);
+        if (this.page.pageProperties.hasOwnProperty('colorScheme')
+            && Array.isArray(this.page.pageProperties.colorScheme.colors)
+        ) {
+            this.page = removeThemeColors(this.page, this.page.pageProperties.colorScheme.colors);
+        }
     }
 
     label() {
@@ -1376,6 +1477,7 @@ class Template {
         for (let pageElement of this.page.pageElements) {
             let urls = [];
             let paragraphs = [];
+            let contentAlignment = "TOP";
 
             if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
                 if (pageElement.hasOwnProperty('additional')
@@ -1385,11 +1487,17 @@ class Template {
                     urls.push(pageElement.additional.contentUrl[0]);
                 }
             }
-            else if (pageElement.hasOwnProperty('shape')
-                && pageElement.shape.hasOwnProperty('text')
-                && Array.isArray(pageElement.shape.text.textElements)
-            ) {
-                paragraphs = getParagraphTexts(pageElement);
+            else if (pageElement.hasOwnProperty('shape')) {
+                if (pageElement.shape.hasOwnProperty('text')
+                    && Array.isArray(pageElement.shape.text.textElements)
+                ) {
+                    paragraphs = getParagraphTexts(pageElement);
+                }
+                if (pageElement.shape.hasOwnProperty('shapeProperties')
+                    && pageElement.shape.shapeProperties.hasOwnProperty('contentAlignment') 
+                ) {
+                    contentAlignment = pageElement.shape.shapeProperties.contentAlignment;
+                }
             }
             result.boxes.push({
                 width: (pageElement.rectangle.finishX - pageElement.rectangle.startX),
@@ -1398,6 +1506,8 @@ class Template {
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
                 objectId: pageElement.objectId,
+                contentAlignment: contentAlignment,
+                canBeMapped: pageElement.additional.canbeMapped.length,
                 originalContents: makeResourcesParagraphs(urls, paragraphs),
             });
         }

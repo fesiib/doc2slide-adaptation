@@ -1,3 +1,4 @@
+const { explicitFitToSlide } = require('../explicitFitContent');
 const { getTemplatesData_v2, fitToPresentation_v2, fitToSlide_v2, fitToAlternatives_v2, getTemplateData_v2 } = require('../fitContent_v2');
 const { Templates } = require('../Templates');
 
@@ -171,6 +172,47 @@ async function generateAlternativesRequests(data, cluster) {
     );
 }
 
+
+// explicit
+
+async function explicitGenerateSlideRequests(data, cluster) {
+    let presentationId = data.presentationId;
+    let targetPageId = data.targetPageId;
+    let layout = data.layout;
+    let styles = data.styles;
+    let pageNum = data.pageNum;
+    let resources = data.resources;
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: false,
+        debug: false,
+        putOriginalContent: true,
+    };
+
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
+    }
+
+    if (!templatesLibrary.hasOwnProperty(presentationId)) {
+        throw new Error('No such presentation with id: ' + presentationId);
+    }
+    let templates = templatesLibrary[presentationId];
+    return await explicitFitToSlide(
+        resources,
+        templates,
+        targetPageId,
+        layout,
+        styles,
+        pageNum,
+        cluster,
+        settings,
+    );
+}
+
 module.exports = {
     uploadPresentation,
     generatePresentationRequests,
@@ -179,4 +221,6 @@ module.exports = {
     getDataSinglePresentation,
     generateAlternativesRequests,
     getDataSingleSlide,
+
+    explicitGenerateSlideRequests,
 };

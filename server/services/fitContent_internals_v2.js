@@ -328,9 +328,6 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
         return area(p2.rectangle) - area(p1.rectangle);
     });
 
-    let originalStyles = layoutTemplate.getStylesJSON();
-    let targetStyles = stylesTemplate.getStylesJSON();
-
     // Fit the header
     if (content.hasOwnProperty('header')) {
         let headerPageElement = null;
