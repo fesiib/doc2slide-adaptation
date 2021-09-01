@@ -1328,6 +1328,17 @@ class Template {
     }
 
     static fromLayoutJSON(layout) {
+        let whiteSolidFill = {
+            alpha: 1,
+            color: {
+                rgbColor: {
+                    red: 1,
+                    green: 1,
+                    blue: 1,
+                },
+            }
+        };
+
         let pageSize = {
             width: layout.pageSize.width * PX,
             height: layout.pageSize.height * PX,
@@ -1337,16 +1348,7 @@ class Template {
             pageElements: [],
             pageProperties: {
                 pageBackgroundFill: {
-                    solidFill: {
-                        alpha: 1,
-                        color: {
-                            rgbColor: {
-                                red: 1,
-                                green: 1,
-                                blue: 1,
-                            },
-                        }
-                    }
+                    solidFill: { ...whiteSolidFill },
                 },
             },
         };
@@ -1364,35 +1366,21 @@ class Template {
                 transform,
             } = rectangleToSizeTransform(rectangle, rectangle.unit);
             let pageElement = {
-                additional: {
-                    canbeMapped: [],
-                    canbeMappedMin: 0,
-                    contentUrl: [],
-                    text: [],
-                    isReplacable: true,
-                    originalType: (IMAGE_PLACEHOLDER.includes(box.type) ? "image" : "shape"),
-                },
                 objectId: random(),
-                rectangle: rectangle,
                 size: size,
-                shape: {
-                    placeholder: {
-                        type: box.type,
-                    },
-                    shapeProperties: {
-                        contentAlignment: box.contentAlignment,
-                    },
-                    shapeType: "RECTANGLE",
-                },
                 transform: transform,
-                type: box.type,
             };
-            for (let i = 0; i < box.canbeMapped; i++) {
-                pageElement.additional.canbeMapped.push(Infinity);
+
+            if (box.hasOwnProperty('shape')) {
+                pageElement.shape = { ...box.shape };
+            }
+            else if (box.hasOwnProperty('image')) {
+                pageElement.image = { ...box.image };
             }
             page.pageElements.push(pageElement);
         }
         let newTemplate = new Template(random(), -1, page, pageSize, 1, false, true);
+        newTemplate.initialize();
         return newTemplate;
     }
 
@@ -1624,7 +1612,6 @@ class Template {
         for (let pageElement of this.page.pageElements) {
             let urls = [];
             let paragraphs = [];
-            let contentAlignment = "TOP";
 
             if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
                 if (pageElement.hasOwnProperty('additional')
@@ -1640,23 +1627,25 @@ class Template {
                 ) {
                     paragraphs = getParagraphTexts(pageElement);
                 }
-                if (pageElement.shape.hasOwnProperty('shapeProperties')
-                    && pageElement.shape.shapeProperties.hasOwnProperty('contentAlignment') 
-                ) {
-                    contentAlignment = pageElement.shape.shapeProperties.contentAlignment;
-                }
             }
-            result.boxes.push({
+
+            let box = {
                 width: (pageElement.rectangle.finishX - pageElement.rectangle.startX),
                 height: (pageElement.rectangle.finishY - pageElement.rectangle.startY),
                 left: pageElement.rectangle.startX,
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
                 objectId: pageElement.objectId,
-                contentAlignment: contentAlignment,
-                canBeMapped: pageElement.additional.canbeMapped.length,
                 originalContents: makeResourcesParagraphs(urls, paragraphs),
-            });
+            };
+
+            if (pageElement.hasOwnProperty('shape')) {
+                box.shape = { ...pageElement.shape };
+            }
+            else if (pageElement.hasOwnProperty('image')) {
+                box.image = { ...pageElement.image };
+            }
+            result.boxes.push(box);
         }
         return result;
     }

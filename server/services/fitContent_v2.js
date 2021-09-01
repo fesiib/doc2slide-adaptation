@@ -1,5 +1,6 @@
 const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
+const { explicitFitFunction_total } = require('./explicitFitContent');
 
 async function fitToPresentation_random(settings, contents, obj, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
@@ -196,6 +197,34 @@ async function fitToPresentation_greedy(
         matchings,
         mappings,
     };
+}
+
+async function fitToSlide_experimental(
+    settings,
+    content,
+    obj,
+    targetPageId,
+    layoutPageId,
+    stylesPageId,
+    pageNum,
+    clusterBrowser,
+) {
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+
+    let layout = null, styles = null;
+
+    if (layoutPageId !== null) {
+        let template = templates.getByOriginalId(layoutPageId);
+        layout = template.getLayoutJSON();
+    }
+
+    if (stylesPageId !== null) {
+        let template = templates.getByOriginalId(stylesPageId);
+        let stylesJSON = template.getStylesJSON(true);
+        styles = stylesJSON.styles;
+    }
+    return explicitFitFunction_total(settings, content, obj, targetPageId, layout, styles, pageNum, clusterBrowser);
 }
 
 async function fitToSlide_total(
@@ -396,7 +425,7 @@ async function fitToSlide_v2(
     settings,
 ) {
 
-    let fitFunction = fitToSlide_total;
+    let fitFunction = fitToSlide_experimental;
 
     let argCluster = cluster;
     if (settings.fast) {

@@ -48,7 +48,6 @@ async function explicitFitFunction_total(
     else {
         let layoutTemplate = Template.fromLayoutJSON(layout);
         let stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
-        console.log(layoutTemplate.getLayoutJSON(), stylesTemplate.getStylesJSON());
         fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
     }
 
@@ -64,6 +63,35 @@ async function explicitFitFunction_total(
     return getSingleTemplateResponse_v2(settings, finalResult, targetPageId, pageNum, pageSize);
 }
 
+async function explicitFitToSlide(
+    resources,
+    templates,
+    targetPageId,
+    layout,
+    styles,
+    pageNum,
+    cluster,
+    settings,
+) {
+
+    let argCluster = cluster;
+    if (settings.fast) {
+        argCluster = null;
+    }
+
+    return await explicitFitFunction_total(
+        settings,
+        resources,
+        templates,
+        targetPageId,
+        layout,
+        styles,
+        pageNum,
+        argCluster,
+    );
+}
+
 module.exports = {
     explicitFitToSlide,
+    explicitFitFunction_total,
 };

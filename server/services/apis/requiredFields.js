@@ -199,6 +199,8 @@ const REQ_FIELDS = [
     ".pageElements.0.shape.placeholder.type",
     ".pageElements.0.shape.placeholder.index",
     ".pageElements.0.image",
+    ".pageElements.0.image.contentUrl",
+    ".pageElements.0.image.sourceUrl",
     ".pageElements.0.image.imageProperties",
     ".pageElements.0.image.imageProperties.outline",
     ".pageElements.0.image.imageProperties.outline.outlineFill",
