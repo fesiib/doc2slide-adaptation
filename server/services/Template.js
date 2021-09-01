@@ -490,6 +490,13 @@ function sanitizePageElements(pageElements) {
             ) {
                 continue;
             }
+            if (pageElement.hasOwnProperty('shape') && pageElement.shape.hasOwnProperty('shapeType')) {
+                if (pageElement.shape.shapeType !== 'TEXT_BOX'
+                    && pageElement.shape.shapeType !== 'RECTANGLE'
+                ) {
+                    continue;
+                }
+            }
         }
         // else {
         //     if (!pageElement.hasOwnProperty('size'))
@@ -501,6 +508,13 @@ function sanitizePageElements(pageElements) {
         //         continue;
         //     }
         // }
+        if (pageElement.hasOwnProperty('transform')) {
+            if (pageElement.transform.shearX !== 0
+                || pageElement.transform.shearY !== 0
+            ) {
+                continue;
+            }
+        }
         newPageElements.push(pageElement);
     }
     return newPageElements;
