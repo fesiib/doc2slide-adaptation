@@ -677,6 +677,22 @@ function refreshIdsPageElement(pageElement) {
     }
 }
 
+function getObjectIdsMappingPageElement(pageElement) {
+    let mapping = {};
+    mapping[pageElement.originalId] = pageElement.objectId;
+    if (pageElement.hasOwnProperty('elementGroup')) {
+        if (!Array.isArray(pageElement.elementGroup.children))
+            return;
+        for (let child of pageElement.elementGroup.children) {
+            mapping = {
+                ...mapping,
+                ...(getObjectIdsMappingPageElement(child)),
+            };
+        }
+    }
+    return mapping;
+}
+
 function labelPageElement(pageElement) {
     pageElement.type = null;
     if (!pageElement.hasOwnProperty('additional')) {
@@ -1545,14 +1561,16 @@ class Template {
         return newInstance;
     }
 
-    getJSON() {
-        let template = JSON.parse(JSON.stringify(this));
-        template.pageId = random();
-        template.informationBoxId = random();
-
-        let newInstance = new Template();
-        newInstance.copyInstance(template);
-        return newInstance;
+    getObjectIdsMapping() {
+        let mapping = {};
+        mapping[template.originalId] = template.pageId;
+        for (let pageElement of template.page.pageElements) {
+            mapping = { 
+                ...mapping,
+                ...(getObjectIdsMappingPageElement(pageElement)),
+            };
+        }
+        return mapping;
     }
 
     sanitize() {
