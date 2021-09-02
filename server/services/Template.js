@@ -1543,6 +1543,13 @@ class Template {
         return newInstance;
     }
 
+    getJSON() {
+        let template = JSON.parse(JSON.stringify(this));
+        let newInstance = new Template();
+        newInstance.copyInstance(template);
+        return newInstance;
+    }
+
     sanitize() {
         this.page.pageElements = transformElementGroups(this.page.pageElements, this.pageSize);
         this.page.pageElements = sanitizePageElements(this.page.pageElements, this.pageSize);
