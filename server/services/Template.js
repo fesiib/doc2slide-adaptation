@@ -637,6 +637,8 @@ function calculateAdditional(pageElement, src) {
         additional.originaType = 'none';
     }
     pageElement['additional'] = additional;
+    pageElement.originalId = pageElement.objectId;
+    pageElement.object = random();
     return pageElement;
 }
 
