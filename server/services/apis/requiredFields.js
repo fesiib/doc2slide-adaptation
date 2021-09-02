@@ -1,6 +1,7 @@
 const REQ_FIELDS = [
     ".pageElements",
     ".pageElements.0",
+    ".pageElements.0.objectId",
     ".pageElements.0.size",
     ".pageElements.0.size.width",
     ".pageElements.0.size.width.magnitude",
