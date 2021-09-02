@@ -1545,6 +1545,9 @@ class Template {
 
     getJSON() {
         let template = JSON.parse(JSON.stringify(this));
+        template.pageId = random();
+        template.informationBoxId = random();
+
         let newInstance = new Template();
         newInstance.copyInstance(template);
         return newInstance;
