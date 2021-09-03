@@ -638,7 +638,7 @@ function calculateAdditional(pageElement, src) {
     }
     pageElement['additional'] = additional;
     pageElement.originalId = pageElement.objectId;
-    pageElement.object = random();
+    pageElement.objectId = random();
     return pageElement;
 }
 
@@ -1563,8 +1563,8 @@ class Template {
 
     getObjectIdsMapping() {
         let mapping = {};
-        mapping[template.originalId] = template.pageId;
-        for (let pageElement of template.page.pageElements) {
+        mapping[this.originalId] = this.pageId;
+        for (let pageElement of this.page.pageElements) {
             mapping = { 
                 ...mapping,
                 ...(getObjectIdsMappingPageElement(pageElement)),

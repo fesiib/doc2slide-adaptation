@@ -1,3 +1,4 @@
+const { adaptDuplicatePresentationRequests } = require('../duplicateAdaptation');
 const { explicitFitToSlide, explicitFitToAlternatives } = require('../explicitFitContent');
 const { getTemplatesData_v2, fitToPresentation_v2, fitToSlide_v2, fitToAlternatives_v2, getTemplateData_v2 } = require('../fitContent_v2');
 const { Templates } = require('../Templates');
@@ -254,6 +255,72 @@ async function explicitGenerateAlternativesRequests(data, cluster) {
         settings,
     );
 }
+async function turnDuplicateToAlternatives(data, cluster) {
+    let presentationId = data.presentationId;
+    let sort = data.sort;
+    let maxCnt = -1;
+    let layoutPageId = data.layoutPageId;
+    let stylesPageId = data.stylesPageId;
+    let resources = data.resources;
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: false,
+        debug: false,
+        putOriginalContent: true,
+    };
+
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
+    }
+
+    if (data.hasOwnProperty('maxCnt')) {
+        maxCnt = data.maxCnt;
+    }
+
+    if (!templatesLibrary.hasOwnProperty(presentationId)) {
+        throw new Error('No such presentation with id: ' + presentationId);
+    }
+    let templates = templatesLibrary[presentationId];
+    return fitToAlternatives_v2(
+        resources,
+        templates,
+        sort,
+        maxCnt,
+        layoutPageId,
+        stylesPageId,
+        cluster,
+        settings,
+    );
+}
+
+async function turnDuplicateToPresentation(data, cluster) {
+    let presentation = data.presentation;
+    let presentationId = data.presentationId;
+    let resources = data.resources;
+    let settings = {
+        fast: true,
+        method: 'greedy',
+        contentControl: false,
+        debug: false,
+        putOriginalContent: true,
+    };
+    if (data.hasOwnProperty('settings')) {
+        settings = {
+            ...settings,
+            ...data.settings,
+        };
+    }
+
+    if (!templatesLibrary.hasOwnProperty(presentationId)) {
+        throw new Error('No such presentation with id: ' + presentationId);
+    }
+    let templates = templatesLibrary[presentationId];
+    return adaptDuplicatePresentationRequests(presentation, resources, templates, cluster, settings);
+}
 
 module.exports = {
     uploadPresentation,
@@ -266,4 +333,6 @@ module.exports = {
 
     explicitGenerateSlideRequests,
     explicitGenerateAlternativesRequests,
+
+    turnDuplicateToPresentation,
 };

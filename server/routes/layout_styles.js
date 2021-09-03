@@ -10,7 +10,8 @@ var { uploadPresentation,
     generateAlternativesRequests,
     getDataSingleSlide,
     explicitGenerateSlideRequests,
-    explicitGenerateAlternativesRequests
+    explicitGenerateAlternativesRequests,
+    turnDuplicateToPresentation
 } = require('../services/apis/LayoutStyleAPI');
 var router = express.Router();
 
@@ -128,6 +129,17 @@ router.post('/get_data_single_slide', function(req, res, next) {
         });;
     });
 
+
+    /* POST get requests for duplicate presentation */
+    router.post('/adapt_duplicate_presentation_requests', function(req, res, next) {
+        console.log(req.body);
+
+        turnDuplicateToPresentation(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            next(reason);
+        });;
+    });
 })();
 
 module.exports = router;

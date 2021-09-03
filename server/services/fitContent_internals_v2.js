@@ -876,7 +876,7 @@ async function fitToPage(settings, mappingFunction, content, start, layoutTempla
     }
 
     let score = await scoreElements_withStyles(elements, clusterBrowser);
-    
+
     for (let pageElement of elements) {
         if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
             requests = requests.concat(initializePageElementImage_withStyles(pageElement));
