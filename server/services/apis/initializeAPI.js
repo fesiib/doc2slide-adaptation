@@ -194,19 +194,22 @@ function initializePageElementImage_withStyles(pageElement) {
     if (!Array.isArray(pageElement.mappedContents)) {
         return requests;
     }
-    if (pageElement.mappedContents.length === 0) {
-        // maybe makes sense to delete the placeholder
-        return requests;
-    }
-
+    
+    let url = PLACEHOLDER_IMAGE_URL;
+    
     if (pageElement.mappedContents.length > 1) {
         throw Error("More than 1 text is mapped to image");
     }
+
+    if (pageElement.mappedContents.length === 1) {
+        url = pageElement.mappedContents[0].url;
+    }
+
     requests.push({
         replaceImage: {
             imageObjectId: pageElement.objectId,
             imageReplaceMethod: 'CENTER_INSIDE',
-            url: pageElement.mappedContents[0].url,
+            url: url,
             //url: PLACEHOLDER_IMAGE_URL,
         }
     });
