@@ -157,8 +157,10 @@ async function adaptDuplicateAlternativesRequests_random(
 ) {
     let fitSessions = [];
 
-    for (let layoutTemplate of layoutTemplates) {
-        for (let stylesTemplate of stylesTemplates) {
+    for (let originalLayoutTemplate of layoutTemplates) {
+        for (let originalStylesTemplate of stylesTemplates) {
+            let layoutTemplate = originalLayoutTemplate.getFreshJSON();
+            let stylesTemplate = originalStylesTemplate.getFreshJSON();
             let originalStyles = layoutTemplate.getStylesJSON(true);
             let targetStyles = stylesTemplate.getStylesJSON(true);
 
