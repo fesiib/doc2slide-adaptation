@@ -160,16 +160,16 @@ export async function generateSlideRequests(presentationId, targetPageId, layout
     });
 }
 
-export async function generateDuplicateAlternativesRequests(presentation, presentationId, sort, maxCnt, layoutPageId, stylesPageId, resources) {
+export async function generateDuplicateAlternativesRequests(userPresentation, presentationId, sort, maxCnt, userPageId, styles, resources) {
     const SERVICE = '/layout_styles/generate_duplicate_alternatives_requests';
 
     let data = {
-        presentation,
+        userPresentation,
         presentationId,
         sort,
         maxCnt,
-        layoutPageId,
-        stylesPageId,
+        userPageId,
+        styles,
         resources,
         settings: {
             fast: true,

@@ -1,5 +1,5 @@
 import { copyPresentation, createPresentation } from './apis/DriveAPI';
-import { generateDuplicatePresentationRequests, clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation } from './apis/layoutStylesAPI';
+import { generateDuplicatePresentationRequests, clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation, generateDuplicateAlternativesRequests } from './apis/layoutStylesAPI';
 import { getPresentation, updatePresentation } from './apis/SlidesAPI';
 
 export async function testPresentation_v2(presentationId, copies, resources) {
@@ -56,28 +56,31 @@ export async function comparePresentation_v2(presentationId, sort, resources) {
             let titleSuffix = 'compare_template_' + presentation.title;
             uploadPresentation(presentation).then((response) => {
                 let title = titleSuffix;
-                createPresentation(title).then((response) => {
-                    let newId = response.presentationId;
-                    if (newId === undefined) {
-                        reject('Creation failed');
-                    }
-                    clearPresentationRequests(newId).then((response) => {
-                        let clearRequests = response.requests;
-                        generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
-                        .then((response) => {
-                            let requests = clearRequests;
-                            for (let obj of response.requestsList) {
-                                requests = requests.concat(obj.requests);
-                            }
-                            console.log('Matching:', title, response.matchings, response.mappings);
-                            updatePresentation(newId, requests).then((response) => {
-                                resolve({
-                                    response,
-                                });
-                            });
-                        });
-                    });
+                generateDuplicateAlternatives(presentationId, presentationId, null, null, sort, resources).then((response) => {
+                    console.log(response);
                 });
+                // createPresentation(title).then((response) => {
+                //     let newId = response.presentationId;
+                //     if (newId === undefined) {
+                //         reject('Creation failed');
+                //     }
+                //     clearPresentationRequests(newId).then((response) => {
+                //         let clearRequests = response.requests;
+                //         generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
+                //         .then((response) => {
+                //             let requests = clearRequests;
+                //             for (let obj of response.requestsList) {
+                //                 requests = requests.concat(obj.requests);
+                //             }
+                //             console.log('Matching:', title, response.matchings, response.mappings);
+                //             updatePresentation(newId, requests).then((response) => {
+                //                 resolve({
+                //                     response,
+                //                 });
+                //             });
+                //         });
+                //     });
+                // });
             });
         });
     });
@@ -166,7 +169,7 @@ export async function generatePresentation_v2(referencePresentationId, presentat
 
 export async function generateDuplicatePresentation(referencePresentationId, title, resources) {
     return new Promise((resolve, reject) => {
-        copyPresentation("duplicate_" + title, referencePresentationId).then((response) => {
+        copyPresentation("duplicate_presentation_" + title, referencePresentationId).then((response) => {
             let presentationId = response.presentationId;
             generateDuplicatePresentationRequests(referencePresentationId, resources)
             .then((response) => {
@@ -240,6 +243,47 @@ export async function generateAlternatives(referencePresentationId, presentation
             });
         }).catch((reason) => {
             reject(reason);
+        });
+    });
+}
+
+export async function generateDuplicateAlternatives(referencePresentationId, presentationId, idx, stylesPageId, sort, resources) {
+    return new Promise((resolve, reject) => {
+        getPresentation(presentationId).then((response) => {
+            let presentation = response.result;
+            let userPageId = null;
+            if (idx !== null) {
+                if (Array.isArray(presentation.slides) && idx <= presentation.slides.length) {
+                    userPageId = presentation.slides[idx - 1].objectId;
+                }
+            }
+
+            copyPresentation("duplicate_alternatives_" + presentation.title, (userPageId === null ? referencePresentationId : presentationId)).then((response) => {
+                let newPresentationId = response.presentationId;
+                generateDuplicateAlternativesRequests(presentation, referencePresentationId, sort, 40, userPageId, null, resources)
+                .then((response) => {
+                    let requests = response.setupRequests;
+                    for (let pageRequests of response.requestsList) {
+                        requests = requests.concat(pageRequests.requests);
+                    }
+                    let matchings = response.matchings;
+                    let mappings = response.mappings;
+                    let pageCnt = Object.keys(matchings).length;
+                    console.log('Matching:', matchings, mappings);
+                    updatePresentation(newPresentationId, requests).then((response) => {
+                        resolve({
+                            presentationId: newPresentationId,
+                            pageCnt,
+                        });
+                    }).catch((reason) => {
+                        reject(reason);
+                    });
+                }).catch((reason) => {
+                    reject(reason);
+                });
+            }).catch((reason) => {
+                reject(reason);
+            });     
         });
     });
 }
