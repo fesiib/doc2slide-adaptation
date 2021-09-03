@@ -1,6 +1,7 @@
 const { Templates } = require('./Templates');
 
-const { getMappingPreserveType_DP, fitToPage } = require('./fitContent_internals_v2');
+const { getMappingPreserveType_DP, fitToPage, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
+const { Template } = require('./Template');
 
 function updateDuplicatePresentationRequests(presentation, presentationPages) {
     if (!Array.isArray(presentation.slides)) {
@@ -145,6 +146,88 @@ async function adaptDuplicatePresentationRequests_greedy(
     };
 }
 
+async function adaptDuplicateAlternativesRequests_random(
+    settings,
+    content,
+    sort,
+    maxCnt,
+    layoutTemplates,
+    stylesTemplates,
+    clusterBrowser
+) {
+    let fitSessions = [];
+
+    for (let layoutTemplate of layoutTemplates) {
+        for (let stylesTemplate of stylesTemplates) {
+            let originalStyles = layoutTemplate.getStylesJSON(true);
+            let targetStyles = stylesTemplate.getStylesJSON(true);
+
+            let hasAllNecessary = true;
+            for (let field in originalStyles.styles) {
+                if (!targetStyles.styles.hasOwnProperty(field)) {
+                    hasAllNecessary = false;
+                }
+            }
+
+            if (!hasAllNecessary) {
+                continue;
+            }
+            fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+        }
+    }
+
+    let results = await Promise.all(fitSessions);
+
+    if (sort) {
+        results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
+    }
+
+    let was = {};
+    let pageNum = 0;
+    let requestsList = [];
+    let matchings = [];
+    let mappings = [];
+
+    for (let result of results) {
+        if (pageNum === maxCnt) {
+            break;
+        }
+
+        let rep = {
+            ...result.score
+        };
+        delete rep.similarity;
+        let repStr = JSON.stringify(rep);
+        if (was[repStr] === true) {
+            continue;
+        }
+        was[repStr] = true;
+
+        pageNum++;
+        let matching = {
+            pageElements: { ...result.matching },
+            totalScore: result.totalScore,
+            layoutPageId: result.layoutTemplate.originalId,
+            stylesPageId: result.stylesTemplate.originalId,
+            pageNum: pageNum,
+            objectId: result.layoutTemplate.pageId,
+            objectIdsMappings: result.layoutTemplate.getObjectIdsMapping(),
+        };
+        matchings.push({ ...matching });
+        mappings.push({ ...result.mapping });
+        requestsList.push({
+            pageId: matching.objectId,
+            requests: result.requests,
+        });
+    }
+
+    return {
+        requestsList,
+        matchings,
+        mappings,
+    };
+}
+
 async function adaptDuplicatePresentationRequests(presentation, resources, templates, cluster, settings) {
     let adaptFunction = adaptDuplicatePresentationRequests_greedy;
     // if (settings.method === 'random') {
@@ -173,6 +256,63 @@ async function adaptDuplicatePresentationRequests(presentation, resources, templ
     return adaptingInformation;
 }
 
+async function adaptDuplicateAlternativesRequests(
+    userPresentation,
+    presentation,
+    resources,
+    obj,
+    sort,
+    maxCnt,
+    userPageId,
+    styles,
+    cluster,
+    settings,
+) {
+    let adaptFunction = adaptDuplicateAlternativesRequests_random;
+    let argCluster = cluster;
+    if (settings.fast) {
+        argCluster = null;
+    }
+
+    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+    templates.copyInstance(obj);
+
+    let adaptingInformation = null;
+    let layoutTemplates = templates.getUniqueLayoutTemplates();
+    let stylesTemplates = templates.getUniqueStylesTemplates();
+    
+    if (userPageId !== null) {
+        // work with userPresentation
+        let userTemplates = Templates.extractTemplates(userPresentation);
+        layoutTemplates = [userTemplates.getByOriginalId(userPageId)];
+        presentation = userPresentation;
+    }
+
+    if (styles !== null) {
+        stylesTemplates = [Template.fromStylesJSON(styles, templates.getPageSizeInPX())];
+    }
+
+    adaptingInformation = await adaptFunction(settings, resources, sort, maxCnt, layoutTemplates, stylesTemplates, argCluster);
+    
+    presentationPages = [];
+
+    for (let matching of adaptingInformation.matchings) {
+        presentationPages.push({
+            originalId: matching.layoutPageId,
+            objectId: matching.objectId,
+            objectIdsMappings: matching.objectIdsMappings,
+        });
+    }
+
+    let setupRequests = updateDuplicatePresentationRequests(presentation, presentationPages);
+
+    return {
+        setupRequests,
+        ...adaptingInformation,
+    };
+}
+
 module.exports = {
     adaptDuplicatePresentationRequests,
+    adaptDuplicateAlternativesRequests,
 };

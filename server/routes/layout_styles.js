@@ -11,7 +11,10 @@ var { uploadPresentation,
     getDataSingleSlide,
     explicitGenerateSlideRequests,
     explicitGenerateAlternativesRequests,
-    turnDuplicateToPresentation
+    turnDuplicateToPresentation,
+    turnDuplicateToAlternatives,
+    generateDuplicateAlternativesRequests,
+    generateDuplicatePresentationRequests
 } = require('../services/apis/LayoutStyleAPI');
 var router = express.Router();
 
@@ -108,7 +111,7 @@ router.post('/get_data_single_slide', function(req, res, next) {
 
     /* POST get requests for single slide from explicit layout and styles */
 
-    router.post('/explicit_generate_slide_requests', function(req, res, next) {
+    router.post('/generate_slide_requests_explicit', function(req, res, next) {
         console.log(req.body);
 
         explicitGenerateSlideRequests(req.body, cluster).then((response) => {
@@ -119,7 +122,7 @@ router.post('/get_data_single_slide', function(req, res, next) {
     });
 
      /* POST get requests for alternative slides from explicit layout and styles */
-     router.post('/explicit_generate_alternatives_requests', function(req, res, next) {
+     router.post('/generate_alternatives_requests_explicit', function(req, res, next) {
         console.log(req.body);
 
         explicitGenerateAlternativesRequests(req.body, cluster).then((response) => {
@@ -131,10 +134,20 @@ router.post('/get_data_single_slide', function(req, res, next) {
 
 
     /* POST get requests for duplicate presentation */
-    router.post('/adapt_duplicate_presentation_requests', function(req, res, next) {
+    router.post('/generate_duplicate_presentation_requests', function(req, res, next) {
+        console.log(req.body);
+        generateDuplicatePresentationRequests(req.body, cluster).then((response) => {
+            res.json(response);
+        }).catch((reason) => {
+            next(reason);
+        });;
+    });
+
+    /* POST get requests for alternatives in duplicate presentation LAYOUT */
+    router.post('/generate_duplicate_alternatives_requests', function(req, res, next) {
         console.log(req.body);
 
-        turnDuplicateToPresentation(req.body, cluster).then((response) => {
+        generateDuplicateAlternativesRequests(req.body, cluster).then((response) => {
             res.json(response);
         }).catch((reason) => {
             next(reason);
