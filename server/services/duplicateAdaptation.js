@@ -291,7 +291,10 @@ async function adaptDuplicateAlternativesRequests(
     }
 
     if (styles !== null) {
-        stylesTemplates = [Template.fromStylesJSON(styles, templates.getPageSizeInPX())];
+        // let stylesTemplate = (templates.getByOriginalId(styles));
+        // styles = stylesTemplate.getStylesJSON(true);
+        let newStylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
+        stylesTemplates = [newStylesTemplate];
     }
 
     adaptingInformation = await adaptFunction(settings, resources, sort, maxCnt, layoutTemplates, stylesTemplates, argCluster);

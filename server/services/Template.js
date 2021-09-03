@@ -1472,9 +1472,16 @@ class Template {
                 size,
                 transform,
             } = rectangleToSizeTransform(rectangle, rectangle.unit);
+
+            let contentText = '\n';
+
+            for (let i = 0; i < styles[type].recommendedLength; i++) {
+                contentText = '$' + contentText;
+            }
+
             let pageElement = {
                 additional: {
-                    canbeMapped: [Infinity],
+                    canbeMapped: [MAX_WORD_LENGTH],
                     canbeMappedMin: 0,
                     contentUrl: [],
                     text: [],
@@ -1508,7 +1515,7 @@ class Template {
                             },
                             {
                                 textRun: {
-                                    content: "$" * styles[type].recommendedLength,
+                                    content: contentText,
                                     style: { ...textStyle },
                                 },
                                 endIndex: styles[type].recommendedLength,
