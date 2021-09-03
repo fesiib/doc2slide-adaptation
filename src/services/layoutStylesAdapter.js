@@ -1,5 +1,5 @@
 import { copyPresentation, createPresentation } from './apis/DriveAPI';
-import { adaptDuplicatePresentationRequests, clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation } from './apis/layoutStylesAPI';
+import { generateDuplicatePresentationRequests, clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation } from './apis/layoutStylesAPI';
 import { getPresentation, updatePresentation } from './apis/SlidesAPI';
 
 export async function testPresentation_v2(presentationId, copies, resources) {
@@ -12,7 +12,7 @@ export async function testPresentation_v2(presentationId, copies, resources) {
                 for (let copy = 1; copy <= copies; copy++) {
                     let title = copy.toString() + '_' + titleSuffix;
                     testSessions.push(
-                        adaptDuplicatePresentation(presentationId, title, resources).then((response) => {
+                        generateDuplicatePresentation(presentationId, title, resources).then((response) => {
                             console.log(response);
                         })
                     );
@@ -164,30 +164,27 @@ export async function generatePresentation_v2(referencePresentationId, presentat
     });
 }
 
-export async function adaptDuplicatePresentation(referencePresentationId, title, resources) {
+export async function generateDuplicatePresentation(referencePresentationId, title, resources) {
     return new Promise((resolve, reject) => {
         copyPresentation("duplicate_" + title, referencePresentationId).then((response) => {
             let presentationId = response.presentationId;
-            getPresentation(presentationId).then((response) => {
-                let presentation = response.result;
-                adaptDuplicatePresentationRequests(presentation, referencePresentationId, resources)
-                .then((response) => {
-                    let requests = response.requests;
-                    let matchings = response.matchings;
-                    let mappings = response.mappings;
-                    let pageCnt = Object.keys(matchings).length;
-                    console.log('Matching:', matchings, mappings);
-                    updatePresentation(presentationId, requests).then((response) => {
-                        resolve({
-                            presentationId,
-                            pageCnt,
-                        });
-                    }).catch((reason) => {
-                        reject(reason);
+            generateDuplicatePresentationRequests(referencePresentationId, resources)
+            .then((response) => {
+                let requests = response.requests;
+                let matchings = response.matchings;
+                let mappings = response.mappings;
+                let pageCnt = Object.keys(matchings).length;
+                console.log('Matching:', matchings, mappings);
+                updatePresentation(presentationId, requests).then((response) => {
+                    resolve({
+                        presentationId,
+                        pageCnt,
                     });
                 }).catch((reason) => {
                     reject(reason);
                 });
+            }).catch((reason) => {
+                reject(reason);
             });
         }).catch((reason) => {
             reject(reason);

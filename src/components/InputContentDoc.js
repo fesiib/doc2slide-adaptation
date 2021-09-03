@@ -11,7 +11,7 @@ import { generatePresentation } from '../services/slideAdapter';
 import { processContentDoc } from '../services/contentProcessing';
 
 import { COMPILING, loadingActivate, loadingDeactivate } from './InputContent';
-import { adaptDuplicatePresentation, generatePresentation_v2 } from '../services/layoutStylesAdapter';
+import { generateDuplicatePresentation, generatePresentation_v2 } from '../services/layoutStylesAdapter';
 
 function InputContentDoc(props) {
     const dispatch = useDispatch();
@@ -68,16 +68,16 @@ function InputContentDoc(props) {
                 let resources = {
                     ...response,
                 };
-                adaptDuplicatePresentation(selected, resources.title.singleWord.text, resources).then((response) => {
-                        let newPresentationId = response.presentationId;
-                        _updatePageCnt(response.pageCnt);
-                        loadingDeactivate(COMPILING);
-                        _extractedFile(selected, newPresentationId);
-                    }).catch((error) => {
-                        console.log('Couldn`t generate Slide Deck: ', error);
-                        loadingDeactivate(COMPILING);
-                    });
-                    _compileContent(resources.title, resources.sections);
+                generateDuplicatePresentation(selected, resources.title.singleWord.text, resources).then((response) => {
+                    let newPresentationId = response.presentationId;
+                    _updatePageCnt(response.pageCnt);
+                    loadingDeactivate(COMPILING);
+                    _extractedFile(selected, newPresentationId);
+                }).catch((error) => {
+                    console.log('Couldn`t generate Slide Deck: ', error);
+                    loadingDeactivate(COMPILING);
+                });
+                _compileContent(resources.title, resources.sections);
             }).catch((error) => {
                 console.log('Couldn`t generate Slide Deck: ', error);
                 loadingDeactivate(COMPILING);
