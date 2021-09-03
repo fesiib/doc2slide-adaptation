@@ -57,3 +57,25 @@ export function createPresentation(title) {
         });
     });
 }
+
+export function copyPresentation(title, presentationId) {
+    return new Promise((resolve, reject) => {
+        let presentationMetaData = {
+            name: title,
+            parents: [TEMPLATES_FOLDER_ID],
+            mimeType: FILE_TYPE,
+        };
+        gapi.client.drive.files.copy({
+            resource: presentationMetaData,
+            fileId: presentationId,
+            fields: 'id',
+        }).then((response) => {
+            let presentation = response.result;
+            resolve({
+                presentationId: presentation.id,
+            });
+        }, (response) => {
+            reject('Error in createPresentation: ' + response.result.error.message);
+        });
+    });
+}

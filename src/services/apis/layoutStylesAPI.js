@@ -36,6 +36,48 @@ export async function uploadPresentation(presentation) {
     });
 }
 
+export async function adaptDuplicatePresentationRequests(presentation, presentationId, resources) {
+    const SERVICE = '/layout_styles/adapt_duplicate_presentation_requests';
+
+    let data = {
+        presentation,
+        presentationId,
+        resources,
+        settings: {
+            fast: true,
+            contentControl: false,
+            method: 'greedy',
+            debug: true,
+            putOriginalContent: true,
+        },
+    };
+
+    const URL = ADDR + SERVICE;
+    
+    const request = {
+        method: 'POST',
+        mode: 'cors',
+        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data)
+    };
+
+    return new Promise((resolve, reject) => {
+        fetch(URL, request).then( (response) => response.json())
+            .then((response) => {
+                resolve(response);
+            })
+            .catch((reason) => {
+                reject(reason);
+            });
+    });
+}
+
+
 export async function generatePresentationRequests(presentationId, resources) {
     const SERVICE = '/layout_styles/generate_presentation_requests';
 
