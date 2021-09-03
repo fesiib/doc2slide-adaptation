@@ -906,7 +906,7 @@ async function fitToPage(settings, mappingFunction, content, start, layoutTempla
         requests,
         moreInfo: {
             totalNumMapped: totalNumMapped,
-            totalNumContent: Object.keys(mapping),
+            totalNumContent: Object.keys(mapping).length,
             totalNumSlideElements: elements.length,    
         }
     };
