@@ -693,6 +693,20 @@ function getObjectIdsMappingPageElement(pageElement) {
     return mapping;
 }
 
+function sortPageElements(pageElements) {
+    const area = (rectangle) => {
+        let width = rectangle.finishX - rectangle.startX;
+        let height = rectangle.finishY - rectangle.startY;
+        let area = width * height;
+        return area;
+    }
+    
+    pageElements.sort((p1, p2) => {
+        return area(p2.rectangle) - area(p1.rectangle);
+    });
+    return pageElements;
+}
+
 function labelPageElement(pageElement) {
     pageElement.type = null;
     if (!pageElement.hasOwnProperty('additional')) {
@@ -1654,13 +1668,17 @@ class Template {
         return true;
     }
 
-    getLayoutJSON() {
+    getLayoutJSON(enumerate = false) {
         let result = {
             boxes: [],
             pageId: this.originalId,
             pageSize: this.getPageSizeInPX(),
         };
-        for (let pageElement of this.page.pageElements) {
+        let pageElements = this.page.pageElements.slice();
+        if (enumerate) {
+            pageElements = sortPageElements(pageElements);
+        }
+        for (let pageElement of pageElements) {
             let urls = [];
             let paragraphs = [];
 
@@ -1698,6 +1716,21 @@ class Template {
             }
             result.boxes.push(box);
         }
+
+        if (enumerate) {
+            let idx = {};
+            for (let box of result.boxes) {
+                if (!idx.hasOwnProperty(box.type)) {
+                    idx[box.type] = 0;
+                }
+                let label = idx[box.type];
+                if (!IMAGE_PLACEHOLDER.includes(box.type)) {
+                    idx[box.type]++;
+                }
+                box.type = box.type + "_" + label.toString();
+            }
+        }
+
         return result;
     }
 
@@ -1813,6 +1846,8 @@ module.exports = {
     rectangleToSizeTransform,
     getParagraphTexts,
     getParagraphTextStyles,
+
+    sortPageElements,
 
     stylesToTextStyle,
 

@@ -1,6 +1,6 @@
 const { scoreElements_withStyles } = require('./apis/EvaluateAPI');
 const { initializeTemplate, initializePageElementShape_withStyles, initializePageElementImage_withStyles, addTextBox } = require('./apis/initializeAPI');
-const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, SUBHEADER_PLACEHOLDER } = require('./Template');
+const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, SUBHEADER_PLACEHOLDER, sortPageElements } = require('./Template');
 
 function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targetStyles) {
     let targetLenghts = pageElement.additional.canbeMapped.slice(0);
@@ -317,16 +317,7 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
 
     let done = start;
 
-    const area = (rectangle) => {
-        let width = rectangle.finishX - rectangle.startX;
-        let height = rectangle.finishY - rectangle.startY;
-        let area = width * height;
-        return area;
-    }
-    
-    elements.sort((p1, p2) => {
-        return area(p2.rectangle) - area(p1.rectangle);
-    });
+    elements = sortPageElements(elements);
 
     // Fit the header
     if (content.hasOwnProperty('header')) {
@@ -632,16 +623,7 @@ function getMappingArea(settings, content, start, layoutTemplate, stylesTemplate
 
     let done = start;
 
-    const area = (rectangle) => {
-        let width = rectangle.finishX - rectangle.startX;
-        let height = rectangle.finishY - rectangle.startY;
-        let area = width * height;
-        return area;
-    }
-    
-    elements.sort((p1, p2) => {
-        return area(p2.rectangle) - area(p1.rectangle);
-    });
+    elements = sortPageElements(elements);
 
     let originalStyles = layoutTemplate.getStylesJSON();
     let targetStyles = stylesTemplate.getStylesJSON();
@@ -802,7 +784,7 @@ async function fitToPage(settings, mappingFunction, content, start, layoutTempla
 
     let originalStyles = layoutTemplate.getStylesJSON();
     let targetStyles = stylesTemplate.getStylesJSON();
-    let originalLayout = layoutTemplate.getLayoutJSON();
+    let originalLayout = layoutTemplate.getLayoutJSON(true);
     for (let pageElement of elements) {
         let targetLengths = getAppropriateTargetLengths(layoutTemplate.isCustom, pageElement, originalStyles, targetStyles);
         let currentMatching = {};
