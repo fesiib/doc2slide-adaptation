@@ -1705,6 +1705,7 @@ class Template {
                 top: pageElement.rectangle.startY,
                 type: pageElement.type,
                 objectId: pageElement.objectId,
+                originalId: pageElement.originalId,
                 originalContents: makeResourcesParagraphs(urls, paragraphs),
             };
 
@@ -1750,6 +1751,7 @@ class Template {
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
+                    originalId: pageElement.originalId,
                     ...(getScopedStyles({}, {}, -1)),
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1764,6 +1766,7 @@ class Template {
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
+                    originalId: pageElement.originalId,
                     ...(getScopedStyles(paragraphStyle, textStyle, paragraphLength)),    
                 });
                 alreadyCovered[pageElement.type] = true;

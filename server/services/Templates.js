@@ -197,10 +197,7 @@ class Templates {
     getLayouts() {
         let result = [];
         for (let template of this.getTemplates()) {
-            result.push({
-                ...(template.getLayoutJSON(true)),
-                requests: initializeLayout(template),
-            });
+            result.push(this.getLayoutByOriginalId(template.originalId));
         }
         return result;
     }
@@ -208,7 +205,7 @@ class Templates {
     getStyles() {
         let result = [];
         for (let template of this.getTemplates()) {
-            result.push(template.getStylesJSON(true));
+            result.push(this.getStylesByOriginalId(template.originalId));
         }
         return result;
     }
