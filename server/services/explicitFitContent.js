@@ -2,7 +2,7 @@ const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
 const { Template } = require('./Template');
 
-async function explicitFitFunction_total(
+async function explicitFitToSlide_total(
     settings,
     content,
     obj,
@@ -12,43 +12,38 @@ async function explicitFitFunction_total(
     pageNum,
     clusterBrowser,
 ) {
-    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
-    templates.copyInstance(obj);
-
-    let pageSize = templates.getPageSizeInPX();
-
-    let originalTemplates = templates.getCustomTemplates();
-
+    let pageSize = null;
     let fitSessions = [];
-
-    if (layout === null && styles === null) {
-        for (let originalTemplate of originalTemplates) {
-            let template = originalTemplate.getFreshJSON();
-            fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, template, template, clusterBrowser));
-        }
-    }
-    else if (layout === null || styles === null) {
-        for (let originalTemplate of originalTemplates) {
-            let layoutTemplate = null, stylesTemplate = null;
-            if (layout !== null) {
-                layoutTemplate = Template.fromLayoutJSON(layout);
-            }
-            else {
-                layoutTemplate = originalTemplate.getFreshJSON();
-            }
-            if (styles !== null) {
-                stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
-            }
-            else {
-                stylesTemplate = originalTemplate.getFreshJSON();
-            }
-            fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
-        }
+    if (layout !== null && styles !== null) {
+        let layoutTemplate = Template.fromLayoutJSON(layout);
+        pageSize = layoutTemplate.getPageSizeInPX();
+        let stylesTemplate = Template.fromStylesJSON(styles, { ...pageSize });
+        fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
     }
     else {
-        let layoutTemplate = Template.fromLayoutJSON(layout);
-        let stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
-        fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+        let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+        templates.copyInstance(obj);
+
+        pageSize = templates.getPageSizeInPX();
+        let originalTemplates = templates.getCustomTemplates();
+
+        for (let originalTemplate of originalTemplates) {
+            let layoutTemplate = null, stylesTemplate = null;
+                if (layout !== null) {
+                    layoutTemplate = Template.fromLayoutJSON(layout);
+                }
+                else {
+                    layoutTemplate = originalTemplate.getFreshJSON();
+                }
+                if (styles !== null) {
+                    stylesTemplate = Template.fromStylesJSON(styles, { ...pageSize });
+                }
+                else {
+                    stylesTemplate = originalTemplate.getFreshJSON();
+                }
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+            
+        }
     }
 
     let results = await Promise.all(fitSessions);
@@ -74,64 +69,73 @@ async function explicitFitToAlternatives_random(
     styles,
     clusterBrowser
 ) {
-    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
-    templates.copyInstance(obj);
-    
-    let pageSize = templates.getPageSizeInPX();
+    let pageSize = null;
+    let fitSessions = [];
 
-    let layoutTemplates = templates.getUniqueLayoutTemplates();
+    if (layout !== null && styles !== null) {
+        let layoutTemplate = Template.fromLayoutJSON(layout);
+        pageSize = layoutTemplate.getPageSizeInPX();
+        let stylesTemplate = Template.fromStylesJSON(styles, { ...pageSize });
+        fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+    }
+    else {
+        let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+        templates.copyInstance(obj);
 
-    let stylesTemplates = templates.getUniqueStylesTemplates();
+        pageSize = templates.getPageSizeInPX();
+        
+        let layoutTemplates = templates.getUniqueLayoutTemplates();
+
+        let stylesTemplates = templates.getUniqueStylesTemplates();
+
+        for (let layoutIdx = 0; layoutIdx < (layout === null ? layoutTemplates.length : 1); layoutIdx++) {
+            for (let stylesIdx = 0; stylesIdx < (styles === null ? stylesTemplates.length : 1); stylesIdx++) {
+                let layoutTemplate = null;
+                if (layout === null) {
+                    layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
+                    // let tempLayout = layoutTemplate.getLayoutJSON();
+                    // layoutTemplate = Template.fromLayoutJSON(tempLayout);
+                }
+                else {
+                    layoutTemplate = Template.fromLayoutJSON(layout);
+                }
+                let stylesTemplate = null;
+                if (styles === null) {
+                    stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
+                    // let tempStyles = stylesTemplate.getStylesJSON(true);
+                    // stylesTemplate = Template.fromStylesJSON(tempStyles, templates.getPageSizeInPX());
+                }
+                else {
+                    stylesTemplate = Template.fromStylesJSON(styles, { ...pageSize });
+                }
+
+                let originalStyles = layoutTemplate.getStylesJSON(true);
+                let targetStyles = stylesTemplate.getStylesJSON(true);
+
+                let hasAllNecessary = true;
+                for (let field in originalStyles.styles) {
+                    if (!targetStyles.styles.hasOwnProperty(field)) {
+                        hasAllNecessary = false;
+                    }
+                }
+
+                if (!hasAllNecessary
+                    && (
+                        layout === null
+                        || styles === null
+                    )
+                ) {
+                    continue;
+                }
+
+                fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
+            }
+        }
+    }
 
     let requestsList = [];
     let matchings = [];
     let mappings = [];
-
-    let fitSessions = [];
-
-    for (let layoutIdx = 0; layoutIdx < (layout === null ? layoutTemplates.length : 1); layoutIdx++) {
-        for (let stylesIdx = 0; stylesIdx < (styles === null ? stylesTemplates.length : 1); stylesIdx++) {
-            let layoutTemplate = null;
-            if (layout === null) {
-                layoutTemplate = layoutTemplates[layoutIdx].getFreshJSON();
-                // let tempLayout = layoutTemplate.getLayoutJSON();
-                // layoutTemplate = Template.fromLayoutJSON(tempLayout);
-            }
-            else {
-                layoutTemplate = Template.fromLayoutJSON(layout);
-            }
-            let stylesTemplate = null;
-            if (styles === null) {
-                stylesTemplate = stylesTemplates[stylesIdx].getFreshJSON();
-                // let tempStyles = stylesTemplate.getStylesJSON(true);
-                // stylesTemplate = Template.fromStylesJSON(tempStyles, templates.getPageSizeInPX());
-            }
-            else {
-                stylesTemplate = Template.fromStylesJSON(styles, templates.getPageSizeInPX());
-            }
-
-            let originalStyles = layoutTemplate.getStylesJSON(true);
-            let targetStyles = stylesTemplate.getStylesJSON(true);
-
-            let hasAllNecessary = true;
-            for (let field in originalStyles.styles) {
-                if (!targetStyles.styles.hasOwnProperty(field)) {
-                    hasAllNecessary = false;
-                }
-            }
-
-            if (!hasAllNecessary
-                && (
-                    layout === null
-                    || styles === null
-                )
-            ) {
-                continue;
-            }
-
-            fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
-        }
-    }
 
     let results = await Promise.all(fitSessions);
 
@@ -186,7 +190,7 @@ async function explicitFitToSlide(
     settings,
 ) {
 
-    let explicitFitFunction = explicitFitFunction_total;
+    let explicitFitFunction = explicitFitToSlide_total;
 
     let argCluster = cluster;
     if (settings.fast) {
@@ -237,7 +241,7 @@ async function explicitFitToAlternatives(
 
 module.exports = {
     explicitFitToSlide,
-    explicitFitFunction_total,
+    explicitFitToSlide_total,
     explicitFitToAlternatives_random,
     explicitFitToAlternatives,
 };

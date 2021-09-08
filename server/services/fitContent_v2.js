@@ -1,6 +1,6 @@
 const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
-const { explicitFitFunction_total, explicitFitToAlternatives_random } = require('./explicitFitContent');
+const { explicitFitToSlide_total, explicitFitToAlternatives_random } = require('./explicitFitContent');
 
 async function fitToPresentation_random(settings, contents, obj, clusterBrowser) {
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
@@ -223,7 +223,7 @@ async function fitToSlide_experimental(
         let template = templates.getByOriginalId(stylesPageId);
         styles = template.getStylesJSON(true);
     }
-    return explicitFitFunction_total(settings, content, obj, targetPageId, layout, styles, pageNum, clusterBrowser);
+    return explicitFitToSlide_total(settings, content, obj, targetPageId, layout, styles, pageNum, clusterBrowser);
 }
 
 async function fitToSlide_total(

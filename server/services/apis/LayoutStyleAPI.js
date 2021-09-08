@@ -214,10 +214,15 @@ async function explicitGenerateSlideRequests(data, cluster) {
         };
     }
 
-    if (!templatesLibrary.hasOwnProperty(presentationId)) {
+    let templates = null;
+    if (!templatesLibrary.hasOwnProperty(presentationId)
+        && (layout === null || styles === null)
+    ) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
-    let templates = templatesLibrary[presentationId];
+    else {
+        templates = templatesLibrary[presentationId];
+    }
     return await explicitFitToSlide(
         resources,
         templates,
@@ -256,10 +261,15 @@ async function explicitGenerateAlternativesRequests(data, cluster) {
         maxCnt = data.maxCnt;
     }
 
-    if (!templatesLibrary.hasOwnProperty(presentationId)) {
+    let templates = null;
+    if (!templatesLibrary.hasOwnProperty(presentationId)
+        && (layout === null || styles === null)
+    ) {
         throw new Error('No such presentation with id: ' + presentationId);
     }
-    let templates = templatesLibrary[presentationId];
+    else {
+        templates = templatesLibrary[presentationId];
+    }
     return explicitFitToAlternatives(
         resources,
         templates,
