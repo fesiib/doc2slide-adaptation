@@ -27,11 +27,18 @@ async function getDataPresentations(data) {
 
 async function getDataSinglePresentation(data) {
     return new Promise(resolve => {
-        let presentationId = data.presentationId;
-        if (!templatesLibrary.hasOwnProperty(presentationId)) {
-            throw new Error('No such presentation with id: ' + presentationId);
+        let templates = null;
+        if (data.userPresentation !== null) {
+            templates = Templates.extractTemplates(data.userPresentation);
         }
-        let templatesData = getTemplatesData_v2(templatesLibrary[presentationId]);
+        if (templates === null) {
+            let presentationId = data.presentationId;
+            if (!templatesLibrary.hasOwnProperty(presentationId)) {
+                throw new Error('No such presentation with id: ' + presentationId);
+            }
+            templates = { ...templatesLibrary[presentationId] };
+        }
+        let templatesData = getTemplatesData_v2(templates);
         resolve({
             ...templatesData,
         });
@@ -40,12 +47,18 @@ async function getDataSinglePresentation(data) {
 
 async function getDataSingleSlide(data) {
     return new Promise(resolve => {
-        let presentationId = data.presentationId;
-        let pageId = data.pageId;
-        if (!templatesLibrary.hasOwnProperty(presentationId)) {
-            throw new Error('No such presentation with id: ' + presentationId);
+        let templates = null;
+        if (data.userPresentation !== null) {
+            templates = Templates.extractTemplates(data.userPresentation);
         }
-        let templatesData = getTemplateData_v2(templatesLibrary[presentationId], pageId);
+        if (templates === null) {
+            let presentationId = data.presentationId;
+            if (!templatesLibrary.hasOwnProperty(presentationId)) {
+                throw new Error('No such presentation with id: ' + presentationId);
+            }
+            templates = { ...templatesLibrary[presentationId] };
+        }
+        let templatesData = getTemplateData_v2(templates, data.pageId);
         resolve({
             ...templatesData,
         });

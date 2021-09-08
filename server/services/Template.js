@@ -1723,11 +1723,9 @@ class Template {
                 if (!idx.hasOwnProperty(box.type)) {
                     idx[box.type] = 0;
                 }
-                let label = idx[box.type];
-                if (!IMAGE_PLACEHOLDER.includes(box.type)) {
-                    idx[box.type]++;
-                }
-                box.type = box.type + "_" + label.toString();
+                let label = idx[box.type].toString();
+                idx[box.type]++;
+                box.type = box.type + "_" + label;
             }
         }
 
@@ -1745,25 +1743,6 @@ class Template {
             if (alreadyCovered[pageElement.type]) {
                 continue;
             }
-            if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
-                let urls = [];
-
-                if (pageElement.hasOwnProperty('additional')
-                    && Array.isArray(pageElement.additional.contentUrl)
-                    && pageElement.additional.contentUrl.length > 0
-                ) {
-                    urls.push(pageElement.additional.contentUrl[0]);
-                }
-
-                result.styles.push({
-                    type: pageElement.type,
-                    objectId: pageElement.objectId,
-                    originalContents: makeResourcesParagraphs(urls, []),
-                    ...(getScopedStyles({}, {}, -1)),
-                });
-                alreadyCovered[pageElement.type] = true;
-                continue;
-            }
             if (!pageElement.hasOwnProperty('shape')
                 || !pageElement.shape.hasOwnProperty('text')
                 || !Array.isArray(pageElement.shape.text.textElements)
@@ -1771,7 +1750,6 @@ class Template {
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
-                    originalContents: [],
                     ...(getScopedStyles({}, {}, -1)),
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1786,7 +1764,6 @@ class Template {
                 result.styles.push({
                     type: pageElement.type,
                     objectId: pageElement.objectId,
-                    originalContents: makeResourcesParagraphs([], getParagraphTexts(pageElement)),
                     ...(getScopedStyles(paragraphStyle, textStyle, paragraphLength)),    
                 });
                 alreadyCovered[pageElement.type] = true;
@@ -1806,7 +1783,6 @@ class Template {
                 // delete stylesDict[styles.type].type;
                 // delete stylesDict[styles.type].recommendedLength;
                 // delete stylesDict[styles.type].objectId;
-                // delete stylesDict[styles.type].originalContents;
                 // if (stylesDict[styles.type].spaceAbove === 0) {
                 //     delete stylesDict[styles.type].spaceAbove;
                 // }
