@@ -77,11 +77,12 @@ export async function generateDuplicatePresentationRequests(presentationId, reso
 }
 
 
-export async function generatePresentationRequests(presentationId, resources) {
+export async function generatePresentationRequests(presentationId, userPresentation, resources) {
     const SERVICE = '/layout_styles/generate_presentation_requests';
 
     let data = {
         presentationId,
+        userPresentation,
         resources,
         settings: {
             fast: true,
@@ -89,6 +90,8 @@ export async function generatePresentationRequests(presentationId, resources) {
             method: 'greedy',
             debug: true,
             putOriginalContent: true,
+            adaptLayout: true,
+            adaptStyles: false,
         },
     };
 

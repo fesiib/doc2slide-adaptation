@@ -59,31 +59,6 @@ function InputContentDoc(props) {
         _extractedFile(selected, prev);
     }
 
-    const submitHandler = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        loadingActivate(COMPILING);
-        processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdateDoc)
-            .then((response) => {
-                let resources = {
-                    ...response,
-                };
-                generateDuplicatePresentation(selected, resources.title.singleWord.text, resources).then((response) => {
-                    let newPresentationId = response.presentationId;
-                    _updatePageCnt(response.pageCnt);
-                    loadingDeactivate(COMPILING);
-                    _extractedFile(selected, newPresentationId);
-                }).catch((error) => {
-                    console.log('Couldn`t generate Slide Deck: ', error);
-                    loadingDeactivate(COMPILING);
-                });
-                _compileContent(resources.title, resources.sections);
-            }).catch((error) => {
-                console.log('Couldn`t generate Slide Deck: ', error);
-                loadingDeactivate(COMPILING);
-            });
-    };
-
     // const submitHandler = (event) => {
     //     event.preventDefault();
     //     event.stopPropagation();
@@ -93,22 +68,47 @@ function InputContentDoc(props) {
     //             let resources = {
     //                 ...response,
     //             };
-    //             generatePresentation_v2(selected, selectedExt, resources)
-    //                 .then((response) => {
-    //                     console.log("Generated Slide Deck: ", response);
-    //                     _updatePageCnt(response.pageCnt);
-    //                     loadingDeactivate(COMPILING);
-    //                     forceUpdateSelected();
-    //                 }).catch((error) => {
-    //                     console.log('Couldn`t generate Slide Deck: ', error);
-    //                     loadingDeactivate(COMPILING);
-    //                 });
-    //                 _compileContent(resources.title, resources.sections);
+    //             generateDuplicatePresentation(selected, resources.title.singleWord.text, resources).then((response) => {
+    //                 let newPresentationId = response.presentationId;
+    //                 _updatePageCnt(response.pageCnt);
+    //                 loadingDeactivate(COMPILING);
+    //                 _extractedFile(selected, newPresentationId);
+    //             }).catch((error) => {
+    //                 console.log('Couldn`t generate Slide Deck: ', error);
+    //                 loadingDeactivate(COMPILING);
+    //             });
+    //             _compileContent(resources.title, resources.sections);
     //         }).catch((error) => {
     //             console.log('Couldn`t generate Slide Deck: ', error);
     //             loadingDeactivate(COMPILING);
     //         });
     // };
+
+    const submitHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        loadingActivate(COMPILING);
+        processContentDoc({title, sections}, {title: titleResult, sections: sectionsResult}, shouldUpdateDoc)
+            .then((response) => {
+                let resources = {
+                    ...response,
+                };
+                generatePresentation_v2(selected, selectedExt, resources)
+                    .then((response) => {
+                        console.log("Generated Slide Deck: ", response);
+                        _updatePageCnt(response.pageCnt);
+                        loadingDeactivate(COMPILING);
+                        forceUpdateSelected();
+                    }).catch((error) => {
+                        console.log('Couldn`t generate Slide Deck: ', error);
+                        loadingDeactivate(COMPILING);
+                    });
+                    _compileContent(resources.title, resources.sections);
+            }).catch((error) => {
+                console.log('Couldn`t generate Slide Deck: ', error);
+                loadingDeactivate(COMPILING);
+            });
+    };
 
     const renderSectionsForm = () => {
         if (Array.isArray(sections)) {

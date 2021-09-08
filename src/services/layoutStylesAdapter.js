@@ -11,35 +11,39 @@ export async function testPresentation_v2(presentationId, copies, resources) {
             uploadPresentation(presentation).then((response) => {
                 for (let copy = 1; copy <= copies; copy++) {
                     let title = copy.toString() + '_' + titleSuffix;
-                    testSessions.push(
-                        generateDuplicatePresentation(presentationId, title, resources).then((response) => {
-                            console.log(response);
-                        })
-                    );
-
                     // testSessions.push(
-                    //     new Promise((resolve_inner, reject_inner) => {
-                    //         createPresentation(title).then((response) => {
-                    //             let newId = response.presentationId;
-                    //             if (newId === undefined) {
-                    //                 reject_inner('Creation failed');
-                    //             }
-                    //             clearPresentationRequests(newId).then((response) => {
-                    //                 let clearRequests = response.requests;
-                    //                 generatePresentationRequests(presentationId, resources)
-                    //                 .then((response) => {
-                    //                     let requests = clearRequests.concat(response.requests);
-                    //                     console.log('Matching:', title, response.matchings, response.mappings);
-                    //                     updatePresentation(newId, requests).then((response) => {
-                    //                         resolve_inner({
-                    //                             response,
-                    //                         });
-                    //                     });
-                    //                 });
-                    //             });
-                    //         });
+                    //     generateDuplicatePresentation(presentationId, title, resources).then((response) => {
+                    //         console.log(response);
                     //     })
                     // );
+
+                    testSessions.push(
+                        new Promise((resolve_inner, reject_inner) => {
+                            createPresentation(title).then((response) => {
+                                let newId = response.presentationId;
+                                if (newId === undefined) {
+                                    reject_inner('Creation failed');
+                                }
+                                clearPresentationRequests(newId).then((response) => {
+                                    let clearRequests = response.requests;
+
+                                    getPresentation("1OLAg7zmqTEC8cMI6BrV8rIJDeaDJrFA_uwgZngHn-SI").then((response) => {
+                                        let userPresentation = response.result;
+                                        generatePresentationRequests(presentationId, userPresentation, resources)
+                                        .then((response) => {
+                                            let requests = clearRequests.concat(response.requests);
+                                            console.log('Matching:', title, response.matchings, response.mappings);
+                                            updatePresentation(newId, requests).then((response) => {
+                                                resolve_inner({
+                                                    response,
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        })
+                    );
                 }
                 Promise.all(testSessions).then((response) => {
                     resolve(response);
@@ -144,22 +148,25 @@ export async function generatePresentation_v2(referencePresentationId, presentat
     return new Promise((resolve, reject) => {
         clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
-            generatePresentationRequests(referencePresentationId, resources)
-            .then((response) => {
-                let requests = clearRequests.concat(response.requests);
-                let matchings = response.matchings;
-                let mappings = response.mappings;
-                let pageCnt = Object.keys(matchings).length;
-                console.log('Matching:', matchings, mappings);
-                updatePresentation(presentationId, requests).then((response) => {
-                    resolve({
-                        pageCnt,
+            getPresentation("1OLAg7zmqTEC8cMI6BrV8rIJDeaDJrFA_uwgZngHn-SI").then((response) => {
+                let userPresentation = response.result;
+                generatePresentationRequests(referencePresentationId, userPresentation, resources)
+                .then((response) => {
+                    let requests = clearRequests.concat(response.requests);
+                    let matchings = response.matchings;
+                    let mappings = response.mappings;
+                    let pageCnt = Object.keys(matchings).length;
+                    console.log('Matching:', matchings, mappings);
+                    updatePresentation(presentationId, requests).then((response) => {
+                        resolve({
+                            pageCnt,
+                        });
+                    }).catch((reason) => {
+                        reject(reason);
                     });
                 }).catch((reason) => {
                     reject(reason);
                 });
-            }).catch((reason) => {
-                reject(reason);
             });
         }).catch((reason) => {
             reject(reason);
