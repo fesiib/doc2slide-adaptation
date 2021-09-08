@@ -1,19 +1,32 @@
 const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
 const { explicitFitToSlide_total, explicitFitToAlternatives_random } = require('./explicitFitContent');
+const { randomInt } = require('mathjs');
 
-async function fitToPresentation_random(settings, contents, obj, clusterBrowser) {
-    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
-    templates.copyInstance(obj);
-    
-    let pageSize = templates.getPageSizeInPX();
-
+async function fitToPresentation_random(
+    settings,
+    contents, 
+    userTemplates,
+    referenceTemplates,
+    pageSize,
+    clusterBrowser,
+) {
     let requests = [];
     let matchings = [];
     let mappings = [];
 
     let results = [];
     let pageNum = 0;
+
+    let templates = [], originalTemplates = [];
+
+    if (referenceTemplates !== null) {
+        templates = referenceTemplates.getCustomTemplates();
+    }
+
+    if (userTemplates !== null) {
+        originalTemplates = userTemplates.getCustomTemplates();
+    }
 
     if (contents.hasOwnProperty('title')) {
         let titleSection = {
@@ -22,13 +35,32 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
         };
         let result = null;
         let fitSessions = [];
-        let originalTemplates = templates.getCustomTemplates();
-        for (let originalTemplate of originalTemplates) {
-            if (!originalTemplate.isTitlePage) {
+        for (let template of templates) {
+            if (!template.isTitlePage) {
                 continue
             }
-            let template = templates.getByOriginalId(originalTemplate.originalId);
-            fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, template, template, clusterBrowser));
+            let referenceTemplate = template.getFreshJSON();
+            let originalTemplate = null;
+            
+            if (pageNum < originalTemplates.length) {
+                originalTemplate = originalTemplates[pageNum].getFreshJSON();
+                if (!originalTemplate.isTitlePage) {
+                    continue;
+                }    
+            }
+            else {
+                originalTemplate = referenceTemplate.getFreshJSON();
+            }
+            
+            if (!settings.adaptLayout) {
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, originalTemplate, referenceTemplate, clusterBrowser));
+            }
+            else if (!settings.adaptStyles) {
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, referenceTemplate, originalTemplate, clusterBrowser));
+            }
+            else {
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, referenceTemplate, referenceTemplate, clusterBrowser));
+            }
         }
         let fitResults = await Promise.all(fitSessions);
         for (let current of fitResults) {
@@ -52,11 +84,36 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
             let iterations = 0;
             let result = null;
             while (iterations < 3) {     
-                let template = templates.randomDraw();
-                if (template.isTitlePage) {
+                let randIdx = randomInt(0, templates.length);
+                let referenceTemplate = templates[randIdx].getFreshJSON();
+                if (referenceTemplate.isTitlePage) {
                     continue
                 }
-                let current = await fitToPage(settings, getMappingPreserveType_DP, section, done, template, template, clusterBrowser);
+                let originalTemplate = null;
+            
+                if (pageNum < originalTemplates.length) {
+                    originalTemplate = originalTemplates[pageNum].getFreshJSON();
+                    if (originalTemplate.isTitlePage) {
+                        continue;
+                    }    
+                }
+                else {
+                    originalTemplate = referenceTemplate.getFreshJSON();
+                }
+                let currentSession = null;
+
+                if (!settings.adaptLayout) {
+                    currentSession = fitToPage(settings, getMappingPreserveType_DP, section, done, originalTemplate, referenceTemplate, clusterBrowser);
+                }
+                else if (!settings.adaptStyles) {
+                    currentSession = fitToPage(settings, getMappingPreserveType_DP, section, done, referenceTemplate, originalTemplate, clusterBrowser);
+                }
+                else {
+                    currentSession = fitToPage(settings, getMappingPreserveType_DP, section, done, referenceTemplate, referenceTemplate, clusterBrowser);
+                }
+
+                let current = await currentSession;
+
                 if (current.done === done) {
                     continue;
                 }
@@ -101,14 +158,11 @@ async function fitToPresentation_random(settings, contents, obj, clusterBrowser)
 async function fitToPresentation_greedy(
     settings,
     contents,
-    obj,
+    userTemplates,
+    referenceTemplates,
+    pageSize,
     clusterBrowser,
 ) {
-    let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
-    templates.copyInstance(obj);
-    
-    let pageSize = templates.getPageSizeInPX();
-
     let requests = [];
     let matchings = [];
     let mappings = [];
@@ -116,7 +170,15 @@ async function fitToPresentation_greedy(
     let results = [];
     let pageNum = 0;
 
-    let originalTemplates = templates.getCustomTemplates();
+    let templates = [], originalTemplates = [];
+
+    if (referenceTemplates !== null) {
+        templates = referenceTemplates.getCustomTemplates();
+    }
+
+    if (userTemplates !== null) {
+        originalTemplates = userTemplates.getCustomTemplates();
+    }
 
     if (contents.hasOwnProperty('title')) {
         let titleSection = {
@@ -125,12 +187,33 @@ async function fitToPresentation_greedy(
         };
         let result = null;
         let fitSessions = [];
-        for (let originalTemplate of originalTemplates) {
-            if (!originalTemplate.isTitlePage) {
+        for (let template of templates) {
+            if (!template.isTitlePage) {
                 continue
             }
-            let template = templates.getByOriginalId(originalTemplate.originalId);
-            fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, template, template, clusterBrowser));
+            let referenceTemplate = template.getFreshJSON();
+
+            let originalTemplate = null;
+            
+            if (pageNum < originalTemplates.length) {
+                originalTemplate = originalTemplates[pageNum].getFreshJSON();
+                if (!originalTemplate.isTitlePage) {
+                    continue;
+                }    
+            }
+            else {
+                originalTemplate = referenceTemplate.getFreshJSON();
+            }
+            
+            if (!settings.adaptLayout) {
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, originalTemplate, referenceTemplate, clusterBrowser));
+            }
+            else if (!settings.adaptStyles) {
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, referenceTemplate, originalTemplate, clusterBrowser));
+            }
+            else {
+                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, titleSection, 0, referenceTemplate, referenceTemplate, clusterBrowser));
+            }
         }
         let fitResults = await Promise.all(fitSessions);
         for (let current of fitResults) {
@@ -151,12 +234,32 @@ async function fitToPresentation_greedy(
         }
         while (done < section.body.length) {
             let fitSessions = [];
-            for (let originalTemplate of originalTemplates) {
-                if (originalTemplate.isTitlePage) {
-                    continue;
+            for (let template of templates) {
+                if (!template.isTitlePage) {
+                    continue
                 }
-                let template = originalTemplate.getFreshJSON();
-                fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, section, done, template, template, clusterBrowser));
+                let referenceTemplate = template.getFreshJSON();
+                let originalTemplate = null;
+            
+                if (pageNum < originalTemplates.length) {
+                    originalTemplate = originalTemplates[pageNum].getFreshJSON();
+                    if (originalTemplate.isTitlePage) {
+                        continue;
+                    }    
+                }
+                else {
+                    originalTemplate = referenceTemplate.getFreshJSON();
+                }
+                
+                if (!settings.adaptLayout) {
+                    fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, section, done, originalTemplate, referenceTemplate, clusterBrowser));
+                }
+                else if (!settings.adaptStyles) {
+                    fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, section, done, referenceTemplate, originalTemplate, clusterBrowser));
+                }
+                else {
+                    fitSessions.push(fitToPage(settings, getMappingPreserveType_DP, section, done, referenceTemplate, referenceTemplate, clusterBrowser));
+                }
             }
             let fitResults = await Promise.all(fitSessions);
 
@@ -429,7 +532,7 @@ function getTemplateData_v2(obj, pageId) {
     }
 }
 
-async function fitToPresentation_v2(resources, templates, cluster, settings) {
+async function fitToPresentation_v2(resources, userTemplates, templates, cluster, settings) {
     let fitFunction = fitToPresentation_greedy;
     if (settings.method === 'random') {
         fitFunction = fitToPresentation_random;
@@ -438,7 +541,30 @@ async function fitToPresentation_v2(resources, templates, cluster, settings) {
     if (settings.fast) {
         argCluster = null;
     }
-    return await fitFunction(settings, resources, templates, argCluster);
+    
+    let referenceTemplates = null;
+    
+    if (templates !== null) {
+        referenceTemplates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
+        referenceTemplates.copyInstance(templates);
+    }
+
+    let pageSize = null;
+
+    if (!settings.adaptLayout && !settings.adaptStyles) {
+        referenceTemplates = userTemplates;
+        settings.adaptLayout = true;
+        settings.adaptStyles = true;
+    }
+
+    if (settings.adaptLayout) {
+        pageSize = referenceTemplates.getPageSizeInPX();
+    }
+    else {
+        pageSize = userTemplates.getPageSizeInPX();
+    }
+
+    return await fitFunction(settings, resources, userTemplates, referenceTemplates, pageSize, argCluster);
 }
 
 async function fitToSlide_v2(

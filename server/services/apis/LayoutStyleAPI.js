@@ -87,6 +87,7 @@ async function uploadPresentation(data) {
 
 async function generatePresentationRequests(data, cluster) {
     let presentationId = data.presentationId;
+    let userPresentation = data.userPresentation;
     let resources = data.resources;
     let settings = {
         fast: true,
@@ -94,6 +95,8 @@ async function generatePresentationRequests(data, cluster) {
         contentControl: false,
         debug: false,
         putOriginalContent: true,
+        adaptLayout: true,
+        adaptStyles: true,
     };
     if (data.hasOwnProperty('settings')) {
         settings = {
@@ -102,11 +105,21 @@ async function generatePresentationRequests(data, cluster) {
         };
     }
 
-    if (!templatesLibrary.hasOwnProperty(presentationId)) {
-        throw new Error('No such presentation with id: ' + presentationId);
+    let templates = null, userTemplates = null;
+
+    if (!settings.adaptLayout || !settings.adaptStyles) {
+        if (userPresentation === null) {
+            throw new Error('No user Presentation is specified');
+        }
+        userTemplates = Templates.extractTemplates(userPresentation);
     }
-    let templates = templatesLibrary[presentationId];
-    return fitToPresentation_v2(resources, templates, cluster, settings);
+    if (settings.adaptLayout || settings.adaptStyles) {
+        if (!templatesLibrary.hasOwnProperty(presentationId)) {
+            throw new Error('No such presentation with id: ' + presentationId);
+        }
+        templates = templatesLibrary[presentationId];
+    }
+    return fitToPresentation_v2(resources, userTemplates, templates, cluster, settings);
 }
 
 async function generateSlideRequests(data, cluster) {
