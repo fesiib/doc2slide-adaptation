@@ -36,10 +36,11 @@ async function fitToPresentation_random(
         let result = null;
         let fitSessions = [];
         for (let template of templates) {
-            if (!template.isTitlePage) {
-                continue
-            }
             let referenceTemplate = template.getFreshJSON();
+            if (!referenceTemplate.isTitlePage) {
+                continue;
+            }
+
             let originalTemplate = null;
             
             if (pageNum < originalTemplates.length) {
@@ -188,11 +189,10 @@ async function fitToPresentation_greedy(
         let result = null;
         let fitSessions = [];
         for (let template of templates) {
-            if (!template.isTitlePage) {
-                continue
-            }
             let referenceTemplate = template.getFreshJSON();
-
+            if (!referenceTemplate.isTitlePage) {
+                continue;
+            }
             let originalTemplate = null;
             
             if (pageNum < originalTemplates.length) {
@@ -235,10 +235,11 @@ async function fitToPresentation_greedy(
         while (done < section.body.length) {
             let fitSessions = [];
             for (let template of templates) {
-                if (!template.isTitlePage) {
-                    continue
-                }
                 let referenceTemplate = template.getFreshJSON();
+                if (referenceTemplate.isTitlePage) {
+                    continue;
+                }
+                
                 let originalTemplate = null;
             
                 if (pageNum < originalTemplates.length) {
