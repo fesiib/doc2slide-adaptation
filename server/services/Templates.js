@@ -224,6 +224,12 @@ class Templates {
             ...(template.getStylesJSON(true)),
         };
     }
+
+    fixLabels(labels) {
+        for (let template of this.__templates) {
+            template.fixLabels(labels);
+        }
+    }
 }
 
 module.exports = {

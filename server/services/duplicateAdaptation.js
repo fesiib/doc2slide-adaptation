@@ -260,6 +260,7 @@ async function adaptDuplicatePresentationRequests(presentation, resources, templ
 
 async function adaptDuplicateAlternativesRequests(
     userPresentation,
+    labels,
     presentation,
     resources,
     obj,
@@ -286,6 +287,9 @@ async function adaptDuplicateAlternativesRequests(
     if (userPageId !== null) {
         // work with userPresentation
         let userTemplates = Templates.extractTemplates(userPresentation);
+        if (labels !== null) {
+            userTemplates.fixLabels(labels);
+        }
         layoutTemplates = [userTemplates.getByOriginalId(userPageId)];
         presentation = userPresentation;
     }

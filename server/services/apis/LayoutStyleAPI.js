@@ -26,10 +26,19 @@ async function getDataPresentations(data) {
 }
 
 async function getDataSinglePresentation(data) {
+    let labels = null;
+
+    if (data.hasOwnProperty("labels")) {
+        labels = data.labels;
+    }
+
     return new Promise(resolve => {
         let templates = null;
         if (data.userPresentation !== null) {
             templates = Templates.extractTemplates(data.userPresentation);
+            if (labels !== null) {
+                templates.fixLabels(labels);
+            }
         }
         if (templates === null) {
             let presentationId = data.presentationId;
@@ -46,10 +55,18 @@ async function getDataSinglePresentation(data) {
 }
 
 async function getDataSingleSlide(data) {
+    let labels = null;
+
+    if (data.hasOwnProperty("labels")) {
+        labels = data.labels;
+    }
     return new Promise(resolve => {
         let templates = null;
         if (data.userPresentation !== null) {
             templates = Templates.extractTemplates(data.userPresentation);
+            if (labels !== null) {
+                templates.fixLabels(labels);
+            }
         }
         if (templates === null) {
             let presentationId = data.presentationId;
@@ -105,6 +122,12 @@ async function generatePresentationRequests(data, cluster) {
         };
     }
 
+    let labels = null;
+
+    if (data.hasOwnProperty("labels")) {
+        labels = data.labels;
+    }
+
     let templates = null, userTemplates = null;
 
     if (!settings.adaptLayout || !settings.adaptStyles) {
@@ -112,6 +135,9 @@ async function generatePresentationRequests(data, cluster) {
             throw new Error('No user Presentation is specified');
         }
         userTemplates = Templates.extractTemplates(userPresentation);
+        if (labels !== null) {
+            userTemplates.fixLabels(labels);
+        }
     }
     if (settings.adaptLayout || settings.adaptStyles) {
         if (!templatesLibrary.hasOwnProperty(presentationId)) {
@@ -318,6 +344,12 @@ async function generateDuplicateAlternativesRequests(data, cluster) {
         };
     }
 
+    let labels = null;
+
+    if (data.hasOwnProperty("labels")) {
+        labels = data.labels;
+    }
+
     if (data.hasOwnProperty('maxCnt')) {
         maxCnt = data.maxCnt;
     }
@@ -335,6 +367,7 @@ async function generateDuplicateAlternativesRequests(data, cluster) {
 
     return adaptDuplicateAlternativesRequests(
         userPresentation,
+        labels,
         presentation,
         resources,
         templates,

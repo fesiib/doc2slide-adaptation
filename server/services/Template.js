@@ -756,6 +756,19 @@ function labelPageElement(pageElement) {
     }
 }
 
+function fixLabelsPageElement(pageElement, labels) {
+    if (labels.hasOwnProperty(pageElement.originalId)) {
+        pageElement.type = labels[pageElement.originalId].split('_').shift();
+    }
+    if (pageElement.hasOwnProperty('elementGroup')) {
+        if (!Array.isArray(pageElement.elementGroup.children))
+            return;
+        for (let child of pageElement.elementGroup.children) {
+            fixLabelsPageElement(child, labels);
+        }
+    }
+}
+
 function getLayout(page, pageSize) {
     // in EMU
     let layout = {
@@ -1398,7 +1411,10 @@ class Template {
             },
         };
 
+        let labels = {};
+
         for (let box of layout.boxes) {
+            labels[box.objectId] = box.type;
             let rectangle = {
                 startX: box.left,
                 startY: box.top,
@@ -1411,7 +1427,7 @@ class Template {
                 transform,
             } = rectangleToSizeTransform(rectangle, rectangle.unit);
             let pageElement = {
-                objectId: random(),
+                objectId: box.objectId,
                 size: size,
                 transform: transform,
             };
@@ -1426,6 +1442,7 @@ class Template {
         }
         let newTemplate = new Template(random(), -1, page, pageSize, 1, false, true);
         newTemplate.initialize();
+        newTemplate.fixLabels(labels);
         return newTemplate;
     }
 
@@ -1502,7 +1519,7 @@ class Template {
                     isReplacable: true,
                     originalType: (IMAGE_PLACEHOLDER.includes(type) ? "image" : "shape"),
                 },
-                objectId: random(),
+                objectId: styles[type].objectId,
                 rectangle: rectangle,
                 size: size,
                 shape: {
@@ -1609,6 +1626,12 @@ class Template {
     label() {
         for (let pageElement of this.page.pageElements) {
             labelPageElement(pageElement);
+        }
+    }
+
+    fixLabels(labels) {
+        for (let pageElement of this.page.pageElements) {
+            fixLabelsPageElement(pageElement, labels);
         }
     }
 
