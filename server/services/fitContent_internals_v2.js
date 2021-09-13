@@ -3,6 +3,9 @@ const { initializeTemplate, initializePageElementShape_withStyles, initializePag
 const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, SUBHEADER_PLACEHOLDER, sortPageElements } = require('./Template');
 
 function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targetStyles) {
+    if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+        return [Infinity];
+    }
     let targetLenghts = pageElement.additional.canbeMapped.slice(0);
     if (!isCustom) {
         targetLenghts = [Infinity, Infinity, Infinity];
