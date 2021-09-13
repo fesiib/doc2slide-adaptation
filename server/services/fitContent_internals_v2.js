@@ -492,8 +492,8 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
                         if (pageElement.additional.canbeMapped.length > curState.toSameTypeInARow) {
                             let add = 0;
                             if (!bodyContent.paragraph.hasOwnProperty('type')
-                                || bodyContent.paragraph.type === 'ANY'
-                                || bodyContent.paragraph.type === pageElement.type
+                                || bodyContent.paragraph.type.toUpperCase().startsWith('ANY')
+                                || bodyContent.paragraph.type.startsWith(pageElement.type)
                             ) {
                                 add = 1;
                             }
@@ -514,8 +514,8 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
                         if (pageElement.additional.canbeMapped.length > 0) {
                             let add = 0;
                             if (!bodyContent.paragraph.hasOwnProperty('type')
-                                || bodyContent.paragraph.type === 'ANY'
-                                || bodyContent.paragraph.type === pageElement.type
+                                || bodyContent.paragraph.type.toUpperCase().startsWith('ANY')
+                                || bodyContent.paragraph.type.startsWith(pageElement.type)
                             ) {
                                 add = 1;
                             }
