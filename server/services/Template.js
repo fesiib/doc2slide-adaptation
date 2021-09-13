@@ -1767,6 +1767,9 @@ class Template {
             if (alreadyCovered[pageElement.type]) {
                 continue;
             }
+            if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
+                continue;
+            }
             if (!pageElement.hasOwnProperty('shape')
                 || !pageElement.shape.hasOwnProperty('text')
                 || !Array.isArray(pageElement.shape.text.textElements)
