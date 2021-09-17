@@ -2,6 +2,8 @@ import { copyPresentation, createPresentation } from './apis/DriveAPI';
 import { generateDuplicatePresentationRequests, clearPresentationRequests, clearSlideRequests, generateAlternativesRequests, generatePresentationRequests, generateSlideRequests, uploadPresentation, generateDuplicateAlternativesRequests } from './apis/layoutStylesAPI';
 import { getPresentation, updatePresentation } from './apis/SlidesAPI';
 
+const USER_PRESENTATION_ID = '1QFQCqsTdadjN0TAfUiyRAmrEQ2u2WEoj7VQsXgnplGA';
+
 export async function testPresentation_v2(presentationId, copies, resources) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
@@ -27,7 +29,7 @@ export async function testPresentation_v2(presentationId, copies, resources) {
                                 clearPresentationRequests(newId).then((response) => {
                                     let clearRequests = response.requests;
 
-                                    getPresentation("1OLAg7zmqTEC8cMI6BrV8rIJDeaDJrFA_uwgZngHn-SI").then((response) => {
+                                    getPresentation(USER_PRESENTATION_ID).then((response) => {
                                         let userPresentation = response.result;
                                         generatePresentationRequests(presentationId, userPresentation, resources)
                                         .then((response) => {
@@ -148,7 +150,7 @@ export async function generatePresentation_v2(referencePresentationId, presentat
     return new Promise((resolve, reject) => {
         clearPresentationRequests(presentationId).then((response) => {
             let clearRequests = response.requests;
-            getPresentation("1OLAg7zmqTEC8cMI6BrV8rIJDeaDJrFA_uwgZngHn-SI").then((response) => {
+            getPresentation(USER_PRESENTATION_ID).then((response) => {
                 let userPresentation = response.result;
                 generatePresentationRequests(referencePresentationId, userPresentation, resources)
                 .then((response) => {

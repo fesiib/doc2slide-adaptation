@@ -4,6 +4,15 @@ const PLACEHOLDER_IMAGE_URL = 'https://i.stack.imgur.com/y9DpT.jpg';
 
 const RGB = ['red', 'blue', 'green'];
 
+const PAGE_ELEMENT_TYPES = [
+    'HEADER',
+    'SUBHEADER',
+    'CAPTION',
+    'BODY',
+    'SLIDE_NUMBER',
+    'PICTURE',
+];
+
 const HEADER_PLACEHOLDER = [
     'CENTERED_TITLE',
     'TITLE',
@@ -758,19 +767,17 @@ function labelPageElement(pageElement) {
 
 function fixLabelsPageElement(pageElement, labels) {
     if (labels.hasOwnProperty(pageElement.originalId)) {
-        let typeParts = labels[pageElement.originalId].split('_');
-        while (typeParts.length > 0) {
-            let last = typeParts[typeParts.length - 1];
-            if (last.length > 0 && isNumeric(last[0])) {
-                typeParts.pop();
-                continue;
+        let fixed = false;
+        for (let type of PAGE_ELEMENT_TYPES) {
+            if (labels[pageElement.originalId].startsWith(type)) {
+                pageElement.type = type;
+                fixed = true;
+                break;
             }
-            break;
         }
-        if (typeParts.length === 0) {
-            throw Error("Correction Label is really bad", labels[pageElement.originalId]);
+        if (!fixed) {
+            throw new Error('wrong Label Format: ', labels[pageElement.originalId]);
         }
-        pageElement.type = typeParts.join('_');
     }
     if (pageElement.hasOwnProperty('elementGroup')) {
         if (!Array.isArray(pageElement.elementGroup.children))
@@ -1879,4 +1886,5 @@ module.exports = {
     RGB,
     SUBHEADER_PLACEHOLDER,
     PLACEHOLDER_IMAGE_URL,
+    PAGE_ELEMENT_TYPES,
 };

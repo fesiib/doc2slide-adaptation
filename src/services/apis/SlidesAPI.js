@@ -1,6 +1,12 @@
 import { gapi } from 'gapi-script';
 
 export async function getPresentation(presentationId) {
+    if (presentationId === null) {
+        return {
+            result: null,
+        };
+    }
+
     return gapi.client.slides.presentations.get({
         presentationId,
     });

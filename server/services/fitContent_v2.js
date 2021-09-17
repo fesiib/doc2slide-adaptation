@@ -1,6 +1,6 @@
 const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
-const { explicitFitToSlide_total, explicitFitToAlternatives_random } = require('./explicitFitContent');
+const { explicitFitToSlide_total, explicitFitToAlternatives_random, explicitFitToAlternatives_modfiy_single_type } = require('./explicitFitContent');
 const { randomInt } = require('mathjs');
 const { stylesToTextStyle, areSimilarObjs } = require('./Template');
 
@@ -405,7 +405,7 @@ async function fitToAlternatives_experimental(
         let template = templates.getByOriginalId(stylesPageId);
         styles = template.getStylesJSON(true);
     }
-    return explicitFitToAlternatives_random(settings, content, obj, sort, maxCnt, layout, styles, clusterBrowser);
+    return explicitFitToAlternatives_modfiy_single_type(settings, content, obj, sort, maxCnt, layout, styles, clusterBrowser);
 }
 
 async function fitToAlternatives_random(
@@ -418,7 +418,7 @@ async function fitToAlternatives_random(
     stylesPageId,
     clusterBrowser
 ) {
-    //return fitToAlternatives_experimental(settings, content, obj, sort, maxCnt, layoutPageId, stylesPageId, clusterBrowser);
+    return fitToAlternatives_experimental(settings, content, obj, sort, maxCnt, layoutPageId, stylesPageId, clusterBrowser);
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     

@@ -1,6 +1,6 @@
 const { scoreElements_withStyles } = require('./apis/EvaluateAPI');
 const { initializeTemplate, initializePageElementShape_withStyles, initializePageElementImage_withStyles, addTextBox } = require('./apis/initializeAPI');
-const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, SUBHEADER_PLACEHOLDER, sortPageElements } = require('./Template');
+const {HEADER_PLACEHOLDER, IMAGE_PLACEHOLDER, SUBHEADER_PLACEHOLDER, sortPageElements, BODY_PLACEHOLDER, PAGE_ELEMENT_TYPES } = require('./Template');
 
 function getAppropriateTargetLengths(isCustom, pageElement, originalStyles, targetStyles) {
     if (IMAGE_PLACEHOLDER.includes(pageElement.type)) {
@@ -255,26 +255,87 @@ function fitToShape(settings, pageElement, originalBox, originalStyles, targetSt
 
 function initializeMapping(content, start, layoutTemplate) {
     let mapping = {};
+    const fixTypeAndFormat = (type, format) => {
+        for (let defType of PAGE_ELEMENT_TYPES) {
+            if (type.startsWith(defType)) {
+                type = defType;
+            }
+        }
+        if (IMAGE_PLACEHOLDER.includes(type)) {
+            format = 'image';
+        }
+        else if (BODY_PLACEHOLDER.includes(type)
+            || HEADER_PLACEHOLDER.includes(type)
+            || SUBHEADER_PLACEHOLDER.includes(type)
+        ) {
+            format = 'text';
+        }
+        else if (type === 'ANY') {
+            if (format !== 'image' && format !== 'text')
+                format = 'any';
+        }
+        else {
+            format = 'not_specified';
+        }
+        return {
+            type,
+            format,
+        };
+    }
+
     if (content.hasOwnProperty('header')) {
+        if (!content.header.hasOwnProperty('type')) {
+            content.header.type = 'NOT_SPECIFIED';
+        }
+        
+        let fixedInfo = fixTypeAndFormat(content.header.type, content.header.format)
+
+        content.header.type = fixedInfo.type;
+        content.header.format = fixedInfo.format;
+
         mapping[content.header.id] = {
             wasMatched: false,
             type: null,
+            originalType: content.header.type,
+            originalFormat: content.header.format,
         };
     }
     if (content.hasOwnProperty('body')) {
         for (let i = start; i < content.body.length; i++) {
             bodyContent = content.body[i];
             if (bodyContent.hasOwnProperty('paragraph')) {
+                if (!bodyContent.paragraph.hasOwnProperty('type')) {
+                    bodyContent.paragraph.type = 'NOT_SPECIFIED';
+                }
+
+                let fixedInfo = fixTypeAndFormat(bodyContent.paragraph.type, bodyContent.paragraph.format)
+
+                bodyContent.paragraph.type = fixedInfo.type;
+                bodyContent.paragraph.format = fixedInfo.format;
+
                 mapping[bodyContent.paragraph.id] = {
                     wasMatched: false,
                     type: null,
+                    originalType: bodyContent.paragraph.type,
+                    originalFormat: bodyContent.paragraph.format,
                 };
             }
             else if (bodyContent.hasOwnProperty('bullet')) {
                 //TODO
+                if (!bodyContent.bullet.hasOwnProperty('type')) {
+                    bodyContent.bullet.type = 'NOT_SPECIFIED';
+                }
+
+                let fixedInfo = fixTypeAndFormat(bodyContent.bullet.type, bodyContent.bullet.format)
+
+                bodyContent.bullet.type = fixedInfo.type;
+                bodyContent.bullet.format = fixedInfo.format;
+
                 mapping[bodyContent.bullet.id] = {
                     wasMatched: false,
                     type: null,
+                    originalType: bodyContent.bullet.type,
+                    originalFormat: bodyContent.bullet.format,
                 };
             }
         }
@@ -320,6 +381,8 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
 
     let done = start;
 
+    let successMatches = 0;
+
     elements = sortPageElements(elements);
 
     // Fit the header
@@ -360,9 +423,11 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
             });
             headerPageElement.isHeader = true;
             mapping[content.header.id] = {
+                ...mapping[content.header.id],
                 wasMatched: true,
                 type: headerPageElement.type,
             };
+            successMatches++;
         }
     }
 
@@ -455,6 +520,27 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
             return true;
         }
 
+        const getReward = (type, format, pageElementType) => {
+            let add = 0;
+            if (type.startsWith(pageElementType)) {
+                add = 1;
+            }
+            else if (format === 'image'
+                && IMAGE_PLACEHOLDER.includes(pageElementType)
+            ) {
+                add = 1;
+            }
+            else if (format === 'text'
+                && BODY_PLACEHOLDER.includes(pageElementType)
+            ) {
+                add = 1;
+            }
+            else if (format === 'any') {
+                add = 1;
+            }
+            return add;
+        }
+
         let dp = [], pr = [];
 
         let maxIdx = stateToIdx(nState);
@@ -493,13 +579,9 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
                     ) {
                         let pageElement = elements[idTypes[newType][curState[newType] - 1]];
                         if (pageElement.additional.canbeMapped.length > curState.toSameTypeInARow) {
-                            let add = 0;
-                            if (!bodyContent.paragraph.hasOwnProperty('type')
-                                || bodyContent.paragraph.type.toUpperCase().startsWith('ANY')
-                                || bodyContent.paragraph.type.startsWith(pageElement.type)
-                            ) {
-                                add = 1;
-                            }
+                            
+                            let add = getReward(bodyContent.paragraph.type, bodyContent.paragraph.format, pageElement.type);
+
                             let nextState = {
                                 ...curState,
                                 contentIdx: curState.contentIdx + 1,
@@ -515,13 +597,7 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
                     if (curState[newType] < nState[newType]) {
                         let pageElement = elements[idTypes[newType][curState[newType]]];;
                         if (pageElement.additional.canbeMapped.length > 0) {
-                            let add = 0;
-                            if (!bodyContent.paragraph.hasOwnProperty('type')
-                                || bodyContent.paragraph.type.toUpperCase().startsWith('ANY')
-                                || bodyContent.paragraph.type.startsWith(pageElement.type)
-                            ) {
-                                add = 1;
-                            }
+                            let add = getReward(bodyContent.paragraph.type, bodyContent.paragraph.format, pageElement.type);
                             let nextState = {
                                 ...curState,
                                 contentIdx: curState.contentIdx + 1,
@@ -590,6 +666,7 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
         }
 
         done = bestState.contentIdx + start;
+        successMatches += dp[stateToIdx(bestState)];
 
         while (!isEqual(bestState, pr[stateToIdx(bestState)])) {
             let prevState = pr[stateToIdx(bestState)];
@@ -604,6 +681,7 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
                     },
                 });
                 mapping[bodyContent.paragraph.id] = {
+                    ...mapping[bodyContent.paragraph.id],
                     wasMatched: true,
                     type: pageElement.type,
                 };
@@ -615,6 +693,7 @@ function getMappingPreserveType_DP(settings, content, start, layoutTemplate, sty
         mapping,
         elements,
         done,
+        successMatches,
     };
 }
 
@@ -668,6 +747,7 @@ function getMappingArea(settings, content, start, layoutTemplate, stylesTemplate
             });
             headerPageElement.isHeader = true;
             mapping[content.header.id] = {
+                ...mapping[content.header.id],
                 wasMatched: true,
                 type: headerPageElement.type,
             };
@@ -748,6 +828,7 @@ function getMappingArea(settings, content, start, layoutTemplate, stylesTemplate
                         },
                     });
                     mapping[bodyContent.paragraph.id] = {
+                        ...mapping[bodyContent.paragraph.id],
                         wasMatched: true,
                         type: pageElement.type,
                     };
@@ -772,6 +853,7 @@ function getMappingArea(settings, content, start, layoutTemplate, stylesTemplate
         mapping,
         elements,
         done,
+        successMatches: 0,
     };
 }
 
@@ -781,6 +863,7 @@ async function fitToPage(settings, mappingFunction, content, start, layoutTempla
         mapping,
         elements,
         done,
+        successMatches,
     } = mappingFunction(settings, content, start, layoutTemplate, stylesTemplate);
     let requests = [];
 
@@ -892,7 +975,8 @@ async function fitToPage(settings, mappingFunction, content, start, layoutTempla
         moreInfo: {
             totalNumMapped: totalNumMapped,
             totalNumContent: Object.keys(mapping).length,
-            totalNumSlideElements: elements.length,    
+            totalNumSlideElements: elements.length,
+            successMatches, 
         }
     };
 
