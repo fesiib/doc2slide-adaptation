@@ -104,6 +104,10 @@ class Templates {
     }
 
     addCustom(originalId, pageNum, page, isTitlePage = false) {
+        if (originalId === 'p') {
+            isTitlePage = true;
+        }
+
         let template = new Template(originalId, pageNum, page, this.pageSize, 2, isTitlePage, true);
         template.initialize();
 
