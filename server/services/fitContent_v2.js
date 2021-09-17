@@ -2,6 +2,7 @@ const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
 const { explicitFitToSlide_total, explicitFitToAlternatives_random } = require('./explicitFitContent');
 const { randomInt } = require('mathjs');
+const { stylesToTextStyle, areSimilarObjs } = require('./Template');
 
 async function fitToPresentation_random(
     settings,
@@ -417,6 +418,7 @@ async function fitToAlternatives_random(
     stylesPageId,
     clusterBrowser
 ) {
+    //return fitToAlternatives_experimental(settings, content, obj, sort, maxCnt, layoutPageId, stylesPageId, clusterBrowser);
     let templates = new Templates('', { width: {magnitude: 0, unit: 'EMU'}, height: {magnitude: 0, unit: 'EMU'}});
     templates.copyInstance(obj);
     
@@ -433,6 +435,7 @@ async function fitToAlternatives_random(
     let fitSessions = [];
 
     for (let layoutIdx = 0; layoutIdx < (layoutPageId === null ? layoutTemplates.length : 1); layoutIdx++) {
+        let fittedStylesList = [];
         for (let stylesIdx = 0; stylesIdx < (stylesPageId === null ? stylesTemplates.length : 1); stylesIdx++) {
             let layoutTemplate = null;
             if (layoutPageId === null) {
@@ -469,6 +472,28 @@ async function fitToAlternatives_random(
                 continue;
             }
 
+            let skip = false;
+            for (let fittedStyles of fittedStylesList) {
+                let totallySimilar = true;
+                for (let field in originalStyles.styles) {
+                    let fitted = stylesToTextStyle(fittedStyles.styles[field]);
+                    let target = stylesToTextStyle(targetStyles.styles[field]);
+                    if (!areSimilarObjs(fitted, target, 0.5)) {
+                        totallySimilar = false;
+                        break;
+                    }
+                }
+                if (totallySimilar) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) {
+                continue;
+            }
+
+            fittedStylesList.push(targetStyles);
+
             fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
         }
     }
@@ -478,24 +503,12 @@ async function fitToAlternatives_random(
     if (sort) {
         results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
     }
-
-    let was = {};
     
     let pageNum = 0;
     for (let result of results) {
         if (pageNum === maxCnt) {
             break;
         }
-
-        let rep = {
-            ...result.score
-        };
-        delete rep.similarity;
-        let repStr = JSON.stringify(rep);
-        if (was[repStr] === true) {
-            continue;
-        }
-        was[repStr] = true;
 
         pageNum++;
         let response = getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize);

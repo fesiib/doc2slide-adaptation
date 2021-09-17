@@ -1,7 +1,7 @@
 const { Templates } = require('./Templates');
 
 const { getMappingPreserveType_DP, fitToPage, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
-const { Template } = require('./Template');
+const { Template, stylesToTextStyle, areSimilarObjs } = require('./Template');
 
 function updateDuplicatePresentationRequests(presentation, presentationPages) {
     if (!Array.isArray(presentation.slides)) {
@@ -158,6 +158,7 @@ async function adaptDuplicateAlternativesRequests_random(
     let fitSessions = [];
 
     for (let originalLayoutTemplate of layoutTemplates) {
+        let fittedStylesList = [];
         for (let originalStylesTemplate of stylesTemplates) {
             let layoutTemplate = originalLayoutTemplate.getFreshJSON();
             let stylesTemplate = originalStylesTemplate.getFreshJSON();
@@ -174,6 +175,28 @@ async function adaptDuplicateAlternativesRequests_random(
             if (!hasAllNecessary) {
                 continue;
             }
+
+            let skip = false;
+            for (let fittedStyles of fittedStylesList) {
+                let totallySimilar = true;
+                for (let field in originalStyles.styles) {
+                    let fitted = stylesToTextStyle(fittedStyles.styles[field]);
+                    let target = stylesToTextStyle(targetStyles.styles[field]);
+                    if (!areSimilarObjs(fitted, target, 0.5)) {
+                        totallySimilar = false;
+                        break;
+                    }
+                }
+                if (totallySimilar) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) {
+                continue;
+            }
+
+            fittedStylesList.push(targetStyles);
             fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
         }
     }
@@ -184,7 +207,6 @@ async function adaptDuplicateAlternativesRequests_random(
         results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
     }
 
-    let was = {};
     let pageNum = 0;
     let requestsList = [];
     let matchings = [];
@@ -194,16 +216,6 @@ async function adaptDuplicateAlternativesRequests_random(
         if (pageNum === maxCnt) {
             break;
         }
-
-        let rep = {
-            ...result.score
-        };
-        delete rep.similarity;
-        let repStr = JSON.stringify(rep);
-        if (was[repStr] === true) {
-            continue;
-        }
-        was[repStr] = true;
 
         pageNum++;
         let matching = {

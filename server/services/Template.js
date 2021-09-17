@@ -1867,6 +1867,7 @@ module.exports = {
     sortPageElements,
 
     stylesToTextStyle,
+    areSimilarObjs,
 
     HEADER_PLACEHOLDER,
     BODY_PLACEHOLDER,

@@ -1,6 +1,6 @@
 const { Templates } = require('./Templates');
 const { fitToPage, getSingleTemplateResponse_v2, getMappingPreserveType_DP, getMappingNoPreserveType_DP } = require('./fitContent_internals_v2');
-const { Template } = require('./Template');
+const { Template, areSimilarObjs, stylesToTextStyle } = require('./Template');
 
 async function explicitFitToSlide_total(
     settings,
@@ -89,6 +89,8 @@ async function explicitFitToAlternatives_random(
         let stylesTemplates = templates.getUniqueStylesTemplates();
 
         for (let layoutIdx = 0; layoutIdx < (layout === null ? layoutTemplates.length : 1); layoutIdx++) {
+            let fittedStylesList = [];
+
             for (let stylesIdx = 0; stylesIdx < (styles === null ? stylesTemplates.length : 1); stylesIdx++) {
                 let layoutTemplate = null;
                 if (layout === null) {
@@ -128,6 +130,28 @@ async function explicitFitToAlternatives_random(
                     continue;
                 }
 
+                let skip = false;
+                for (let fittedStyles of fittedStylesList) {
+                    let totallySimilar = true;
+                    for (let field in originalStyles.styles) {
+                        let fitted = stylesToTextStyle(fittedStyles.styles[field]);
+                        let target = stylesToTextStyle(targetStyles.styles[field]);
+                        if (!areSimilarObjs(fitted, target, 0.5)) {
+                            totallySimilar = false;
+                            break;
+                        }
+                    }
+                    if (totallySimilar) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+
+                fittedStylesList.push(targetStyles);
+
                 fitSessions.push(fitToPage(settings, getMappingNoPreserveType_DP, content, 0, layoutTemplate, stylesTemplate, clusterBrowser));
             }
         }
@@ -142,25 +166,12 @@ async function explicitFitToAlternatives_random(
     if (sort) {
         results.sort((p1, p2) => (p2.totalScore - p1.totalScore));
     }
-
-    let was = {};
     
     let pageNum = 0;
     for (let result of results) {
         if (pageNum === maxCnt) {
             break;
         }
-
-        let rep = {
-            ...result.score
-        };
-        delete rep.similarity;
-        let repStr = JSON.stringify(rep);
-        if (was[repStr] === true) {
-            continue;
-        }
-        was[repStr] = true;
-
         pageNum++;
         let response = getSingleTemplateResponse_v2(settings, result, null, pageNum, pageSize);
 
