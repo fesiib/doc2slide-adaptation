@@ -91,7 +91,7 @@ export async function generatePresentationRequests(presentationId, userPresentat
             debug: true,
             putOriginalContent: true,
             adaptLayout: true,
-            adaptStyles: false,
+            adaptStyles: true,
         },
     };
 

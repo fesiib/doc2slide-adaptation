@@ -222,39 +222,6 @@ function InputContent(props) {
             });
     }
 
-    const submitAlternativesHandler = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        loadingActivate(COMPILING);
-        _clearThumbnails();
-        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
-            .then((response) => {
-                let resources = {
-                    ...response,
-                };
-                let idx = null;
-                if (indexDropdownValue <= extPageCnt && indexDropdownValue > 0) {
-                    idx = indexDropdownValue;
-                }
-
-                generateDuplicateAlternatives(selected, selectedExt, idx, stylesPageIdDropdownValue, sortToggle, resources)
-                .then((response) => {
-                    let newPresentationId = response.presentationId;
-                    _updatePageCnt(response.pageCnt);
-                    loadingDeactivate(COMPILING);
-                    _extractedFile(selected, newPresentationId);
-                }).catch((error) => {
-                    console.log('Couldn`t generate Alternatives: ', error);
-                    loadingDeactivate(COMPILING);
-                });
-                _compileContent(resources.header, resources.body);
-            }).catch((error) => {
-                console.log('Couldn`t generate Alternatives: ', error);
-                loadingDeactivate(COMPILING);
-            });
-    }
-
-
     // const submitAlternativesHandler = (event) => {
     //     event.preventDefault();
     //     event.stopPropagation();
@@ -265,21 +232,54 @@ function InputContent(props) {
     //             let resources = {
     //                 ...response,
     //             };
-    //             generateAlternatives(selected, selectedExt, layoutPageIdDropdownValue, stylesPageIdDropdownValue, sortToggle, resources)
-    //                 .then((response) => {
-    //                     console.log("Generated Alternatives: ", response);
-    //                     loadingDeactivate(COMPILING);
-    //                     forceUpdateSelected();
-    //                 }).catch((error) => {
-    //                     console.log('Couldn`t generate Alternatives: ', error);
-    //                     loadingDeactivate(COMPILING);
-    //                 });
-    //                 _compileContent(resources.header, resources.body);
+    //             let idx = null;
+    //             if (indexDropdownValue <= extPageCnt && indexDropdownValue > 0) {
+    //                 idx = indexDropdownValue;
+    //             }
+
+    //             generateDuplicateAlternatives(selected, selectedExt, idx, stylesPageIdDropdownValue, sortToggle, resources)
+    //             .then((response) => {
+    //                 let newPresentationId = response.presentationId;
+    //                 _updatePageCnt(response.pageCnt);
+    //                 loadingDeactivate(COMPILING);
+    //                 _extractedFile(selected, newPresentationId);
+    //             }).catch((error) => {
+    //                 console.log('Couldn`t generate Alternatives: ', error);
+    //                 loadingDeactivate(COMPILING);
+    //             });
+    //             _compileContent(resources.header, resources.body);
     //         }).catch((error) => {
     //             console.log('Couldn`t generate Alternatives: ', error);
     //             loadingDeactivate(COMPILING);
     //         });
     // }
+
+
+    const submitAlternativesHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        loadingActivate(COMPILING);
+        _clearThumbnails();
+        processContent({header, body}, {header: headerResult, body: bodyResult}, shouldUpdate)
+            .then((response) => {
+                let resources = {
+                    ...response,
+                };
+                generateAlternatives(selected, selectedExt, layoutPageIdDropdownValue, stylesPageIdDropdownValue, sortToggle, resources)
+                    .then((response) => {
+                        console.log("Generated Alternatives: ", response);
+                        loadingDeactivate(COMPILING);
+                        forceUpdateSelected();
+                    }).catch((error) => {
+                        console.log('Couldn`t generate Alternatives: ', error);
+                        loadingDeactivate(COMPILING);
+                    });
+                    _compileContent(resources.header, resources.body);
+            }).catch((error) => {
+                console.log('Couldn`t generate Alternatives: ', error);
+                loadingDeactivate(COMPILING);
+            });
+    }
 
     const submitBestSlideHandler = (event) => {
         event.preventDefault();

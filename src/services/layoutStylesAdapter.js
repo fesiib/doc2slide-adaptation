@@ -57,34 +57,34 @@ export async function comparePresentation_v2(presentationId, sort, resources) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let presentation = response.result;
-            let titleSuffix = 'compare_template_' + presentation.title;
+            let titleSuffix = 'compare_' + presentation.title;
             uploadPresentation(presentation).then((response) => {
                 let title = titleSuffix;
-                generateDuplicateAlternatives(presentationId, presentationId, null, null, sort, resources).then((response) => {
-                    console.log(response);
-                });
-                // createPresentation(title).then((response) => {
-                //     let newId = response.presentationId;
-                //     if (newId === undefined) {
-                //         reject('Creation failed');
-                //     }
-                //     clearPresentationRequests(newId).then((response) => {
-                //         let clearRequests = response.requests;
-                //         generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
-                //         .then((response) => {
-                //             let requests = clearRequests;
-                //             for (let obj of response.requestsList) {
-                //                 requests = requests.concat(obj.requests);
-                //             }
-                //             console.log('Matching:', title, response.matchings, response.mappings);
-                //             updatePresentation(newId, requests).then((response) => {
-                //                 resolve({
-                //                     response,
-                //                 });
-                //             });
-                //         });
-                //     });
+                // generateDuplicateAlternatives(presentationId, presentationId, null, null, sort, resources).then((response) => {
+                //     console.log(response);
                 // });
+                createPresentation(title).then((response) => {
+                    let newId = response.presentationId;
+                    if (newId === undefined) {
+                        reject('Creation failed');
+                    }
+                    clearPresentationRequests(newId).then((response) => {
+                        let clearRequests = response.requests;
+                        generateAlternativesRequests(presentationId, sort, 40, null, null, resources)
+                        .then((response) => {
+                            let requests = clearRequests;
+                            for (let obj of response.requestsList) {
+                                requests = requests.concat(obj.requests);
+                            }
+                            console.log('Matching:', title, response.matchings, response.mappings);
+                            updatePresentation(newId, requests).then((response) => {
+                                resolve({
+                                    response,
+                                });
+                            });
+                        });
+                    });
+                });
             });
         });
     });
@@ -176,7 +176,7 @@ export async function generatePresentation_v2(referencePresentationId, presentat
 
 export async function generateDuplicatePresentation(referencePresentationId, title, resources) {
     return new Promise((resolve, reject) => {
-        copyPresentation("duplicate_presentation_" + title, referencePresentationId).then((response) => {
+        copyPresentation("duplicate_" + title, referencePresentationId).then((response) => {
             let presentationId = response.presentationId;
             generateDuplicatePresentationRequests(referencePresentationId, resources)
             .then((response) => {
