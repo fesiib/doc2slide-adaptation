@@ -634,7 +634,7 @@ function calculateAdditional(pageElement, src) {
     }
     else {
         additional.isReplacable = false;
-        additional.originaType = 'none';
+        additional.originalType = 'none';
     }
     pageElement['additional'] = additional;
     pageElement.originalId = pageElement.objectId;
@@ -758,7 +758,19 @@ function labelPageElement(pageElement) {
 
 function fixLabelsPageElement(pageElement, labels) {
     if (labels.hasOwnProperty(pageElement.originalId)) {
-        pageElement.type = labels[pageElement.originalId].split('_').shift();
+        let typeParts = labels[pageElement.originalId].split('_');
+        while (typeParts.length > 0) {
+            let last = typeParts[typeParts.length - 1];
+            if (last.length > 0 && isNumeric(last[0])) {
+                typeParts.pop();
+                continue;
+            }
+            break;
+        }
+        if (typeParts.length === 0) {
+            throw Error("Correction Label is really bad", labels[pageElement.originalId]);
+        }
+        pageElement.type = typeParts.join('_');
     }
     if (pageElement.hasOwnProperty('elementGroup')) {
         if (!Array.isArray(pageElement.elementGroup.children))
