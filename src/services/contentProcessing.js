@@ -48,8 +48,7 @@ export async function processContent(request, possibleResponse, shouldUpdate) {
             paragraph: {
                 ...bodyText[i],
                 images: bodyImage[i],
-                format: 'text',
-                type: 'BODY',
+                type: 'PICTURE',
             }
         });
     }
