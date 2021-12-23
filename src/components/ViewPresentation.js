@@ -12,30 +12,20 @@ function ViewPresentation(props) {
             </Alert>
         );
     }
-    if (props.presentationId === '') {
-        return (
-            <Alert color="primary">
-                Please Wait! Extracting the Template!!
-            </Alert>
-        ); 
-    }
-    if (props.presentationId === ERROR_SIGNAL) {
-        return (
-            <Alert color="primary">
-                Error Occured!!
-            </Alert>
-        );
-    }
     return (
-        <ReactGoogleSlides
-            width={640}
-            height={480}
-            slidesLink={LINK_PREFIX + props.presentationId}
-            slideDuration={0}
-            position={1}
-            showControls={true}
-            loop={false}
-        />
+        <div style={{
+            margin: "2em",
+        }}>
+            <ReactGoogleSlides
+                width={640}
+                height={480}
+                slidesLink={LINK_PREFIX + props.presentationId}
+                slideDuration={0}
+                position={1}
+                showControls={true}
+                loop={false}
+            />
+        </div>
     );
 } 
 
