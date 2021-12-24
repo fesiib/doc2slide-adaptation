@@ -2,24 +2,24 @@ import Example from "./Example";
 
 const EXAMPLES_LIST = [
     {
-        slideDeckId: 0,
-        slideId: 1,
+        exampleDeckId: 0,
+        exampleId: 1,
     },
     {
-        slideDeckId: 0,
-        slideId: 2,
+        exampleDeckId: 0,
+        exampleId: 2,
     },
     {
-        slideDeckId: 0,
-        slideId: 3,
+        exampleDeckId: 0,
+        exampleId: 3,
     },
     {
-        slideDeckId: 0,
-        slideId: 4,
+        exampleDeckId: 0,
+        exampleId: 4,
     },
     {
-        slideDeckId: 0,
-        slideId: 5,
+        exampleDeckId: 0,
+        exampleId: 5,
     }
 ];
 
@@ -36,11 +36,10 @@ function ExamplesGallery(props) {
     }>
         {
             EXAMPLES_LIST.map((value, i) => {
-                
                 return (
                     <Example
-                        slideDeckId={value.slideDeckId}
-                        slideId={value.slideId}
+                        exampleDeckId={value.exampleDeckId}
+                        exampleId={value.exampleId}
                     />
                 );
             })

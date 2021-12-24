@@ -6,7 +6,6 @@ export async function getPresentation(presentationId) {
             result: null,
         };
     }
-
     return gapi.client.slides.presentations.get({
         presentationId,
     });

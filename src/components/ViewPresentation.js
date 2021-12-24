@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import ReactGoogleSlides from 'react-google-slides';
 import {Alert} from 'reactstrap';
-import { ERROR_SIGNAL } from '../reducers/presentationFiles';
 
 const LINK_PREFIX = 'https://docs.google.com/presentation/d/';
 

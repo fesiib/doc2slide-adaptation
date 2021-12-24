@@ -5,8 +5,9 @@ import './index.css';
 import Authorize from './components/Authorize';
 import ViewPresentation from './components/ViewPresentation';
 import ExamplesGallery from './components/ExamplesGallery';
+import { EXPERIMENTAL_PRESENTATION_ID } from './components/Example';
 
-const EXPERIMENTAL_PRESENTATION_ID = "16AP3S-EPxG7Sqls2LtZkJBm7pkjqy2ZoHNWjU6Wp_eo";
+
 
 function App() {
 

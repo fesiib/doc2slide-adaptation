@@ -4,6 +4,7 @@ import {combineReducers} from 'redux';
 import presentationFiles from './presentationFiles';
 import content from './content';
 import contentDoc from './contentDoc';
+import loadingState from './loadingState';
 
 const RESET_APP = "RESET_APP";
 
@@ -11,6 +12,7 @@ const appReducer = combineReducers({
     presentationFiles,
     content,
     contentDoc,
+    loadingState,
 });
 
 export const resetApp = () => ({
