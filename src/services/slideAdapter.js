@@ -12,6 +12,8 @@ export async function generateSlide(exampleUrl, exampleId, exampleDeckId, presen
             let clearRequests = response.requests;
             let slideInfo = {
                 slide_id: response.slideId,
+                slide_height: response.slideHeight,
+                slide_width: response.slideWidth,
             };
             if (slideInfo.slide_id === null) {
                 throw Error("No such page" + pageNum.toString());

@@ -70,16 +70,29 @@ export async function processExample(exampleUrl, exampleId, exampleDeckId) {
     });
 }
 
+function getDimensionInPt(dimension) {
+    if (dimension.unit == 'PT') {
+        return dimension.magnitude;
+    }
+    if (dimension.unit == 'EMU') {
+        return Math.round(dimension.magnitude / 12700);
+    }
+}
+
 export async function clearSlideRequests(presentationId, pageNum) {
     return new Promise((resolve, reject) => {
         getPresentation(presentationId).then((response) => {
             let requests = [];
             let slideId = null;
+
+            const slideHeight = getDimensionInPt(response.result.pageSize.height);
+            const slideWidth = getDimensionInPt(response.result.pageSize.width);
+
             if (!Array.isArray(response.result.slides)) {
-                resolve({requests, slideId});
+                resolve({requests, slideId, slideHeight, slideWidth});
             }
             if (response.result.slides.length < pageNum) {
-                resolve({requests, slideId});
+                resolve({requests, slideId, slideHeight, slideWidth});
             }
             const slide = response.result.slides[pageNum-1];
             slideId = slide.objectId;
@@ -93,6 +106,8 @@ export async function clearSlideRequests(presentationId, pageNum) {
             resolve({
                 requests,
                 slideId,
+                slideHeight,
+                slideWidth,
             });
         }).catch((reason) => {
             reject(reason);

@@ -37,7 +37,10 @@ function Example(props) {
         generateSlide(EXAMPLES_LINK + url, exampleId, exampleDeckId, EXPERIMENTAL_PRESENTATION_ID, 1).then((response) => {
             dispatch(deactivateLoading());
             window.location.reload();
-        })
+        }).catch((reason) => {
+            dispatch(deactivateLoading());
+            console.log(reason)
+        });
     }
 
     return (<div onClick={exampleSelected} key={key} style={
