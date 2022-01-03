@@ -25,6 +25,22 @@ const EXAMPLES_LIST = [
 
 function ExamplesGallery(props) {
 
+    const parseDatabase = () => {
+        let lst = []
+        for (let exampleDeckId = 0; exampleDeckId < 5; exampleDeckId++) {
+            for (let exampleId = 1; exampleId < 7; exampleId++) {
+                lst.push(
+                    <Example
+                        exampleDeckId={exampleDeckId}
+                        exampleId={exampleId}
+                        size='s'
+                    />
+                );
+            }
+        }   
+        return lst;
+    }
+
     return (<div style={
         {
             margin: "2em",
@@ -35,14 +51,15 @@ function ExamplesGallery(props) {
         }
     }>
         {
-            EXAMPLES_LIST.map((value, i) => {
-                return (
-                    <Example
-                        exampleDeckId={value.exampleDeckId}
-                        exampleId={value.exampleId}
-                    />
-                );
-            })
+            parseDatabase()
+            // EXAMPLES_LIST.map((value, i) => {
+            //     return (
+            //         <Example
+            //             exampleDeckId={value.exampleDeckId}
+            //             exampleId={value.exampleId}
+            //         />
+            //     );
+            // })
         }
     </div>);
 }

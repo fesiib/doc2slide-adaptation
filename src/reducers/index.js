@@ -5,13 +5,12 @@ import presentationFiles from './presentationFiles';
 import content from './content';
 import contentDoc from './contentDoc';
 import loadingState from './loadingState';
+import example from './example';
 
 const RESET_APP = "RESET_APP";
 
 const appReducer = combineReducers({
-    presentationFiles,
-    content,
-    contentDoc,
+    example,
     loadingState,
 });
 

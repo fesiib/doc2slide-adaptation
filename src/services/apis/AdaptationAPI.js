@@ -1,6 +1,6 @@
 import { getPresentation } from './SlidesAPI';
 
-const ADDR = 'http://192.168.1.147:7777';
+const ADDR = 'http://server.hyungyu.com:7777';
 //const ADDR = 'http://localhost:7777';
 
 export async function generateSlideRequests(slideInfo, exampleInfo) {
@@ -96,12 +96,14 @@ export async function clearSlideRequests(presentationId, pageNum) {
             }
             const slide = response.result.slides[pageNum-1];
             slideId = slide.objectId;
-            for (let pageElement of slide.pageElements) {
-                requests.push({
-                    deleteObject: {
-                        objectId: pageElement.objectId,
-                    }
-                });  
+            if (slide.hasOwnProperty("pageElements")) {
+                for (let pageElement of slide.pageElements) {
+                    requests.push({
+                        deleteObject: {
+                            objectId: pageElement.objectId,
+                        }
+                    });  
+                }
             }
             resolve({
                 requests,

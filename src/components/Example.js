@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { selectExample } from "../reducers/example";
 import { activateLoading, deactivateLoading } from "../reducers/loadingState";
 import { generateSlide } from "../services/slideAdapter";
 
@@ -16,9 +17,10 @@ function Example(props) {
     
     const exampleDeckId = props.exampleDeckId;
     const exampleId = props.exampleId;
+    const size = props.size
 
-    const width = WIDTH;
-    const height = HEIGHT;
+    const width = WIDTH * (size == 'l' ? 3.5 : 1);
+    const height = HEIGHT * (size == 'l' ? 3.5 : 1);
     
     if (exampleDeckId == null || exampleId == null) {
         return (<div>
@@ -30,13 +32,15 @@ function Example(props) {
     const url = "/" + exampleDeckId.toString() + "/" + exampleId.toString() + ".jpg";
 
     const exampleSelected = (event) => {
-        if (loading) {
+        if (loading || size == 'l') {
             return;
         }
         dispatch(activateLoading());
         generateSlide(EXAMPLES_LINK + url, exampleId, exampleDeckId, EXPERIMENTAL_PRESENTATION_ID, 1).then((response) => {
             dispatch(deactivateLoading());
             window.location.reload();
+            console.log(exampleDeckId, exampleId)
+            dispatch(selectExample({exampleDeckId, exampleId}));
         }).catch((reason) => {
             dispatch(deactivateLoading());
             console.log(reason)
