@@ -1,43 +1,33 @@
+import EXAMPLES_LIST from "../services/ExamplesList";
 import Example from "./Example";
-
-const EXAMPLES_LIST = [
-    {
-        exampleDeckId: 0,
-        exampleId: 1,
-    },
-    {
-        exampleDeckId: 0,
-        exampleId: 2,
-    },
-    {
-        exampleDeckId: 0,
-        exampleId: 3,
-    },
-    {
-        exampleDeckId: 0,
-        exampleId: 4,
-    },
-    {
-        exampleDeckId: 0,
-        exampleId: 5,
-    }
-];
 
 function ExamplesGallery(props) {
 
     const parseDatabase = () => {
         let lst = []
-        for (let exampleDeckId = 0; exampleDeckId < 5; exampleDeckId++) {
-            for (let exampleId = 1; exampleId < 7; exampleId++) {
-                lst.push(
-                    <Example
-                        exampleDeckId={exampleDeckId}
-                        exampleId={exampleId}
-                        size='s'
-                    />
-                );
-            }
-        }   
+        for (let example of EXAMPLES_LIST) {
+            const exampleDeckId = example.exampleDeckId;
+            const exampleId = example.exampleId;
+            lst.push(
+                <Example
+                    exampleDeckId={exampleDeckId}
+                    exampleId={exampleId}
+                    size='s'
+                />
+            );
+        }
+
+        // for (let exampleDeckId = 44; exampleDeckId < 70; exampleDeckId++) {
+        //     for (let exampleId = 13; exampleId < 19; exampleId++) {
+        //         lst.push(
+        //             <Example
+        //                 exampleDeckId={exampleDeckId}
+        //                 exampleId={exampleId}
+        //                 size='s'
+        //             />
+        //         );
+        //     }
+        // }   
         return lst;
     }
 
