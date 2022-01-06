@@ -116,3 +116,25 @@ export async function clearSlideRequests(presentationId, pageNum) {
         });
     });
 }
+
+export async function clearPresentationRequests(presentationId) {
+    return new Promise((resolve, reject) => {
+        getPresentation(presentationId).then((response) => {
+            let requests = [];
+            if (response.result.hasOwnProperty('slides')) {
+                for (let slide of response.result.slides) {
+                    requests.push({
+                        deleteObject: {
+                            objectId: slide.objectId,
+                        }
+                    });
+                }    
+            }
+            resolve({
+                requests,
+            });
+        }).catch((reason) => {
+            reject(reason);
+        });
+    });
+}
