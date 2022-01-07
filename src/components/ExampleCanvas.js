@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Moveable from 'react-moveable';
 import { useDispatch, useSelector } from 'react-redux';
 import { addBB, delBB, selectExample, updateBB } from '../reducers/example';
@@ -18,7 +18,6 @@ function ExampleCanvas(props) {
 
     const [selectedTarget, setSelectedTarget] = useState(null);
 
-    const parentRef = useRef();
     const bbsRefs = useRef([]);
 
     const exampleUrl = getExampleURL(exampleDeckId, exampleId);
@@ -43,6 +42,7 @@ function ExampleCanvas(props) {
                     dispatch(addBB({bb: element}));
                 }
             }
+            window.location.reload();
         }).catch((reason) => {
             dispatch(deactivateLoading());
             console.log(reason);
@@ -56,12 +56,12 @@ function ExampleCanvas(props) {
         const bbRef = bbsRefs.current.find((ref, idx) => {
             return ref && ref.id === id;
         });
-        setSelectedTarget(bbRef)
+        if (bbRef)
+            setSelectedTarget(bbRef);
     }
     const handleDelClick = (event) => {
         const target = selectedTarget;
         if (target) {
-            console.log(event);
             event.preventDefault();
             event.stopPropagation();
             const id = target.id;
@@ -163,7 +163,7 @@ function ExampleCanvas(props) {
     const handleOnDragEnd = ({
         target, isDrag, lastEvent
     }) => {
-        if (isDrag) {
+        if (isDrag && lastEvent) {
             const {left, top} = lastEvent;
             const id = target.id;
             const object_id = parseInt(id.slice(OBJECT_ID_PREFIX.length));
@@ -222,7 +222,7 @@ function ExampleCanvas(props) {
                     selectedTarget ? <button onClick={handleDelClick}> Delete </button> : null
                 }
             </div>
-            <div ref={parentRef} style={
+            <div style={
                 {
                     pointerEvents: loading ? 'none' : 'all',
                     visibility: loading ? 'hidden' : 'visible',

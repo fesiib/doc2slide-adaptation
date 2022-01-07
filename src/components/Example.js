@@ -46,6 +46,7 @@ function Example(props) {
                     dispatch(addBB({bb: element}));
                 }
             }
+            window.location.reload();
         }).catch((reason) => {
             dispatch(deactivateLoading());
             console.log(reason);
