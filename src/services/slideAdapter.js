@@ -5,6 +5,7 @@ import {
     clearSlideRequests, 
     generateSlideRequests,
     processExample,
+    processExampleDesign,
 } from './apis/AdaptationAPI';
 
 const SLIDE_HEIGHT = 405;
@@ -35,6 +36,25 @@ async function process(exampleUrl, exampleId, exampleDeckId, slideInfo) {
     })
 }
 
+async function processBBS(exampleUrl, bbs, slideInfo) {
+    return new Promise((resolve, reject) => {
+        processExampleDesign(exampleUrl, bbs).then((response) => {
+            let exampleInfo = response.example_info;
+            generateSlideRequests(slideInfo, exampleInfo)
+            .then((response) => {
+                resolve({
+                    response,
+                    exampleInfo,
+                });
+            }).catch((reason) => {
+                reject(reason);
+            });
+        }).catch((reason) => {
+            reject(reason);
+        });
+    })
+}
+
 export async function generateSlide(exampleUrl, exampleId, exampleDeckId, presentationId, pageNum) {
     return new Promise((resolve, reject) => {
         clearSlideRequests(presentationId, pageNum).then((response) => {
@@ -48,6 +68,37 @@ export async function generateSlide(exampleUrl, exampleId, exampleDeckId, presen
                 throw Error("No such page" + pageNum.toString());
             }
             process(exampleUrl, exampleId, exampleDeckId, slideInfo).then(({response, exampleInfo}) => {
+                let requests = clearRequests.concat(response.requests);
+                updatePresentation(presentationId, requests).then((response) => {
+                    resolve({
+                        exampleInfo,
+                        updateResult: response,
+                    });
+                }).catch((reason) => {
+                    reject(reason);
+                });
+            }).catch((reason) => {
+                reject(reason);
+            })
+        }).catch((reason) => {
+            reject(reason);
+        });
+    });
+}
+
+export async function generateSlideFromBBS(exampleUrl, bbs, presentationId, pageNum) {
+    return new Promise((resolve, reject) => {
+        clearSlideRequests(presentationId, pageNum).then((response) => {
+            let clearRequests = response.requests;
+            let slideInfo = {
+                slide_id: response.slideId,
+                slide_height: response.slideHeight,
+                slide_width: response.slideWidth,
+            };
+            if (slideInfo.slide_id === null) {
+                throw Error("No such page" + pageNum.toString());
+            }
+            processBBS(exampleUrl, bbs, slideInfo).then(({response, exampleInfo}) => {
                 let requests = clearRequests.concat(response.requests);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({

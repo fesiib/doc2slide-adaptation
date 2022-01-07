@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
 import Moveable from 'react-moveable';
 import { useDispatch, useSelector } from 'react-redux';
-import { addBB, delBB, updateBB } from '../reducers/example';
-import { getExampleURL } from '../services/slideAdapter';
+import { addBB, delBB, selectExample, updateBB } from '../reducers/example';
+import { activateLoading, deactivateLoading } from '../reducers/loadingState';
+import { generateSlideFromBBS, getExampleURL } from '../services/slideAdapter';
+import { EXPERIMENTAL_PRESENTATION_ID } from './Example';
 
 const DELETE_ICON = '../icons/delete.svg';
 const OBJECT_ID_PREFIX = 'object_';
@@ -25,7 +27,26 @@ function ExampleCanvas(props) {
     const exampleHeight = exampleWidth * (9/16);
 
     const handleOnProcess = (event) => {
-
+        if (loading) {
+            return;
+        }
+        dispatch(activateLoading());
+        generateSlideFromBBS(exampleUrl, Object.values(bbs), EXPERIMENTAL_PRESENTATION_ID, 1).then((response) => {
+            console.log(response);
+            dispatch(deactivateLoading());
+            dispatch(selectExample({exampleDeckId, exampleId}));
+            if (response.exampleInfo.hasOwnProperty('elements')) {
+                const elements = response.exampleInfo.elements;
+                for (let i = 0; i < elements.length; i++) {
+                    const element = elements[i];
+                    element["object_id"] = i;
+                    dispatch(addBB({bb: element}));
+                }
+            }
+        }).catch((reason) => {
+            dispatch(deactivateLoading());
+            console.log(reason);
+        });
     }
 
     const handleRectClick = (event) => {
