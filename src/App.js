@@ -6,17 +6,31 @@ import Authorize from './components/Authorize';
 import ViewPresentation from './components/ViewPresentation';
 import ExamplesGallery from './components/ExamplesGallery';
 import Example, { EXPERIMENTAL_PRESENTATION_ID } from './components/Example';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { generateAllSlides } from './services/slideAdapter';
 import EXAMPLES_LIST from './services/ExamplesList';
 import ExampleCanvas from './components/ExampleCanvas';
 import { useRef } from 'react';
+import { activateLoading, deactivateLoading } from './reducers/loadingState';
 
 
 
 function App() {
+	const dispatch = useDispatch();
+    const { loading } = useSelector(state => state.loadingState);
+
 	const adaptAll = () => {
-		generateAllSlides(EXAMPLES_LIST, EXPERIMENTAL_PRESENTATION_ID)
+		if (loading) {
+            return;
+        }
+        dispatch(activateLoading());
+		generateAllSlides(EXAMPLES_LIST, EXPERIMENTAL_PRESENTATION_ID).then((response) => {
+            console.log(response);
+            dispatch(deactivateLoading());
+        }).catch((reason) => {
+            dispatch(deactivateLoading());
+            console.log(reason);
+        });
 	}
 
 	return (
@@ -24,7 +38,8 @@ function App() {
 			<Authorize/>
 			<ExamplesGallery/>
 			<button onClick={adaptAll} style={{
-				margin: "2em"
+				margin: "2em",
+				visibility: loading ? 'hidden' : 'visible',
 			}}> Adapt All </button>
 
 			<div style={{

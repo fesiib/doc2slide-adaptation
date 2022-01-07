@@ -24,6 +24,10 @@ function ExampleCanvas(props) {
     const width = 650;
     const height = width * (9/16);
 
+    const handleOnProcess = (event) => {
+        
+    }
+
     const handleRectClick = (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -241,6 +245,19 @@ function ExampleCanvas(props) {
                     onScale={handleOnScale}
                     onScaleEnd={handleOnScaleEnd}
                 />
+            </div>
+            <div style={
+                {
+                    pointerEvents: loading ? 'none' : 'all',
+                    visibility: loading ? 'hidden' : 'visible',
+                    overflow: "hidden",
+                    display: "flex",
+                    justifyContent: 'left',
+                    gap: '2em',
+                    margin: '1em',
+                }
+            }>
+                <button onClick={handleOnProcess}> Process </button>
             </div>
         </div>
     );

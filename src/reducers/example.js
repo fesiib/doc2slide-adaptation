@@ -2,6 +2,7 @@ const SELECT_EXAMPLE = "SELECT_EXAMPLE";
 const ADD_BB = "ADD_BB";
 const DEL_BB = "DEL_BB";
 const UPDATE_BB = "UPDATE_BB";
+const CLEAR_BBS = "CLEAR_BBS";
 
 export const selectExample = (payload) => ({
     type: SELECT_EXAMPLE,
@@ -53,7 +54,9 @@ const example = (state = initialState, action) => {
             return {
                 ...state,
                 exampleDeckId: action.payload.exampleDeckId,
-                exampleId: action.payload.exampleId
+                exampleId: action.payload.exampleId,
+                bbs: {},
+                idCnt: 0,
             }
         }
         case ADD_BB: {

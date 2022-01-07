@@ -35,13 +35,12 @@ function Example(props) {
         }
         dispatch(activateLoading());
         generateSlide(exampleUrl, exampleId, exampleDeckId, EXPERIMENTAL_PRESENTATION_ID, 1).then((response) => {
+            console.log(response);
             dispatch(deactivateLoading());
-            window.location.reload();
-            console.log(exampleDeckId, exampleId)
             dispatch(selectExample({exampleDeckId, exampleId}));
         }).catch((reason) => {
             dispatch(deactivateLoading());
-            console.log(reason)
+            console.log(reason);
         });
     }
 

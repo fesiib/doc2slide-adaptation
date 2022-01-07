@@ -70,6 +70,39 @@ export async function processExample(exampleUrl, exampleId, exampleDeckId) {
     });
 }
 
+export async function processExampleDesign(exampleUrl, bbs) {
+    const SERVICE = '/example_adaptation/process_example_design';
+
+    let data = {
+        "url": exampleUrl,
+        "bbs": bbs
+    };
+
+    const URL = ADDR + SERVICE;
+    
+    const request = {
+        method: 'POST',
+        mode: 'cors',
+        //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data)
+    };
+
+    return new Promise((resolve, reject) => {
+        fetch(URL, request).then( (response) => response.json())
+            .then((response) => {
+                resolve(response);
+            })
+            .catch((reason) => {
+                reject(reason);
+            });
+    });
+}
+
 function getDimensionInPt(dimension) {
     if (dimension.unit == 'PT') {
         return dimension.magnitude;

@@ -22,7 +22,10 @@ async function process(exampleUrl, exampleId, exampleDeckId, slideInfo) {
             let exampleInfo = response.example_info;
             generateSlideRequests(slideInfo, exampleInfo)
             .then((response) => {
-                resolve(response);
+                resolve({
+                    response,
+                    exampleInfo,
+                });
             }).catch((reason) => {
                 reject(reason);
             });
@@ -44,11 +47,12 @@ export async function generateSlide(exampleUrl, exampleId, exampleDeckId, presen
             if (slideInfo.slide_id === null) {
                 throw Error("No such page" + pageNum.toString());
             }
-            process(exampleUrl, exampleId, exampleDeckId, slideInfo).then((response) => {
+            process(exampleUrl, exampleId, exampleDeckId, slideInfo).then(({response, exampleInfo}) => {
                 let requests = clearRequests.concat(response.requests);
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({
-                        response,
+                        exampleInfo,
+                        updateResult: response,
                     });
                 }).catch((reason) => {
                     reject(reason);
@@ -85,14 +89,18 @@ export async function generateAllSlides(examples, presentationId) {
                 };
                 
                 processingList.push(process(exampleUrl, exampleId, exampleDeckId, slideInfo));
+                break;
             }
             Promise.all(processingList).then((responses) => {
-                for (let response of responses) {
+                let exampleInfos = []
+                for (let {response, exampleInfo} of responses) {
+                    exampleInfos.push(exampleInfo);
                     requests = requests.concat(response.requests);
                 }
                 updatePresentation(presentationId, requests).then((response) => {
                     resolve({
-                        response,
+                        exampleInfos,
+                        updateResult: response,
                     });
                 }).catch((reason) => {
                     reject(reason);
