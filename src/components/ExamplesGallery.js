@@ -12,7 +12,6 @@ function ExamplesGallery(props) {
                 <Example
                     exampleDeckId={exampleDeckId}
                     exampleId={exampleId}
-                    size='s'
                 />
             );
         }

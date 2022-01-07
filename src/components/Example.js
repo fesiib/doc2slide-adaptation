@@ -16,10 +16,9 @@ function Example(props) {
     
     const exampleDeckId = props.exampleDeckId;
     const exampleId = props.exampleId;
-    const size = props.size
 
-    const width = WIDTH * (size == 'l' ? 3.5 : 1);
-    const height = HEIGHT * (size == 'l' ? 3.5 : 1);
+    const width = WIDTH;
+    const height = HEIGHT;
     
     if (exampleDeckId == null || exampleId == null) {
         return (<div>
@@ -31,7 +30,7 @@ function Example(props) {
     const exampleUrl = getExampleURL(exampleDeckId, exampleId)
 
     const exampleSelected = (event) => {
-        if (loading || size == 'l') {
+        if (loading) {
             return;
         }
         dispatch(activateLoading());

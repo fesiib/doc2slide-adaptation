@@ -9,13 +9,12 @@ import Example, { EXPERIMENTAL_PRESENTATION_ID } from './components/Example';
 import { useSelector } from 'react-redux';
 import { generateAllSlides } from './services/slideAdapter';
 import EXAMPLES_LIST from './services/ExamplesList';
+import ExampleCanvas from './components/ExampleCanvas';
+import { useRef } from 'react';
 
 
 
 function App() {
-
-	const {exampleDeckId, exampleId} = useSelector(state => state.example);
-
 	const adaptAll = () => {
 		generateAllSlides(EXAMPLES_LIST, EXPERIMENTAL_PRESENTATION_ID)
 	}
@@ -27,6 +26,7 @@ function App() {
 			<button onClick={adaptAll} style={{
 				margin: "2em"
 			}}> Adapt All </button>
+
 			<div style={{
 				margin: "2em",
 				display: "flex",
@@ -37,11 +37,7 @@ function App() {
 				<ViewPresentation
 					presentationId={EXPERIMENTAL_PRESENTATION_ID}
 				/>
-				<Example
-					exampleDeckId={exampleDeckId}
-					exampleId={exampleId}
-					size='l'
-				/>
+				<ExampleCanvas/>
 			</div>
 		</div>
 	);
