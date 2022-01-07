@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { selectExample } from "../reducers/example";
+import { addBB, selectExample } from "../reducers/example";
 import { activateLoading, deactivateLoading } from "../reducers/loadingState";
 import { generateSlide, getExampleURL } from "../services/slideAdapter";
 
@@ -38,6 +38,14 @@ function Example(props) {
             console.log(response);
             dispatch(deactivateLoading());
             dispatch(selectExample({exampleDeckId, exampleId}));
+            if (response.exampleInfo.hasOwnProperty('elements')) {
+                const elements = response.exampleInfo.elements;
+                for (let i = 0; i < elements.length; i++) {
+                    const element = elements[i];
+                    element["object_id"] = i;
+                    dispatch(addBB({bb: element}));
+                }
+            }
         }).catch((reason) => {
             dispatch(deactivateLoading());
             console.log(reason);

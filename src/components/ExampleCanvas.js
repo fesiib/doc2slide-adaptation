@@ -21,11 +21,11 @@ function ExampleCanvas(props) {
 
     const exampleUrl = getExampleURL(exampleDeckId, exampleId);
 
-    const width = 650;
-    const height = width * (9/16);
+    const exampleWidth = 650;
+    const exampleHeight = exampleWidth * (9/16);
 
     const handleOnProcess = (event) => {
-        
+
     }
 
     const handleRectClick = (event) => {
@@ -61,13 +61,18 @@ function ExampleCanvas(props) {
     const generateBBS = () => {
         return Object.values(bbs).map((entry, idx) => {
             const isFigure = entry['type'] === 'figure';
+            const id = `${OBJECT_ID_PREFIX}${entry['object_id']}`;
+            const width = entry["width"] / entry["image_width"] * exampleWidth;
+            const height = entry["height"] / entry["image_height"] * exampleHeight;
+            const left = entry["left"] / entry["image_width"] * exampleWidth;
+            const top = entry["top"] / entry["image_height"] * exampleHeight;
             return (
                 <g
                     ref={(ref) => bbsRefs.current.push(ref)}
                     id={`${OBJECT_ID_PREFIX}${entry['object_id']}`}
                     key={`${OBJECT_ID_PREFIX}${entry['object_id']}`}
                     style={{
-                        transform: `translate(${entry["left"]}px, ${entry["top"]}px) scale(${entry["width"]}, ${entry["height"]})`
+                        transform: `translate(${left}px, ${top}px) scale(${width}, ${height})`
                     }}
                 >
                     <rect
@@ -93,8 +98,8 @@ function ExampleCanvas(props) {
                 bb: {
                     slide_deck_id: exampleDeckId,
                     slide_id: exampleId,
-                    image_height: height,
-                    image_width: width,
+                    image_height: exampleHeight,
+                    image_width: exampleWidth,
                     type: 'figure',
                     conf: 100,
                     left: 100 + id * 10,
@@ -114,8 +119,8 @@ function ExampleCanvas(props) {
                 bb: {
                     slide_deck_id: exampleDeckId,
                     slide_id: exampleId,
-                    image_height: height,
-                    image_width: width,
+                    image_height: exampleHeight,
+                    image_width: exampleWidth,
                     type: 'text',
                     conf: 100,
                     left: 100 + id * 10,
@@ -202,8 +207,8 @@ function ExampleCanvas(props) {
                     pointerEvents: loading ? 'none' : 'all',
                     visibility: loading ? 'hidden' : 'visible',
                     overflow: "hidden",
-                    width: width,
-                    height: height,
+                    width: exampleWidth,
+                    height: exampleHeight,
                     display: "flex",
                     justifyContent: 'center',
                     margin: '1em 1em',
@@ -211,13 +216,13 @@ function ExampleCanvas(props) {
             }>
 
                 <svg 
-                    version="1.1" baseProfile="full" width={width} height={height} xlmns="http://www/w3/org/2000/svg"
+                    version="1.1" baseProfile="full" width={exampleWidth} height={exampleHeight} xlmns="http://www/w3/org/2000/svg"
                     // style={{
                     //     transformBox: "fill-box",
                     // }}
                     onClick={handleCanvasClick}
                 >
-                    <image xlinkHref={exampleUrl} width={width} height={height} preserveAspectRatio="xMaxYMid slice"/>
+                    <image xlinkHref={exampleUrl} width={exampleWidth} height={exampleHeight} preserveAspectRatio="xMaxYMid slice"/>
                     { generateBBS() }
                 </svg>
                 <Moveable
