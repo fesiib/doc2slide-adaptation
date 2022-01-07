@@ -146,12 +146,11 @@ function ExampleCanvas(props) {
             const {left, top} = lastEvent;
             const id = target.id;
             const object_id = parseInt(id.slice(OBJECT_ID_PREFIX.length));
-            console.log(left, top);
             dispatch(updateBB({
                 id: object_id,
                 change: {
-                    left: bbs[object_id]["left"] + left,
-                    top: bbs[object_id]["top"] + top
+                    left: bbs[object_id]["left"] + left / exampleWidth * bbs[object_id]["image_width"],
+                    top: bbs[object_id]["top"] + top / exampleHeight * bbs[object_id]["image_height"]
                 }
             }))
         }
@@ -175,10 +174,10 @@ function ExampleCanvas(props) {
         dispatch(updateBB({
             id: object_id,
             change: {
-                width: scale[0],
-                height: scale[1],
-                left: bbs[object_id]["left"] + left,
-                top: bbs[object_id]["top"] + top
+                width: scale[0] / exampleWidth * bbs[object_id]["image_width"],
+                height: scale[1] / exampleHeight * bbs[object_id]["image_height"],
+                left: bbs[object_id]["left"] + left / exampleWidth * bbs[object_id]["image_width"],
+                top: bbs[object_id]["top"] + top / exampleHeight * bbs[object_id]["image_height"]
             }
         }))
     };
