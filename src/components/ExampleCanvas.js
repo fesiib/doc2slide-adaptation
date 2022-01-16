@@ -1,9 +1,13 @@
 import React, { useRef, useState } from 'react';
 import Moveable from 'react-moveable';
+import  {DraggableAreasGroup } from 'react-draggable-tags';
+
 import { useDispatch, useSelector } from 'react-redux';
+
 import { addBB, delBB, selectExample, updateBB } from '../reducers/example';
 import { activateLoading, deactivateLoading } from '../reducers/loadingState';
 import { generateSlideFromBBS, getExampleURL } from '../services/slideAdapter';
+
 import BoundingBox from './BoundingBox';
 import { EXPERIMENTAL_PRESENTATION_ID } from './Example';
 
@@ -25,6 +29,8 @@ function ExampleCanvas(props) {
 
     const exampleWidth = 650;
     const exampleHeight = exampleWidth * (9/16);
+    
+    const exampleGroupAreas = new DraggableAreasGroup();
 
     const handleOnProcess = (event) => {
         if (loading) {
@@ -90,6 +96,7 @@ function ExampleCanvas(props) {
             const top = entry["top"] / entry["image_height"] * exampleHeight;
             return (
                 <BoundingBox 
+                    moveable={false}
                     customRef={(ref) => bbsRefs.current.push(ref)}
                     isFigure={isFigure}
                     id={id}
@@ -99,6 +106,7 @@ function ExampleCanvas(props) {
                     top={top}
                     key={id}
                     onRectClick={handleRectClick}
+                    groupAreas={exampleGroupAreas}
                 />
             );
         });
