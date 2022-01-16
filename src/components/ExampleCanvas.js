@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Moveable from 'react-moveable';
 import { useDispatch, useSelector } from 'react-redux';
 import { addBB, delBB, selectExample, updateBB } from '../reducers/example';
 import { activateLoading, deactivateLoading } from '../reducers/loadingState';
 import { generateSlideFromBBS, getExampleURL } from '../services/slideAdapter';
+import BoundingBox from './BoundingBox';
 import { EXPERIMENTAL_PRESENTATION_ID } from './Example';
 
 const DELETE_ICON = '../icons/delete.svg';
@@ -88,26 +89,17 @@ function ExampleCanvas(props) {
             const left = entry["left"] / entry["image_width"] * exampleWidth;
             const top = entry["top"] / entry["image_height"] * exampleHeight;
             return (
-                <g
-                    ref={(ref) => bbsRefs.current.push(ref)}
-                    id={`${OBJECT_ID_PREFIX}${entry['object_id']}`}
-                    key={`${OBJECT_ID_PREFIX}${entry['object_id']}`}
-                    style={{
-                        transform: `translate(${left}px, ${top}px) scale(${width}, ${height})`
-                    }}
-                >
-                    <rect
-                        x={0} y={0} 
-                        width={1} height={1}
-                        style={{
-                            strokeWidth: 0,
-                            stroke: (isFigure ? 'green' : 'blue'),
-                            fill: (isFigure ? 'greenyellow' : 'skyblue'),
-                            opacity: 0.5,
-                        }}
-                        onClick={handleRectClick}
-                    />
-                </g>
+                <BoundingBox 
+                    customRef={(ref) => bbsRefs.current.push(ref)}
+                    isFigure={isFigure}
+                    id={id}
+                    width={width}
+                    height={height}
+                    left={left}
+                    top={top}
+                    key={id}
+                    onRectClick={handleRectClick}
+                />
             );
         });
     }
