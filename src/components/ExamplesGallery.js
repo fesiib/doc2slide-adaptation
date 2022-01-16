@@ -12,6 +12,7 @@ function ExamplesGallery(props) {
                 <Example
                     exampleDeckId={exampleDeckId}
                     exampleId={exampleId}
+                    key={exampleDeckId.toString() + "_" + exampleId.toString()}
                 />
             );
         }
@@ -30,15 +31,15 @@ function ExamplesGallery(props) {
         return lst;
     }
 
-    return (<div style={
-        {
+    return (<div style={{
             margin: "2em",
             display: "flex",
             flexDirection: "row",
             gap: "1em",
             flexWrap: "wrap",
-        }
-    }>
+        }}
+        key={'gallery'}
+    >
         {
             parseDatabase()
             // EXAMPLES_LIST.map((value, i) => {

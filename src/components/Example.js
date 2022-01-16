@@ -26,7 +26,6 @@ function Example(props) {
         </div>);
     }
 
-    const key = exampleDeckId.toString() + "-" + exampleId.toString();
     const exampleUrl = getExampleURL(exampleDeckId, exampleId)
 
     const exampleSelected = (event) => {
@@ -53,8 +52,8 @@ function Example(props) {
         });
     }
 
-    return (<div onClick={exampleSelected} key={key} style={
-            {
+    return (
+        <div onClick={exampleSelected} style={{
                 pointerEvents: loading ? 'none' : 'all',
                 visibility: loading ? 'hidden' : 'visible',
                 overflow: "hidden",
@@ -62,15 +61,15 @@ function Example(props) {
                 height: height,
                 display: "flex",
                 justifyContent: 'center'
-            }
-        }>
-        <img src={exampleUrl} style={
-            {
-                width: width,
-                objectFit: "cover"
-            }
-        }/>
-    </div>);
+            }}
+        >
+            <img src={exampleUrl} style={{
+                    width: width,
+                    objectFit: "cover"
+                }}
+            />
+        </div>
+    );
 }
 
 export default Example;

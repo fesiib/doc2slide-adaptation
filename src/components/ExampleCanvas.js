@@ -205,8 +205,7 @@ function ExampleCanvas(props) {
 
     return (
         <div>
-            <div style={
-                {
+            <div style={{
                     pointerEvents: loading ? 'none' : 'all',
                     visibility: loading ? 'hidden' : 'visible',
                     overflow: "hidden",
@@ -214,16 +213,16 @@ function ExampleCanvas(props) {
                     justifyContent: 'left',
                     gap: '2em',
                     margin: '1em',
-                }
-            }>
+                }}
+                key={'above_buttons'}
+            >
                 <button onClick={addFigureBB}> Add Figure Box </button>
                 <button onClick={addTextBB}> Add Text Box </button>
                 {
                     selectedTarget ? <button onClick={handleDelClick}> Delete </button> : null
                 }
             </div>
-            <div style={
-                {
+            <div style={{
                     pointerEvents: loading ? 'none' : 'all',
                     visibility: loading ? 'hidden' : 'visible',
                     overflow: "hidden",
@@ -232,8 +231,9 @@ function ExampleCanvas(props) {
                     display: "flex",
                     justifyContent: 'center',
                     margin: '1em 1em',
-                }
-            }>
+                }}
+                key={'canvas'}
+            >
 
                 <svg 
                     version="1.1" baseProfile="full" width={exampleWidth} height={exampleHeight} xlmns="http://www/w3/org/2000/svg"
@@ -249,7 +249,7 @@ function ExampleCanvas(props) {
                     target={selectedTarget}
                     container={document.body}
                     origin={false}
-                    edge={false}
+                    edge={true}
 
                     draggable={true}
                     resizable={false}
@@ -259,9 +259,9 @@ function ExampleCanvas(props) {
                     pinchable={false}
                     
                     keepRatio={false}
-                    throttleDrag={0}
+                    throttleDrag={1}
                     throttleResize={0}
-                    throttleScale={0}
+                    throttleScale={1}
                     throttleRotate={0}
 
                     onDrag={handleOnDrag}
@@ -271,8 +271,7 @@ function ExampleCanvas(props) {
                     onScaleEnd={handleOnScaleEnd}
                 />
             </div>
-            <div style={
-                {
+            <div style={{
                     pointerEvents: loading ? 'none' : 'all',
                     visibility: loading ? 'hidden' : 'visible',
                     overflow: "hidden",
@@ -280,8 +279,9 @@ function ExampleCanvas(props) {
                     justifyContent: 'left',
                     gap: '2em',
                     margin: '1em',
-                }
-            }>
+                }}
+                key={'below_buttons'}
+            >
                 <button onClick={handleOnProcess}> Process </button>
             </div>
         </div>

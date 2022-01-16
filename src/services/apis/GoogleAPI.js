@@ -33,7 +33,6 @@ export function gapiSignOut() {
  *  listeners.
  */
 function initClient(callbackStatusChange) {
-    console.log("DOoing init");
     gapi.client.init({
         apiKey: API_KEY,
         clientId: CLIENT_ID,
