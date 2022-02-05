@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { resetApp } from "../reducers";
-import { addFile } from "../reducers/presentationFiles";
 import { parsePresentations } from "../services/apis/DriveAPI";
 import {handleClientLoad,
     gapiSignIn,
@@ -14,19 +13,11 @@ function Authorize() {
     const [authorizeDisplay, setAuthorizeDisplay] = useState('none');
     const [signoutDisplay, setSignoutDisplay] = useState('none');
 
-    const _addFile = (name, id) => {
-        dispatch(addFile({
-            name,
-            id,
-        }));
-    }
 
     const callbackStatusChange = (isSignedIn) => {
         if (isSignedIn) {
             setAuthorizeDisplay('none');
             setSignoutDisplay('block');
-            const callbackForEachPresentation = _addFile;
-            parsePresentations(callbackForEachPresentation);
         }
         else {
             dispatch(resetApp());

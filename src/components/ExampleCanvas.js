@@ -203,11 +203,26 @@ function ExampleCanvas(props) {
         }))
     };
 
-    return (<svg 
-        version="1.1" baseProfile="full" width={exampleWidth} height={exampleHeight} xlmns="http://www/w3/org/2000/svg"
-    >
-        <image xlinkHref={exampleUrl} width={exampleWidth} height={exampleHeight} preserveAspectRatio="xMaxYMid slice"/>
-    </svg>)
+    return (
+        <div style={{
+                pointerEvents: loading ? 'none' : 'all',
+                visibility: loading ? 'hidden' : 'visible',
+                overflow: "hidden",
+                width: exampleWidth,
+                height: exampleHeight,
+                display: "flex",
+                justifyContent: 'center',
+                margin: '1em 1em',
+            }}
+            key={'canvas'}
+        >
+            <svg 
+                version="1.1" baseProfile="full" width={exampleWidth} height={exampleHeight} xlmns="http://www/w3/org/2000/svg"
+            >
+                <image xlinkHref={exampleUrl} width={exampleWidth} height={exampleHeight} preserveAspectRatio="xMaxYMid slice"/>
+            </svg>
+        </div>
+    );
 
     return (
         <div>

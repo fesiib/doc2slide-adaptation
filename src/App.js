@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { generateAllSlides } from './services/slideAdapter';
 import EXAMPLES_LIST from './services/ExamplesList';
 import ExampleCanvas from './components/ExampleCanvas';
+import InputContent from './components/InputContent';
 import { useRef } from 'react';
 import { activateLoading, deactivateLoading } from './reducers/loadingState';
 
@@ -36,6 +37,7 @@ function App() {
 	return (
 		<div>
 			<Authorize/>
+			<InputContent/>
 			<ExamplesGallery/>
 			<button onClick={adaptAll} style={{
 				margin: "2em",
