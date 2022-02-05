@@ -203,6 +203,12 @@ function ExampleCanvas(props) {
         }))
     };
 
+    return (<svg 
+        version="1.1" baseProfile="full" width={exampleWidth} height={exampleHeight} xlmns="http://www/w3/org/2000/svg"
+    >
+        <image xlinkHref={exampleUrl} width={exampleWidth} height={exampleHeight} preserveAspectRatio="xMaxYMid slice"/>
+    </svg>)
+
     return (
         <div>
             <div style={{
