@@ -1,5 +1,5 @@
 import React from 'react';
-import DraggableTag from './DraggableTag';
+import DraggableTag from './draggable_tags/DraggableTag';
 
 function BoundingBox(props) {
     const moveable = props.moveable;

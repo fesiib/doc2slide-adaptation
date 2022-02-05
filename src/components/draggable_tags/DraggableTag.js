@@ -33,6 +33,9 @@ const TAG_STYLES = {
         lineHeight: '15px',
         color: '#FFFFFF',
         background: 'rgba(0, 255, 0, 0.9)',        
+    },
+    'color': {
+
     }
 }
 
